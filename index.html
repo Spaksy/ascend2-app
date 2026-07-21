@@ -191,6 +191,9 @@ body {
 .btn[disabled] { opacity: .45; cursor: default; filter: none; transform: none; }
 .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
 .btn.ghost:hover { border-color: var(--accent); filter: none; }
+/* Bouton doré — l'action « récompense » (ouvrir un coffre, rejoindre la collection).
+   Réintroduit en Phase 1.3, là où il SERT enfin (gardé hors de 1.2 → zéro code mort). */
+.btn.gold { background: var(--gold); color: var(--on-gold); }
 
 /* Formulaire de création */
 .creator {
@@ -290,7 +293,8 @@ body {
   border-radius: var(--r-lg); padding: 14px 16px;
   box-shadow: 0 6px 20px -12px var(--shadow);
 }
-.chest-main { min-width: 0; }
+.chest-main { flex: 1; min-width: 0; }
+.chest-open { flex: 0 0 auto; min-height: 44px; padding: 0 18px; font-size: 14px; }
 .chest-title { font-weight: 700; font-size: 15px; }
 .chest-src { color: var(--ink-2); font-size: 13px; margin-top: 2px; word-break: break-word; }
 
@@ -315,6 +319,82 @@ body {
   border-radius: 2px; background: var(--gold); border: 1px solid var(--on-gold);
 }
 .chest-vig--bois { --chest-body: #A9743F; --chest-lid: #BC854B; --chest-edge: #6F4A28; }
+
+/* ==================== TA COLLECTION (Phase 1.3, amorce) ==================== */
+/* Amorce accessible de l'écran Collection (complet = Phase 3.1). Même grammaire que la
+   pile de coffres : liste sémantique, cartes sobres. */
+.card-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.coll-card {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 14px 16px;
+  box-shadow: 0 6px 20px -12px var(--shadow);
+}
+.cc-emoji { font-size: 24px; line-height: 1.2; flex: 0 0 auto; }
+.cc-main { min-width: 0; }
+.cc-name { font-weight: 700; font-size: 15px; word-break: break-word; }
+.cc-meta { color: var(--ink-2); font-size: 12px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.cc-src { color: var(--ink-2); font-size: 13px; margin-top: 4px; word-break: break-word; }
+
+/* ==================== CÉRÉMONIE D'OUVERTURE (Phase 1.3) ==================== */
+/* < 6 s, skippable (tap/« Passer »), INSTANTANÉE en reduce-motion. Voile sombre fixe pour
+   concentrer l'attention (texte en encre claire fixe → lisible quelle que soit l'ambiance). */
+.ceremony {
+  position: fixed; inset: 0; z-index: 80;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; background: rgba(10, 14, 22, .74);
+  animation: cer-fade var(--dur-ui) ease;
+}
+.cer-stage { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; }
+.cer-hint { color: #EEF1FA; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+.cer-skip {
+  min-height: 44px; padding: 0 12px; background: transparent;
+  border: 1px solid rgba(255, 255, 255, .35); border-radius: var(--r-pill);
+  color: #EEF1FA; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.cer-skip:hover { border-color: #EEF1FA; }
+
+/* Suspense : le coffre grandi tremble doucement + halo doré (animation coupée par
+   reduce-motion via la règle globale ; on affiche alors directement la révélation). */
+.cer-chest {
+  transform: scale(2.3);
+  animation: cer-tremble .55s ease-in-out infinite;
+  filter: drop-shadow(0 0 14px var(--gold));
+}
+
+/* Révélation */
+.cer-reveal { animation: cer-pop .32s ease; }
+.cer-kicker {
+  color: #EEF1FA; font-size: 13px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.cer-src { color: #C9D0E0; font-size: 13px; max-width: 40ch; }
+.cer-reveal .btn.gold { margin-top: 4px; }
+
+/* Carte-récompense (placeholder géométrique ; SVG Claude Design plus tard) */
+.reward-card {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 12px;
+  width: 210px; padding: 26px 20px;
+  background: var(--surface); border: 1px solid var(--gold);
+  border-radius: var(--r-lg); box-shadow: 0 16px 48px -14px rgba(0, 0, 0, .5);
+}
+.rc-emoji { font-size: 48px; line-height: 1; }
+.rc-name { font-weight: 700; font-size: 18px; color: var(--ink); text-align: center; word-break: break-word; }
+.rc-rarity {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  padding: 3px 12px; border-radius: var(--r-pill);
+}
+/* En 1.3 seule la rareté « commun » est produite → seule elle est stylée (les autres
+   arrivent avec leur coffre — zéro palette orpheline). */
+.rc-rarity--commun { background: var(--accent-soft); color: var(--ink); border: 1px solid var(--accent); }
+
+@keyframes cer-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cer-pop { from { transform: scale(.86); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes cer-tremble {
+  0%, 100% { transform: scale(2.3) translateX(0) rotate(0); }
+  25%      { transform: scale(2.3) translateX(-2px) rotate(-2.2deg); }
+  75%      { transform: scale(2.3) translateX(2px) rotate(2.2deg); }
+}
 
 /* ============================ REDUCED MOTION ============================ */
 @media (prefers-reduced-motion: reduce) {
@@ -769,6 +849,168 @@ body {
   };
 })();
 
+/* ASCEND v2 — Pools d'objets par domaine (données pures, Phase 1.3).
+   Le contenu qu'un coffre révèle vient d'ICI (tiré à l'OUVERTURE — la logique de tirage
+   est dans derive.js ; ce fichier ne fait que déclarer le catalogue + le résoudre).
+
+   Placeholders v0 : chaque objet = { id, domain, name, rarity }. Les histoires complètes
+   (métadonnées narratives, art) = Phase 6.1 ; ici, un nom évocateur suffit.
+
+   Raretés (GDD §4.2) : commun · rare · epique · legendaire — la rareté reflète l'EFFORT
+   réel, jamais la chance seule. En Phase 1.3 le Coffre de BOIS ne tire que des COMMUNS
+   (1 objet commun du pool du domaine). Les objets de rareté supérieure sont DÉCLARÉS pour
+   la lisibilité du modèle (comme chests.js déclare fer/or/légendaire) et seront tirés dans
+   LEUR phase (fer=1.4, or/jalons=1.5, légendaire=2.2/4.1) — aucune palette/UI orpheline :
+   seule la rareté « commun » est rendue en 1.3.
+
+   Anti-doublon / anti-frustration (GDD §4.3) : le tirage pioche SANS REMISE dans le pool
+   du domaine ; pool de communs épuisé → objet remplacé par une DÉCO GÉNÉRATIVE (déterministe,
+   toujours embellissante). Ces décos ne sont pas dans le catalogue fixe : leur id encode
+   tout (`gen_<domaine>_<n>`) et `resolve()` les reconstruit → rien de précieux n'est stocké
+   qui puisse être dérivé (invariant d'intégrité). Aucune logique de tirage ici. */
+(function () {
+  'use strict';
+
+  // Table des raretés (§4.2) : id → libellé FR. Sert au rendu (rarityLabel) et de
+  // référence unique de l'échelle. Ordre = valeur croissante.
+  var RARITIES = [
+    { id: 'commun',     label: 'Commun' },
+    { id: 'rare',       label: 'Rare' },
+    { id: 'epique',     label: 'Épique' },
+    { id: 'legendaire', label: 'Légendaire' }
+  ];
+  var rarityById = {};
+  for (var r = 0; r < RARITIES.length; r++) rarityById[RARITIES[r].id] = RARITIES[r];
+
+  // Un POOL par domaine (ids des 5 domaines MVP — domains.js). Apostrophes FR = ’ (U+2019).
+  // 6 communs par domaine (le vivier tiré en 1.3) + quelques objets de rareté supérieure
+  // déclarés pour le modèle (tirés dans leur phase). Ids GLOBALEMENT uniques (préfixe domaine).
+  var POOLS = {
+    physique: [
+      { id: 'phys_c1', name: 'Galet lisse',        rarity: 'commun' },
+      { id: 'phys_c2', name: 'Corde à sauter',     rarity: 'commun' },
+      { id: 'phys_c3', name: 'Gourde de voyage',   rarity: 'commun' },
+      { id: 'phys_c4', name: 'Ruban de course',    rarity: 'commun' },
+      { id: 'phys_c5', name: 'Caillou de sommet',  rarity: 'commun' },
+      { id: 'phys_c6', name: 'Brassard usé',       rarity: 'commun' },
+      { id: 'phys_r1', name: 'Médaille de bronze', rarity: 'rare' },
+      { id: 'phys_e1', name: 'Flamme du marathon', rarity: 'epique' },
+      { id: 'phys_l1', name: 'Atlas',              rarity: 'legendaire' }
+    ],
+    mental: [
+      { id: 'ment_c1', name: 'Bille d’apaisement', rarity: 'commun' },
+      { id: 'ment_c2', name: 'Carnet de pensées',  rarity: 'commun' },
+      { id: 'ment_c3', name: 'Bougie douce',       rarity: 'commun' },
+      { id: 'ment_c4', name: 'Galet du calme',     rarity: 'commun' },
+      { id: 'ment_c5', name: 'Plume légère',       rarity: 'commun' },
+      { id: 'ment_c6', name: 'Sablier de pause',   rarity: 'commun' },
+      { id: 'ment_r1', name: 'Clé de sérénité',    rarity: 'rare' },
+      { id: 'ment_e1', name: 'Phare intérieur',    rarity: 'epique' }
+    ],
+    connaissances: [
+      { id: 'conn_c1', name: 'Marque-page corné',      rarity: 'commun' },
+      { id: 'conn_c2', name: 'Bougie de lecture',      rarity: 'commun' },
+      { id: 'conn_c3', name: 'Encrier séché',          rarity: 'commun' },
+      { id: 'conn_c4', name: 'Feuille manuscrite',     rarity: 'commun' },
+      { id: 'conn_c5', name: 'Loupe de poche',         rarity: 'commun' },
+      { id: 'conn_c6', name: 'Ticket de bibliothèque', rarity: 'commun' },
+      { id: 'conn_r1', name: 'Parchemin ancien',       rarity: 'rare' },
+      { id: 'conn_e1', name: 'La Bibliothèque Éternelle', rarity: 'epique' }
+    ],
+    creativite: [
+      { id: 'crea_c1', name: 'Crayon mâché',      rarity: 'commun' },
+      { id: 'crea_c2', name: 'Éclat de couleur',  rarity: 'commun' },
+      { id: 'crea_c3', name: 'Bouton dépareillé', rarity: 'commun' },
+      { id: 'crea_c4', name: 'Bille de verre',    rarity: 'commun' },
+      { id: 'crea_c5', name: 'Bout de ficelle',   rarity: 'commun' },
+      { id: 'crea_c6', name: 'Pastel usé',        rarity: 'commun' },
+      { id: 'crea_r1', name: 'Pinceau doré',      rarity: 'rare' },
+      { id: 'crea_e1', name: 'Palette du maître', rarity: 'epique' }
+    ],
+    bienetre: [
+      { id: 'bien_c1', name: 'Galet tiède',      rarity: 'commun' },
+      { id: 'bien_c2', name: 'Brin de lavande',  rarity: 'commun' },
+      { id: 'bien_c3', name: 'Tasse fumante',    rarity: 'commun' },
+      { id: 'bien_c4', name: 'Coussin moelleux', rarity: 'commun' },
+      { id: 'bien_c5', name: 'Feuille de menthe',rarity: 'commun' },
+      { id: 'bien_c6', name: 'Plume d’oreiller', rarity: 'commun' },
+      { id: 'bien_r1', name: 'Fleur de quiétude',rarity: 'rare' },
+      { id: 'bien_e1', name: 'Source paisible',  rarity: 'epique' }
+    ]
+  };
+
+  // Index plat id → objet enrichi de son domaine (le domaine vient de la clé de POOLS,
+  // pas dupliqué dans chaque record).
+  var byId = {};
+  var commonsByDom = {};
+  for (var dom in POOLS) {
+    if (!POOLS.hasOwnProperty(dom)) continue;
+    commonsByDom[dom] = [];
+    var arr = POOLS[dom];
+    for (var i = 0; i < arr.length; i++) {
+      var it = arr[i];
+      var card = { id: it.id, domain: dom, name: it.name, rarity: it.rarity };
+      byId[card.id] = card;
+      if (card.rarity === 'commun') commonsByDom[dom].push(card);
+    }
+  }
+
+  // Décos génératives (déco quand le pool de communs d'un domaine est épuisé, §4.3).
+  // Toujours embellissantes ; nom déterministe du seul id (aucune donnée stockée).
+  var GEN_FLAVORS = [
+    'Galet du rivage', 'Jeune pousse', 'Sentier de pierres',
+    'Fleur des champs', 'Rocher moussu', 'Éclat de lumière'
+  ];
+
+  // Hash de chaîne déterministe (FNV-1a 32 bits) — sert au tirage (derive.js) ET au choix
+  // de saveur générative. Pur, sans réseau, stable entre sessions.
+  function hash(s) {
+    s = '' + s;
+    var h = 2166136261 >>> 0;
+    for (var i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619) >>> 0;
+    }
+    return h >>> 0;
+  }
+
+  function unknown(itemId) {
+    return { id: itemId || '?', domain: '', name: 'Objet mystère', rarity: 'commun', generative: false, unknown: true };
+  }
+
+  // Résout un itemId (stocké minimal dans inventory) en objet affichable. Gère le catalogue
+  // fixe ET les décos génératives (`gen_<domaine>_<n>`) ; itemId inconnu (save bricolée) →
+  // repli serein (jamais de crash au rendu de la collection).
+  function resolve(itemId) {
+    if (typeof itemId !== 'string' || !itemId) return unknown(itemId);
+    if (byId[itemId]) return byId[itemId];
+    if (itemId.indexOf('gen_') === 0) {
+      var parts = itemId.split('_');            // ['gen', <domaine>, <n>]
+      var domain = parts[1] || '';
+      var flavor = GEN_FLAVORS[hash(itemId) % GEN_FLAVORS.length];
+      return { id: itemId, domain: domain, name: flavor, rarity: 'commun', generative: true };
+    }
+    return unknown(itemId);
+  }
+
+  // Fabrique l'id d'une déco générative (le n-ième déjà généré pour ce domaine → id unique)
+  // et le résout. Utilisé par le tirage quand le pool de communs est vide.
+  function makeGenerative(domain, n) {
+    return resolve('gen_' + domain + '_' + (n | 0));
+  }
+
+  window.AscendCards = {
+    pools: POOLS,
+    rarities: RARITIES,
+    rarityLabel: function (id) { return rarityById[id] ? rarityById[id].label : 'Commun'; },
+    commonsByDomain: function (domain) { return commonsByDom[domain] ? commonsByDom[domain].slice() : []; },
+    get: resolve,
+    resolve: resolve,
+    makeGenerative: makeGenerative,
+    hash: hash
+  };
+})();
+
 /* ASCEND v2 — Dérivé (Phase 1.1).
    INVARIANT structurel : tout ce qui est précieux et calculable se DÉRIVE ici
    depuis history/inventory — jamais stocké (un save édité à la main ne peut pas
@@ -778,8 +1020,13 @@ body {
 (function () {
   'use strict';
 
+  var cards = window.AscendCards;
+
   function historyOf(state) {
     return (state && Array.isArray(state.history)) ? state.history : [];
+  }
+  function inventoryOf(state) {
+    return (state && Array.isArray(state.inventory)) ? state.inventory : [];
   }
 
   // Compteur cumulatif d'une habitude = nombre d'entrées d'historique la référençant.
@@ -806,9 +1053,53 @@ body {
     return false;
   }
 
+  /* ------------------------------------------------ tirage de coffre (Phase 1.3) */
+  // Le contenu d'un coffre est DÉRIVÉ à l'ouverture, jamais stocké à l'obtention (TDD §4,
+  // GDD §4.3). C'est une fonction PURE de (state, chest) : re-calculable, IDEMPOTENTE tant
+  // que le coffre n'est pas ouvert (même chestId → même objet), mais FIGÉE seulement au
+  // moment où actions.openChest écrit l'entrée d'inventory.
+  //
+  // Seed = hash(createdAt + chestId) → indépendante de l'horloge, stable entre sessions.
+  // Sans remise : on retire du pool du domaine les objets DÉJÀ possédés (aucun doublon).
+  // Pool de communs épuisé → déco générative déterministe (n = nombre de génératifs déjà
+  // possédés dans ce domaine → id unique). En 1.3 : Coffre de bois → 1 COMMUN.
+
+  function ownedItemIds(state) {
+    var inv = inventoryOf(state), set = {};
+    for (var i = 0; i < inv.length; i++) {
+      var e = inv[i];
+      if (e && typeof e.itemId === 'string') set[e.itemId] = true;
+    }
+    return set;
+  }
+
+  // Combien de décos génératives ce domaine a-t-il déjà produites (dans inventory) ?
+  // Sert à donner à la prochaine un id unique (gen_<domaine>_<n>).
+  function generativeCountInDomain(state, domain) {
+    var inv = inventoryOf(state), n = 0;
+    for (var i = 0; i < inv.length; i++) {
+      var e = inv[i];
+      if (!e || typeof e.itemId !== 'string') continue;
+      var it = cards.resolve(e.itemId);
+      if (it && it.generative && it.domain === domain) n++;
+    }
+    return n;
+  }
+
+  function drawForChest(state, chest) {
+    if (!chest || !chest.domain) return null;
+    var seed = cards.hash((state && state.createdAt ? state.createdAt : '') + '|' + chest.id);
+    var owned = ownedItemIds(state);
+    var pool = cards.commonsByDomain(chest.domain).filter(function (c) { return !owned[c.id]; });
+    if (pool.length) return pool[seed % pool.length];
+    // Pool épuisé → déco générative (embellit toujours, GDD §4.3).
+    return cards.makeGenerative(chest.domain, generativeCountInDomain(state, chest.domain));
+  }
+
   window.AscendDerive = {
     habitCount: habitCount,
-    isHabitValidatedOn: isHabitValidatedOn
+    isHabitValidatedOn: isHabitValidatedOn,
+    drawForChest: drawForChest
   };
 })();
 
@@ -921,11 +1212,45 @@ body {
     return { ok: true, reason: 'valide', count: derive.habitCount(store.get(), id), chest: chest };
   }
 
+  function findChest(state, id) {
+    var cs = state.chests || [];
+    for (var i = 0; i < cs.length; i++) if (cs[i] && cs[i].id === id) return cs[i];
+    return null;
+  }
+
+  // Ouvre un coffre : c'est ICI que le tirage (dérivé, idempotent tant que non ouvert) est
+  // FIGÉ en une entrée d'inventory (GDD §4.3, TDD §4). Le coffre quitte la pile ; l'objet
+  // rejoint la collection avec ses métadonnées-souvenir (§5.2) : date + source reprise du
+  // coffre, photo/note à venir (Phase 7). Une seule écriture (chests + inventory).
+  // Idempotent/robuste : coffre introuvable (déjà ouvert, id bidon) → no-op propre.
+  // Retourne { ok, reason:'ouvert'|'introuvable', item, entry, chestType, sourceLabel }.
+  function openChest(chestId) {
+    var st = store.get();
+    var chest = findChest(st, chestId);
+    if (!chest) return { ok: false, reason: 'introuvable' };
+    var item = derive.drawForChest(st, chest);   // tiré au moment de l'ouverture
+    if (!item) return { ok: false, reason: 'introuvable' };
+    var entry = {
+      id: uid('inv'),
+      itemId: item.id,                            // seul l'id est stocké ; le reste se dérive (cards.resolve)
+      day: store.todayKey(),
+      sourceLabel: chest.sourceLabel,             // le souvenir de l'action réelle, repris du coffre
+      photoId: null,
+      note: null
+    };
+    store.set({
+      chests: st.chests.filter(function (c) { return !(c && c.id === chestId); }),
+      inventory: st.inventory.concat([entry])
+    });
+    return { ok: true, reason: 'ouvert', item: item, entry: entry, chestType: chest.type, sourceLabel: chest.sourceLabel };
+  }
+
   window.AscendActions = {
     createHabit: createHabit,
     editHabit: editHabit,
     deleteHabit: deleteHabit,
-    validateHabit: validateHabit
+    validateHabit: validateHabit,
+    openChest: openChest
   };
 })();
 
@@ -947,16 +1272,25 @@ body {
   var derive = window.AscendDerive;
   var domains = window.AscendDomains;
   var chestTypes = window.AscendChests;
-  var VER = '0.05';
+  var cards = window.AscendCards;
+  var VER = '0.06';
 
   /* ------------------------------------------------------------ état d'UI éphémère */
   var ui = {
     form: { title: '', domain: domains.list[0].id, freq: '' },
     editingId: null,
     edit: { title: '', domain: '', freq: '' },
-    confirmDeleteId: null
+    confirmDeleteId: null,
+    ceremony: null            // { phase:'suspense'|'reveal', chestType, item, sourceLabel } | null
   };
   function resetForm() { ui.form = { title: '', domain: domains.list[0].id, freq: '' }; }
+
+  var ceremonyTimer = null;
+  // Respecte le réglage système : reduce-motion → cérémonie INSTANTANÉE (pas de suspense).
+  function prefersReduced() {
+    try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+    catch (e) { return false; }
+  }
 
   /* ------------------------------------------------------------------- handlers */
   function onCreateSubmit(e) {
@@ -966,6 +1300,36 @@ body {
     paint();
   }
   function validate(id) { actions.validateHabit(id); } // store.set → subscribe → paint
+
+  /* --- ouverture de coffre : la cérémonie (Phase 1.3) --- */
+  // On MUTE d'abord (openChest fige le tirage en inventory) puis on JOUE la présentation :
+  // ainsi la récompense est en sûreté même si l'utilisateur ferme au milieu. Suspense doux
+  // (~1,5 s) → révélation ; skippable ; instantané en reduce-motion.
+  function openChest(chestId) {
+    var res = actions.openChest(chestId);
+    if (!res || !res.ok) { paint(); return; }       // introuvable (déjà ouvert) → no-op propre
+    if (ceremonyTimer) { clearTimeout(ceremonyTimer); ceremonyTimer = null; }
+    var reduce = prefersReduced();
+    ui.ceremony = {
+      phase: reduce ? 'reveal' : 'suspense',
+      chestType: res.chestType, item: res.item, sourceLabel: res.sourceLabel
+    };
+    paint();
+    if (!reduce) {
+      ceremonyTimer = setTimeout(function () {
+        if (ui.ceremony && ui.ceremony.phase === 'suspense') { ui.ceremony.phase = 'reveal'; paint(); }
+        ceremonyTimer = null;
+      }, 1500);
+    }
+  }
+  function skipCeremony() {
+    if (ceremonyTimer) { clearTimeout(ceremonyTimer); ceremonyTimer = null; }
+    if (ui.ceremony && ui.ceremony.phase === 'suspense') { ui.ceremony.phase = 'reveal'; paint(); }
+  }
+  function closeCeremony() {
+    if (ceremonyTimer) { clearTimeout(ceremonyTimer); ceremonyTimer = null; }
+    ui.ceremony = null; paint();
+  }
 
   function startEdit(hb) {
     ui.editingId = hb.id;
@@ -1104,6 +1468,9 @@ body {
           <div class="chest-title">${typeLabel}</div>
           <div class="chest-src">${c.sourceLabel}</div>
         </div>
+        <button class="btn gold chest-open" type="button"
+                aria-label=${'Ouvrir : ' + typeLabel}
+                onClick=${function () { openChest(c.id); }}>Ouvrir</button>
       </li>`;
   }
 
@@ -1120,6 +1487,77 @@ body {
         <p class="sec-note">Tes coffres s’accumulent tranquillement — chacun garde le
         souvenir de ce que tu as accompli. Rien ne presse.</p>
         <ul class="chest-list">${display.map(ChestCard)}</ul>
+      </section>`;
+  }
+
+  /* ------------------------------------------------ carte-récompense (placeholder) */
+  // Placeholder géométrique propre (les SVG Claude Design la remplaceront, jamais
+  // redessinés). En 1.3 seule la rareté « commun » est produite → seule elle est stylée.
+  function RewardCard(item) {
+    var d = domains.get(item.domain);
+    return html`
+      <div class="reward-card">
+        <span class="rc-emoji" aria-hidden="true">${d ? d.emoji : '✨'}</span>
+        <div class="rc-name">${item.name}</div>
+        <span class="rc-rarity rc-rarity--${item.rarity}">${cards.rarityLabel(item.rarity)}</span>
+      </div>`;
+  }
+
+  // La cérémonie (< 6 s, skippable, instantanée en reduce-motion) : suspense doux →
+  // révélation « Tu as obtenu … » → la carte rejoint la collection (bouton doré).
+  function Ceremony() {
+    var c = ui.ceremony;
+    if (!c) return null;
+    var suspense = c.phase === 'suspense';
+    return html`
+      <div class="ceremony" role="dialog" aria-modal="true" aria-label="Ouverture d’un coffre"
+           onClick=${suspense ? skipCeremony : null}>
+        ${suspense
+          ? html`
+            <div class="cer-stage">
+              <span class="cer-chest chest-vig chest-vig--${c.chestType}" aria-hidden="true"></span>
+              <p class="cer-hint">Ouverture…
+                <button class="cer-skip" type="button"
+                        onClick=${function (e) { if (e && e.stopPropagation) e.stopPropagation(); skipCeremony(); }}>Passer</button>
+              </p>
+            </div>`
+          : html`
+            <div class="cer-stage cer-reveal" role="status">
+              <p class="cer-kicker">Tu as obtenu</p>
+              ${RewardCard(c.item)}
+              <p class="cer-src">${c.sourceLabel}</p>
+              <button class="btn gold" type="button" onClick=${closeCeremony}>Rejoindre ma collection</button>
+            </div>`}
+      </div>`;
+  }
+
+  /* ------------------------------------------------ ta collection (Phase 1.3, amorce) */
+  // L'écran Collection complet = Phase 3.1 ; ici, une liste sémantique accessible qui
+  // prouve que la carte révélée porte bien ses métadonnées-souvenir (date + source).
+  // Absente tant qu'aucune carte n'a été obtenue (état vide serein). Récentes en haut.
+  function CollectionCard(e) {
+    var it = cards.resolve(e.itemId);
+    var d = domains.get(it.domain);
+    var meta = (d ? d.label : (it.domain || '—')) + ' · ' + cards.rarityLabel(it.rarity) + ' · ' + e.day;
+    return html`
+      <li class="coll-card">
+        <span class="cc-emoji" aria-hidden="true">${d ? d.emoji : '✨'}</span>
+        <div class="cc-main">
+          <div class="cc-name">${it.name}</div>
+          <div class="cc-meta">${meta}</div>
+          <div class="cc-src">${e.sourceLabel}</div>
+        </div>
+      </li>`;
+  }
+  function CollectionSection() {
+    var inv = (store.get().inventory || []).filter(function (e) { return e && e.id; });
+    if (!inv.length) return null;
+    var display = inv.slice().reverse();
+    return html`
+      <section class="section collection-section" aria-label="Ta collection">
+        <h2 class="sec-title">Ta collection</h2>
+        <p class="sec-note">Chaque carte garde la date et l’action réelle qui l’a méritée.</p>
+        <ul class="card-list">${display.map(CollectionCard)}</ul>
       </section>`;
   }
 
@@ -1144,7 +1582,9 @@ body {
         </section>
 
         ${ChestPile()}
-      </main>`;
+        ${CollectionSection()}
+      </main>
+      ${Ceremony()}`;
   }
 
   /* ------------------------------------------------------------------- montage */
