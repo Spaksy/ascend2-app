@@ -278,6 +278,44 @@ body {
 .empty .e-title { color: var(--ink); font-weight: 700; font-size: 17px; margin: 10px 0 6px; }
 .empty p { font-size: 14px; max-width: 36ch; margin: 0 auto; }
 
+/* ==================== COFFRES — À DÉCOUVRIR (Phase 1.2) ==================== */
+.chest-section { margin-top: 26px; }
+.sec-title { font-size: 18px; font-weight: 700; letter-spacing: .01em; }
+.sec-note { color: var(--ink-2); font-size: 13px; margin: 4px 0 14px; max-width: 46ch; }
+
+.chest-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.chest {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 14px 16px;
+  box-shadow: 0 6px 20px -12px var(--shadow);
+}
+.chest-main { min-width: 0; }
+.chest-title { font-weight: 700; font-size: 15px; }
+.chest-src { color: var(--ink-2); font-size: 13px; margin-top: 2px; word-break: break-word; }
+
+/* Vignette de coffre — placeholder géométrique propre (décoratif, aria-hidden ; les SVG
+   Claude Design la remplaceront, jamais redessinés — CLAUDE.md). Géométrie PARTAGÉE,
+   palette PAR TYPE : en 1.2 seul le bois est produit, donc seule sa palette est définie
+   (les autres arrivent avec leur phase — zéro palette orpheline). */
+.chest-vig {
+  position: relative; flex: 0 0 auto; width: 46px; height: 40px;
+  border-radius: 7px;
+  background: var(--chest-body); border: 1px solid var(--chest-edge);
+  box-shadow: inset 0 -7px 10px -6px rgba(0, 0, 0, .28);
+}
+.chest-vig::before {                       /* couvercle */
+  content: ""; position: absolute; left: -1px; right: -1px; top: -1px; height: 15px;
+  border-radius: 7px 7px 3px 3px;
+  background: var(--chest-lid); border: 1px solid var(--chest-edge);
+}
+.chest-vig::after {                         /* fermoir doré */
+  content: ""; position: absolute; left: 50%; top: 10px;
+  width: 8px; height: 13px; transform: translateX(-50%);
+  border-radius: 2px; background: var(--gold); border: 1px solid var(--on-gold);
+}
+.chest-vig--bois { --chest-body: #A9743F; --chest-lid: #BC854B; --chest-edge: #6F4A28; }
+
 /* ============================ REDUCED MOTION ============================ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -701,6 +739,36 @@ body {
   };
 })();
 
+/* ASCEND v2 — Types de coffre (données pures, Phase 1.2).
+   LE canal unique de récompense (GDD §4.1). Chaque TYPE est lié à sa SOURCE
+   (lisibilité immédiate) : bois=habitude, fer=quête, or=jalon, légendaire=objectif/niveau.
+   Phase 1.2 ne PRODUIT que le Coffre de bois (via la validation d'habitude) ; les autres
+   types sont déclarés pour la lisibilité du modèle et seront alimentés dans LEUR phase
+   (fer=1.4, or=1.5, légendaire=2.2/4.1). Raretés et POOLS d'objets = Phase 1.3 (tirage
+   à l'ouverture) — RIEN de tout cela ici. Aucune logique : la liste + deux accès. */
+(function () {
+  'use strict';
+
+  // Ordre = rareté croissante de la SOURCE (effort réel). `emoji` sert d'étiquette
+  // de secours accessible ; la VIGNETTE visible est un placeholder géométrique CSS
+  // (les SVG Claude Design la remplaceront, jamais redessinés — CLAUDE.md).
+  var TYPES = [
+    { id: 'bois',       label: 'Coffre de bois',    source: 'validation d’une habitude' },
+    { id: 'fer',        label: 'Coffre de fer',     source: 'quête minutée accomplie' },
+    { id: 'or',         label: 'Coffre d’or',       source: 'jalon franchi' },
+    { id: 'legendaire', label: 'Coffre légendaire', source: 'objectif accompli · niveau de bâtiment' }
+  ];
+
+  var byId = {};
+  for (var i = 0; i < TYPES.length; i++) byId[TYPES[i].id] = TYPES[i];
+
+  window.AscendChests = {
+    list: TYPES,
+    get: function (id) { return byId[id] || null; },
+    has: function (id) { return Object.prototype.hasOwnProperty.call(byId, id); }
+  };
+})();
+
 /* ASCEND v2 — Dérivé (Phase 1.1).
    INVARIANT structurel : tout ce qui est précieux et calculable se DÉRIVE ici
    depuis history/inventory — jamais stocké (un save édité à la main ne peut pas
@@ -744,11 +812,12 @@ body {
   };
 })();
 
-/* ASCEND v2 — Actions (mutations métier, Phase 1.1).
+/* ASCEND v2 — Actions (mutations métier, Phases 1.1 → 1.2).
    Seul endroit qui MUTE l'état (via AscendStore.set → persistance + notify).
-   Phase 1.1 : CRUD habitude + validation du jour. Les récompenses (coffres) se
-   grefferont sur validateHabit en Phase 1.2 — ici on ne produit QUE l'entrée
-   d'historique datée (la source de vérité dont tout le dérivé découle).
+   Phase 1.1 : CRUD habitude + validation du jour. Phase 1.2 : la validation d'habitude
+   PRODUIT en plus un Coffre de bois (le canal de récompense, GDD §4.1) — poussé dans
+   `chests` (non ouvert : l'ouverture = Phase 1.3). L'entrée d'historique datée reste la
+   source de vérité dont tout le dérivé découle.
 
    Rappel modèle (TDD §4) : le record d'habitude est {id,title,domain,freq,createdAt}.
    On N'Y STOCKE PAS `count` (pourtant listé §4) : le compteur est DÉRIVÉ de history
@@ -821,9 +890,14 @@ body {
   }
 
   // Valide une habitude pour AUJOURD'HUI. Garde d'or : jamais deux fois le même jour
-  // civil pour la même habitude (s'appuie sur todayKey()/history via AscendDerive).
-  // Alimente `history` (entrée datée, elan +1 = poids habitude, GDD §6.2).
-  // Retourne { ok, reason:'valide'|'deja'|'introuvable', count } — count = cumul dérivé.
+  // civil pour la même habitude (s'appuie sur todayKey()/history via AscendDerive) —
+  // donc jamais deux coffres pour la même habitude le même jour (le PUSH n'a lieu que
+  // dans la branche « valide », après la garde). Alimente `history` (entrée datée,
+  // elan +1 = poids habitude, GDD §6.2) ET `chests` (un Coffre de bois non ouvert,
+  // avec son libellé de source — GDD §4.1 / §5.2). Une seule écriture (les deux clés
+  // dans le même set → une save, une notification).
+  // Retourne { ok, reason:'valide'|'deja'|'introuvable', count, chest } — count = cumul
+  // dérivé ; chest = le coffre créé (ou undefined si non validé).
   function validateHabit(id) {
     var st = store.get();
     var habit = findHabit(st, id);
@@ -833,8 +907,18 @@ body {
       return { ok: false, reason: 'deja', count: derive.habitCount(st, id) };
     }
     var entry = { kind: 'habit', refId: id, domain: habit.domain, day: day, elan: 1 };
-    store.set({ history: st.history.concat([entry]) });
-    return { ok: true, reason: 'valide', count: derive.habitCount(store.get(), id) };
+    var chest = {
+      id: uid('c'),
+      type: 'bois',
+      domain: habit.domain,
+      sourceLabel: 'Obtenu en validant « ' + habit.title + ' »',
+      day: day
+    };
+    store.set({
+      history: st.history.concat([entry]),
+      chests: st.chests.concat([chest])
+    });
+    return { ok: true, reason: 'valide', count: derive.habitCount(store.get(), id), chest: chest };
   }
 
   window.AscendActions = {
@@ -862,7 +946,8 @@ body {
   var actions = window.AscendActions;
   var derive = window.AscendDerive;
   var domains = window.AscendDomains;
-  var VER = '0.04';
+  var chestTypes = window.AscendChests;
+  var VER = '0.05';
 
   /* ------------------------------------------------------------ état d'UI éphémère */
   var ui = {
@@ -1006,6 +1091,38 @@ body {
       </div>`;
   }
 
+  /* ------------------------------------------------------- coffres (Phase 1.2) */
+  // Une entrée de la pile : vignette placeholder + type + libellé de source.
+  // Non interactive : en 1.2 le coffre s'affiche seulement (l'ouverture = Phase 1.3).
+  function ChestCard(c) {
+    var t = chestTypes.get(c.type);
+    var typeLabel = t ? t.label : 'Coffre';
+    return html`
+      <li class="chest">
+        <span class="chest-vig chest-vig--${c.type}" aria-hidden="true"></span>
+        <div class="chest-main">
+          <div class="chest-title">${typeLabel}</div>
+          <div class="chest-src">${c.sourceLabel}</div>
+        </div>
+      </li>`;
+  }
+
+  // Pile SEREINE : pas de badge rouge, pas de compteur culpabilisant, pas d'« ouvre
+  // vite ». Absente tant qu'il n'y a aucun coffre (0 coffre = rien ne s'affiche → état
+  // vide serein). Les plus récents en haut ; c'est déjà une vue liste accessible.
+  function ChestPile() {
+    var list = (store.get().chests || []).filter(function (c) { return c && c.id; });
+    if (!list.length) return null;
+    var display = list.slice().reverse();
+    return html`
+      <section class="section chest-section" aria-label="Coffres à découvrir">
+        <h2 class="sec-title">À découvrir</h2>
+        <p class="sec-note">Tes coffres s’accumulent tranquillement — chacun garde le
+        souvenir de ce que tu as accompli. Rien ne presse.</p>
+        <ul class="chest-list">${display.map(ChestCard)}</ul>
+      </section>`;
+  }
+
   function App() {
     var habits = (store.get().habits || []).filter(function (hb) { return hb && hb.id; });
     return html`
@@ -1025,6 +1142,8 @@ body {
             ? html`<div class="habits">${habits.map(HabitCard)}</div>`
             : EmptyState()}
         </section>
+
+        ${ChestPile()}
       </main>`;
   }
 
