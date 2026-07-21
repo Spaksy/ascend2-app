@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#10131F">
 <title>ASCEND</title>
 <style>
-/* ASCEND v2 — Design system (Phase 0.3).
+/* ASCEND v2 — Design system (Phase 0.3, étendu Phase 1.1).
    Direction : AMBIANCE PILOTÉE PAR L'HEURE (choix de Leo).
    L'app s'ouvre sur l'île ; le ciel/fond évolue avec la journée —
    « jour doux » en journée, « nuit étoilée » après 21 h, « aube pastel »
@@ -21,8 +21,7 @@
    - --accent et --gold sont des REMPLISSAGES / bordures / icônes ; quand du texte
      s'y pose, il prend --on-accent / --on-gold (dark, tous ≥ 5:1) ;
    - plancher typographique 11 px ; cibles tactiles ≥ 44 px ;
-   - prefers-reduced-motion : coupe transitions d'ambiance et animations.
-   Ratios mesurés (build 0.03) : voir la légende de la page de spécimens. */
+   - prefers-reduced-motion : coupe transitions d'ambiance et animations. */
 
 /* --- Couleurs de ciel animables : typées <color> pour un fondu réel entre
        ambiances (interpolation de dégradé impossible sans @property). --- */
@@ -145,7 +144,7 @@ body {
 #splash.hidden { opacity: 0; pointer-events: none; }
 #app { min-height: 100%; }
 
-/* ============================ SPÉCIMENS ============================ */
+/* ==================== PREMIER ÉCRAN — HABITUDES (Phase 1.1) ==================== */
 .wrap {
   max-width: 560px; margin: 0 auto;
   padding: max(24px, env(safe-area-inset-top)) 20px calc(48px + env(safe-area-inset-bottom));
@@ -154,73 +153,32 @@ body {
   font-size: 11px; font-weight: 700; letter-spacing: .16em;
   text-transform: uppercase; color: var(--ink-2);
 }
-.spec-hero { padding: 12px 0 20px; }
-.spec-hero h1 {
-  font-size: clamp(30px, 8vw, 42px); font-weight: 700;
-  letter-spacing: .01em; line-height: 1.08; margin: 6px 0 8px;
-}
-.spec-hero .lede { color: var(--ink-2); font-size: 15px; max-width: 44ch; }
 
-/* Barre de sélection d'ambiance */
-.amb-bar {
-  display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2);
-  margin: 20px 0 8px;
+/* Hero */
+.app-hero { padding: 8px 0 20px; }
+.app-hero h1 {
+  font-size: clamp(26px, 7vw, 34px); font-weight: 700;
+  letter-spacing: .01em; line-height: 1.1; margin: 6px 0 8px;
 }
-.amb-bar .amb-label { font-size: 12px; color: var(--ink-2); margin-right: 4px; }
-.amb-chip {
-  min-height: 44px; padding: 0 16px;
-  display: inline-flex; align-items: center; gap: 6px;
-  border: 1px solid var(--line); border-radius: var(--r-pill);
+.lede { color: var(--ink-2); font-size: 15px; max-width: 46ch; }
+
+/* Libellés & champs génériques */
+.lab, .lab2 {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--ink-2); margin: 0 0 6px;
+}
+.lab2 { margin: 16px 0 8px; }
+.in {
+  width: 100%; min-height: 48px; padding: 0 14px;
   background: var(--surface); color: var(--ink);
-  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
-  transition: background-color var(--dur-ui) ease, border-color var(--dur-ui) ease,
-              transform var(--dur-ui) ease;
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  font: inherit; font-size: 15px;
+  transition: border-color var(--dur-ui) ease, box-shadow var(--dur-ui) ease;
 }
-.amb-chip:hover { border-color: var(--accent); }
-.amb-chip:active { transform: scale(.97); }
-.amb-chip[aria-pressed="true"] {
-  background: var(--accent-soft); border-color: var(--accent); color: var(--ink);
-}
-.amb-chip .dot {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft);
-}
+.in::placeholder { color: var(--ink-2); opacity: .75; }
+.in:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
-/* Section */
-.section { margin-top: 28px; }
-.section > .eyebrow { display: block; margin-bottom: 12px; }
-
-/* Cartes */
-.card {
-  background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--r-lg); padding: 18px;
-  box-shadow: 0 6px 20px -12px var(--shadow);
-}
-.card + .card { margin-top: 14px; }
-.card h3 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
-.card p { color: var(--ink-2); font-size: 14px; }
-.card-row { display: flex; align-items: center; gap: 14px; }
-.thumb {
-  width: 56px; height: 56px; flex: 0 0 auto; border-radius: var(--r-md);
-  display: grid; place-items: center; font-size: 26px;
-}
-/* Vignettes = remplissage SOLIDE (motif bouton, AA garanti dans les 3 ambiances) */
-.thumb.chest { background: var(--gold); color: var(--on-gold); }
-.thumb.card-mem { background: var(--accent); color: var(--on-accent); }
-
-/* Grille de domaines (tuiles) */
-.tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-.tile {
-  background: var(--surface-2); border: 1px solid var(--line);
-  border-radius: var(--r-md); padding: 14px; min-height: 76px;
-  display: flex; flex-direction: column; justify-content: space-between;
-}
-.tile .t-emoji { font-size: 22px; }
-.tile .t-name { font-weight: 600; font-size: 14px; }
-.tile .t-meta { color: var(--ink-2); font-size: 12px; }
-
-/* Boutons */
-.btns { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Boutons (système) */
 .btn {
   min-height: 48px; padding: 0 22px; border: 0; border-radius: var(--r-pill);
   background: var(--accent); color: var(--on-accent);
@@ -230,69 +188,95 @@ body {
 }
 .btn:active { transform: scale(.97); }
 .btn:hover { filter: brightness(1.04); }
-.btn.gold { background: var(--gold); color: var(--on-gold); }
-.btn.ghost {
-  background: transparent; color: var(--ink);
-  border: 1px solid var(--line);
-}
+.btn[disabled] { opacity: .45; cursor: default; filter: none; transform: none; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
 .btn.ghost:hover { border-color: var(--accent); filter: none; }
 
-/* Chips / étiquettes */
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip {
-  min-height: 30px; padding: 0 12px; border-radius: var(--r-pill);
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12px; font-weight: 600; line-height: 1;
-  background: var(--accent-soft); color: var(--ink);
-  border: 1px solid var(--line);
+/* Formulaire de création */
+.creator {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 18px;
+  box-shadow: 0 6px 20px -12px var(--shadow);
+  display: flex; flex-direction: column;
 }
-.chip.gold { background: var(--gold-soft); }
-.chip .k { font-size: 11px; color: var(--ink-2); font-weight: 600; }
+.creator .in + .in { margin-top: 12px; }
+.creator .btn { margin-top: 18px; }
 
-/* Champ de saisie */
-.field { display: block; margin-top: 4px; }
-.field .lab { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 6px; }
-.field input {
-  width: 100%; min-height: 48px; padding: 0 14px;
+/* Sélecteur de domaine (chips, single-select) */
+.dom-select { display: flex; flex-wrap: wrap; gap: 8px; }
+.dom-chip {
+  min-height: 44px; padding: 0 14px;
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 1px solid var(--line); border-radius: var(--r-pill);
   background: var(--surface); color: var(--ink);
-  border: 1px solid var(--line); border-radius: var(--r-md);
-  font: inherit; font-size: 15px;
-  transition: border-color var(--dur-ui) ease;
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background-color var(--dur-ui) ease, border-color var(--dur-ui) ease,
+              transform var(--dur-ui) ease;
 }
-.field input:focus { outline: none; border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft); }
-.field input::placeholder { color: var(--ink-2); opacity: .8; }
+.dom-chip:hover { border-color: var(--accent); }
+.dom-chip:active { transform: scale(.97); }
+.dom-chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.dom-chip .d-emoji { font-size: 15px; }
 
-/* Rangées de liste + état vide */
-.list { border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
-.row {
-  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
-  background: var(--surface);
+/* Liste des habitudes */
+.section { margin-top: 26px; }
+.habits { display: flex; flex-direction: column; gap: 12px; }
+.habit {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 16px;
+  box-shadow: 0 6px 20px -12px var(--shadow);
 }
-.row + .row { border-top: 1px solid var(--line); }
-.row .r-emoji { font-size: 20px; }
-.row .r-main { flex: 1; }
-.row .r-title { font-weight: 600; font-size: 15px; }
-.row .r-sub { color: var(--ink-2); font-size: 12px; }
-.row .r-count { color: var(--ink-2); font-size: 13px; font-variant-numeric: tabular-nums; }
+.habit-head { display: flex; align-items: flex-start; gap: 12px; }
+.habit .h-emoji { font-size: 22px; line-height: 1.25; flex: 0 0 auto; }
+.habit .h-main { flex: 1; min-width: 0; }
+.habit .h-title { font-weight: 700; font-size: 16px; word-break: break-word; }
+.habit .h-sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+.habit .h-count {
+  flex: 0 0 auto; font-weight: 700; font-size: 20px; color: var(--ink);
+  line-height: 1; font-variant-numeric: tabular-nums;
+  display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap;
+}
+.habit .h-count .u { font-size: 11px; font-weight: 600; color: var(--ink-2); }
+
+.habit-foot {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 14px; flex-wrap: wrap;
+}
+.habit .btn.val { flex: 1; min-width: 150px; }
+.habit .done {
+  flex: 1; min-width: 150px; min-height: 48px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: var(--r-pill); font-weight: 700; font-size: 15px;
+  background: var(--accent-soft); color: var(--ink); border: 1px solid var(--accent);
+}
+.h-actions { display: flex; gap: 2px; margin-left: auto; }
+.lnk {
+  min-height: 44px; padding: 0 10px; background: transparent; border: 0;
+  color: var(--ink-2); font: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; border-radius: var(--r-sm);
+}
+.lnk:hover { color: var(--ink); }
+
+/* Édition inline */
+.habit.editing .edit-actions { display: flex; gap: 10px; margin-top: 18px; }
+.habit.editing .edit-actions .btn { flex: 1; }
+
+/* Confirmation de suppression */
+.del-confirm {
+  margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.del-confirm .msg { flex: 1; min-width: 160px; font-size: 14px; color: var(--ink); }
+.del-confirm .btn { min-height: 44px; padding: 0 16px; font-size: 14px; flex: 0 0 auto; }
+
+/* État vide (île qui s'éveille) */
 .empty {
-  text-align: center; padding: 32px 20px; color: var(--ink-2);
-  border: 1px dashed var(--line); border-radius: var(--r-md);
+  text-align: center; padding: 40px 24px; color: var(--ink-2);
+  border: 1px dashed var(--line); border-radius: var(--r-lg);
 }
-.empty .e-emoji { font-size: 30px; }
-.empty .e-title { color: var(--ink); font-weight: 600; margin: 8px 0 4px; }
-
-/* Légende de contraste (preuve AA) */
-.legend {
-  margin-top: 32px; font-size: 12px; color: var(--ink-2);
-  border-top: 1px solid var(--line); padding-top: 16px; line-height: 1.7;
-}
-.legend code {
-  font-family: ui-monospace, Menlo, Consolas, monospace;
-  background: var(--accent-soft); color: var(--ink);
-  padding: 1px 6px; border-radius: 6px;
-}
-.legend .ok { color: var(--ink); font-weight: 600; }
+.empty .e-emoji { font-size: 34px; }
+.empty .e-title { color: var(--ink); font-weight: 700; font-size: 17px; margin: 10px 0 6px; }
+.empty p { font-size: 14px; max-width: 36ch; margin: 0 auto; }
 
 /* ============================ REDUCED MOTION ============================ */
 @media (prefers-reduced-motion: reduce) {
@@ -692,172 +676,365 @@ body {
   auto();
 })();
 
+/* ASCEND v2 — Domaines de vie (données pures).
+   MVP = 5 domaines actifs (PRD §3) ; libellés / emojis canoniques (GDD §6.2).
+   Les 5 autres domaines de lancement arrivent avec le contenu (post-validation).
+   Aucune logique ici : juste la liste + deux accès. */
+(function () {
+  'use strict';
+
+  var DOMAINS = [
+    { id: 'physique',      label: 'Physique',      emoji: '🏋️' }, // 🏋️
+    { id: 'mental',        label: 'Mental',        emoji: '🧠' },        // 🧠
+    { id: 'connaissances', label: 'Connaissances', emoji: '📖' },        // 📖
+    { id: 'creativite',    label: 'Créativité',    emoji: '🎨' },        // 🎨
+    { id: 'bienetre',      label: 'Bien-être',     emoji: '🧘' }         // 🧘
+  ];
+
+  var byId = {};
+  for (var i = 0; i < DOMAINS.length; i++) byId[DOMAINS[i].id] = DOMAINS[i];
+
+  window.AscendDomains = {
+    list: DOMAINS,
+    get: function (id) { return byId[id] || null; },
+    has: function (id) { return Object.prototype.hasOwnProperty.call(byId, id); }
+  };
+})();
+
+/* ASCEND v2 — Dérivé (Phase 1.1).
+   INVARIANT structurel : tout ce qui est précieux et calculable se DÉRIVE ici
+   depuis history/inventory — jamais stocké (un save édité à la main ne peut pas
+   s'inventer un compteur). Ce fichier grandira (élan, niveaux, pools, jalons) ;
+   la Phase 1.1 n'a besoin que du compteur d'habitude et du « déjà validée ce jour ? ».
+   Fonctions PURES : elles lisent l'état passé, ne mutent rien. */
+(function () {
+  'use strict';
+
+  function historyOf(state) {
+    return (state && Array.isArray(state.history)) ? state.history : [];
+  }
+
+  // Compteur cumulatif d'une habitude = nombre d'entrées d'historique la référençant.
+  // Jamais perdu, jamais stocké : c'est le remplaçant SAIN du streak (on compte ce qui
+  // a été FAIT, pas les jours consécutifs — GDD §3.1).
+  function habitCount(state, habitId) {
+    var hist = historyOf(state), n = 0;
+    for (var i = 0; i < hist.length; i++) {
+      var e = hist[i];
+      if (e && e.kind === 'habit' && e.refId === habitId) n++;
+    }
+    return n;
+  }
+
+  // Une habitude est-elle déjà validée pour le jour civil `day` (clé todayKey()) ?
+  // Garde d'or : on ne valide JAMAIS deux fois la même habitude le même jour civil.
+  function isHabitValidatedOn(state, habitId, day) {
+    if (!day) return false;
+    var hist = historyOf(state);
+    for (var i = 0; i < hist.length; i++) {
+      var e = hist[i];
+      if (e && e.kind === 'habit' && e.refId === habitId && e.day === day) return true;
+    }
+    return false;
+  }
+
+  window.AscendDerive = {
+    habitCount: habitCount,
+    isHabitValidatedOn: isHabitValidatedOn
+  };
+})();
+
+/* ASCEND v2 — Actions (mutations métier, Phase 1.1).
+   Seul endroit qui MUTE l'état (via AscendStore.set → persistance + notify).
+   Phase 1.1 : CRUD habitude + validation du jour. Les récompenses (coffres) se
+   grefferont sur validateHabit en Phase 1.2 — ici on ne produit QUE l'entrée
+   d'historique datée (la source de vérité dont tout le dérivé découle).
+
+   Rappel modèle (TDD §4) : le record d'habitude est {id,title,domain,freq,createdAt}.
+   On N'Y STOCKE PAS `count` (pourtant listé §4) : le compteur est DÉRIVÉ de history
+   (AscendDerive.habitCount) — invariant d'intégrité, prime sur la liste indicative. */
+(function () {
+  'use strict';
+
+  var store = window.AscendStore;
+  var derive = window.AscendDerive;
+  var domains = window.AscendDomains;
+
+  function uid(prefix) {
+    // Identifiant local unique (aucun réseau) : temps + aléa, base36 compact.
+    return (prefix || 'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+  function trim(s) { return (typeof s === 'string') ? s.replace(/^\s+|\s+$/g, '') : ''; }
+
+  function findHabit(state, id) {
+    var hs = state.habits || [];
+    for (var i = 0; i < hs.length; i++) if (hs[i] && hs[i].id === id) return hs[i];
+    return null;
+  }
+
+  // Crée une habitude. Retourne le record créé, ou null si invalide
+  // (titre vide après trim, ou domaine hors des 5 domaines actifs).
+  function createHabit(title, domain, freq) {
+    var t = trim(title);
+    if (!t || !domains.has(domain)) return null;
+    var st = store.get();
+    var habit = {
+      id: uid('h'),
+      title: t,
+      domain: domain,
+      freq: trim(freq),          // fréquence LIBRE (peut rester vide — GDD §3.1)
+      createdAt: store.todayKey()
+    };
+    store.set({ habits: st.habits.concat([habit]) });
+    return habit;
+  }
+
+  // Édite titre / domaine / fréquence d'une habitude. Ne touche NI id NI createdAt.
+  // Un patch invalide (titre vidé, domaine inconnu) est simplement ignoré champ par champ.
+  // Retourne true si l'habitude existait, false sinon.
+  function editHabit(id, patch) {
+    var st = store.get();
+    if (!findHabit(st, id)) return false;
+    patch = patch || {};
+    var habits = st.habits.map(function (hb) {
+      if (!hb || hb.id !== id) return hb;
+      var next = { id: hb.id, title: hb.title, domain: hb.domain, freq: hb.freq, createdAt: hb.createdAt };
+      if (typeof patch.title === 'string') { var tt = trim(patch.title); if (tt) next.title = tt; }
+      if (domains.has(patch.domain)) next.domain = patch.domain;
+      if (typeof patch.freq === 'string') next.freq = trim(patch.freq);
+      return next;
+    });
+    store.set({ habits: habits });
+    return true;
+  }
+
+  // Supprime le record d'habitude. On NE touche JAMAIS `history` : les entrées datées
+  // restent (registre honnête de l'effort réel — invariant « rien de précieux dérivable
+  // n'est détruit »). Une habitude supprimée n'est simplement plus affichée ni validable.
+  // Retourne true si quelque chose a été retiré.
+  function deleteHabit(id) {
+    var st = store.get();
+    var habits = st.habits.filter(function (hb) { return !(hb && hb.id === id); });
+    if (habits.length === st.habits.length) return false;
+    store.set({ habits: habits });
+    return true;
+  }
+
+  // Valide une habitude pour AUJOURD'HUI. Garde d'or : jamais deux fois le même jour
+  // civil pour la même habitude (s'appuie sur todayKey()/history via AscendDerive).
+  // Alimente `history` (entrée datée, elan +1 = poids habitude, GDD §6.2).
+  // Retourne { ok, reason:'valide'|'deja'|'introuvable', count } — count = cumul dérivé.
+  function validateHabit(id) {
+    var st = store.get();
+    var habit = findHabit(st, id);
+    if (!habit) return { ok: false, reason: 'introuvable', count: 0 };
+    var day = store.todayKey();
+    if (derive.isHabitValidatedOn(st, id, day)) {
+      return { ok: false, reason: 'deja', count: derive.habitCount(st, id) };
+    }
+    var entry = { kind: 'habit', refId: id, domain: habit.domain, day: day, elan: 1 };
+    store.set({ history: st.history.concat([entry]) });
+    return { ok: true, reason: 'valide', count: derive.habitCount(store.get(), id) };
+  }
+
+  window.AscendActions = {
+    createHabit: createHabit,
+    editHabit: editHabit,
+    deleteHabit: deleteHabit,
+    validateHabit: validateHabit
+  };
+})();
+
 /* ASCEND v2 — Racine de l'app.
-   Phase 0.3 : PAGE DE SPÉCIMENS du design system (remplace le diagnostic 0.2).
-   Montre les tokens sur des éléments réels (titres, cartes, boutons, chips,
-   champ, liste, état vide) et laisse Leo BASCULER l'ambiance (Auto / Jour /
-   Crépuscule / Nuit) pour valider les 3 directions et le fondu du ciel.
-   Le store (state.js) reste intact — il boote seul, __test survit. 0.03 : build. */
+   Phase 1.1 : PREMIER VRAI ÉCRAN — Habitudes (créer, lister, éditer, supprimer,
+   valider le jour). Remplace la page de spécimens 0.3 (les styles restent la banque
+   du design system). L'ambiance suit désormais l'heure automatiquement (ambiance.js).
+
+   État d'UI éphémère (formulaires, édition, confirmation) = variables de module,
+   JAMAIS persistées (le store ne voit que les mutations métier via AscendActions).
+   Re-rendu : abonnement au store (mutations) + paint() explicite (frappe clavier). */
 (function () {
   'use strict';
   var h = window.preact.h;
   var render = window.preact.render;
   var html = window.htm.bind(h);
-  var amb = window.AscendAmbiance;
-  var VER = '0.03';
+  var store = window.AscendStore;
+  var actions = window.AscendActions;
+  var derive = window.AscendDerive;
+  var domains = window.AscendDomains;
+  var VER = '0.04';
 
-  var AMBIANCES = [
-    { key: 'auto', label: 'Auto' },
-    { key: 'jour', label: 'Jour doux' },
-    { key: 'crepuscule', label: 'Aube' },
-    { key: 'nuit', label: 'Nuit' }
-  ];
+  /* ------------------------------------------------------------ état d'UI éphémère */
+  var ui = {
+    form: { title: '', domain: domains.list[0].id, freq: '' },
+    editingId: null,
+    edit: { title: '', domain: '', freq: '' },
+    confirmDeleteId: null
+  };
+  function resetForm() { ui.form = { title: '', domain: domains.list[0].id, freq: '' }; }
 
-  function selectAmbiance(key) {
-    if (key === 'auto') amb.auto(); else amb.apply(key);
+  /* ------------------------------------------------------------------- handlers */
+  function onCreateSubmit(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var created = actions.createHabit(ui.form.title, ui.form.domain, ui.form.freq);
+    if (created) resetForm();
     paint();
   }
+  function validate(id) { actions.validateHabit(id); } // store.set → subscribe → paint
 
-  function isPressed(key) {
-    if (key === 'auto') return amb.mode() === 'auto';
-    return amb.mode() === 'manual' && amb.current() === key;
+  function startEdit(hb) {
+    ui.editingId = hb.id;
+    ui.edit = { title: hb.title, domain: hb.domain, freq: hb.freq || '' };
+    ui.confirmDeleteId = null;
+    paint();
+  }
+  function saveEdit(id) {
+    if (actions.editHabit(id, { title: ui.edit.title, domain: ui.edit.domain, freq: ui.edit.freq })) {
+      ui.editingId = null;
+    }
+    paint();
+  }
+  function cancelEdit() { ui.editingId = null; paint(); }
+
+  function askDelete(id) { ui.confirmDeleteId = id; paint(); }
+  function cancelDelete() { ui.confirmDeleteId = null; paint(); }
+  function confirmDelete(id) { ui.confirmDeleteId = null; actions.deleteHabit(id); paint(); }
+
+  /* --------------------------------------------------------------- composants */
+  function DomainChips(selectedId, onPick) {
+    return html`
+      <div class="dom-select" role="group" aria-label="Domaine">
+        ${domains.list.map(function (d) {
+          var on = d.id === selectedId;
+          return html`
+            <button type="button" class="dom-chip" aria-pressed=${on ? 'true' : 'false'}
+                    onClick=${function () { onPick(d.id); }}>
+              <span class="d-emoji" aria-hidden="true">${d.emoji}</span>${d.label}
+            </button>`;
+        })}
+      </div>`;
   }
 
-  function ambChip(a) {
+  function Creator() {
     return html`
-      <button class="amb-chip" type="button"
-              aria-pressed=${isPressed(a.key) ? 'true' : 'false'}
-              onClick=${function () { selectAmbiance(a.key); }}>
-        ${a.key !== 'auto' ? html`<span class="dot" data-for=${a.key}></span>` : null}
-        ${a.label}
-      </button>`;
+      <form class="creator" onSubmit=${onCreateSubmit}>
+        <label class="lab" for="new-habit">Nouvelle habitude</label>
+        <input id="new-habit" class="in" type="text" value=${ui.form.title}
+               placeholder="Ex. Lire 10 pages" aria-label="Titre de la nouvelle habitude"
+               autocomplete="off"
+               onInput=${function (e) { ui.form.title = e.target.value; paint(); }} />
+        <span class="lab2">Domaine</span>
+        ${DomainChips(ui.form.domain, function (id) { ui.form.domain = id; paint(); })}
+        <input class="in" type="text" value=${ui.form.freq}
+               placeholder="À quel rythme ? Ex. chaque jour, 3×/semaine, quand je peux"
+               aria-label="Fréquence, libre et facultative" autocomplete="off"
+               onInput=${function (e) { ui.form.freq = e.target.value; paint(); }} />
+        <button class="btn" type="submit" disabled=${!ui.form.title.trim()}>Ajouter l’habitude</button>
+      </form>`;
+  }
+
+  function EditCard(hb) {
+    return html`
+      <div class="habit editing">
+        <label class="lab">Titre</label>
+        <input class="in" type="text" value=${ui.edit.title} aria-label="Titre" autocomplete="off"
+               onInput=${function (e) { ui.edit.title = e.target.value; paint(); }} />
+        <span class="lab2">Domaine</span>
+        ${DomainChips(ui.edit.domain, function (id) { ui.edit.domain = id; paint(); })}
+        <label class="lab" style="margin-top:14px">Fréquence</label>
+        <input class="in" type="text" value=${ui.edit.freq} placeholder="Ex. chaque jour"
+               aria-label="Fréquence, libre et facultative" autocomplete="off"
+               onInput=${function (e) { ui.edit.freq = e.target.value; paint(); }} />
+        <div class="edit-actions">
+          <button class="btn" type="button" disabled=${!ui.edit.title.trim()}
+                  onClick=${function () { saveEdit(hb.id); }}>Enregistrer</button>
+          <button class="btn ghost" type="button" onClick=${cancelEdit}>Annuler</button>
+        </div>
+      </div>`;
+  }
+
+  function HabitCard(hb) {
+    if (ui.editingId === hb.id) return EditCard(hb);
+    var st = store.get();
+    var count = derive.habitCount(st, hb.id);
+    var done = derive.isHabitValidatedOn(st, hb.id, store.todayKey());
+    var d = domains.get(hb.domain);
+    var sub = (d ? d.label : hb.domain) + (hb.freq ? ' · ' + hb.freq : '');
+    return html`
+      <div class="habit">
+        <div class="habit-head">
+          <span class="h-emoji" aria-hidden="true">${d ? d.emoji : '•'}</span>
+          <div class="h-main">
+            <div class="h-title">${hb.title}</div>
+            <div class="h-sub">${sub}</div>
+          </div>
+          ${count > 0
+            ? html`<span class="h-count" aria-label=${'validée ' + count + ' fois'}>
+                     ${count}<span class="u">fois</span></span>`
+            : null}
+        </div>
+        <div class="habit-foot">
+          ${done
+            ? html`<span class="done" role="status">Fait ✓</span>`
+            : html`<button class="btn val" type="button"
+                     onClick=${function () { validate(hb.id); }}>Je l’ai fait</button>`}
+          <div class="h-actions">
+            <button class="lnk" type="button" onClick=${function () { startEdit(hb); }}
+                    aria-label=${'Modifier ' + hb.title}>Modifier</button>
+            <button class="lnk" type="button" onClick=${function () { askDelete(hb.id); }}
+                    aria-label=${'Supprimer ' + hb.title}>Supprimer</button>
+          </div>
+        </div>
+        ${ui.confirmDeleteId === hb.id
+          ? html`
+            <div class="del-confirm" role="group" aria-label="Confirmer la suppression">
+              <span class="msg">Supprimer « ${hb.title} » ?</span>
+              <button class="btn" type="button"
+                      onClick=${function () { confirmDelete(hb.id); }}>Oui, supprimer</button>
+              <button class="btn ghost" type="button" onClick=${cancelDelete}>Annuler</button>
+            </div>`
+          : null}
+      </div>`;
+  }
+
+  function EmptyState() {
+    return html`
+      <div class="empty">
+        <div class="e-emoji" aria-hidden="true">🌱</div>
+        <div class="e-title">Ton île attend sa première graine</div>
+        <p>Crée une habitude que tu veux faire souvent — elle réveillera ton île.</p>
+      </div>`;
   }
 
   function App() {
-    var current = amb.current();
-    var modeLabel = amb.mode() === 'auto' ? 'auto (' + current + ')' : current + ' (manuel)';
+    var habits = (store.get().habits || []).filter(function (hb) { return hb && hb.id; });
     return html`
       <div class="sky" aria-hidden="true"></div>
       <main class="wrap">
-        <header class="spec-hero">
-          <div class="eyebrow">Design system · v${VER}</div>
-          <h1>ASCEND</h1>
-          <p class="lede">Ton île, ta collection — un monde qui n'avance que quand
-          toi tu avances dans la vraie vie. Le ciel suit ton heure.</p>
+        <header class="app-hero">
+          <div class="eyebrow">ASCEND · v${VER}</div>
+          <h1>Tes habitudes</h1>
+          <p class="lede">Chaque fois que tu la fais pour de vrai, valide-la ici.
+          Rien ne se perd, rien ne se punit — ton île avance avec toi.</p>
         </header>
 
-        <div class="amb-bar" role="group" aria-label="Ambiance">
-          <span class="amb-label">Ambiance · ${modeLabel}</span>
-          ${AMBIANCES.map(ambChip)}
-        </div>
+        ${Creator()}
 
-        <section class="section" aria-label="Boutons">
-          <span class="eyebrow">Actions</span>
-          <div class="btns">
-            <button class="btn" type="button">Valider le jour</button>
-            <button class="btn gold" type="button">Ouvrir le coffre</button>
-            <button class="btn ghost" type="button">Plus tard</button>
-          </div>
+        <section class="section" aria-label="Tes habitudes">
+          ${habits.length
+            ? html`<div class="habits">${habits.map(HabitCard)}</div>`
+            : EmptyState()}
         </section>
-
-        <section class="section" aria-label="Cartes">
-          <span class="eyebrow">Cartes</span>
-          <div class="card">
-            <div class="card-row">
-              <div class="thumb chest">🎁</div>
-              <div>
-                <h3>Coffre de bois</h3>
-                <p>Obtenu en validant « Lire 10 pages » · aujourd'hui</p>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-row">
-              <div class="thumb card-mem">🃏</div>
-              <div>
-                <h3>Carte-souvenir</h3>
-                <p>Un fragment de ton île, gagné par un vrai effort.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="section" aria-label="Domaines">
-          <span class="eyebrow">Domaines</span>
-          <div class="tiles">
-            <div class="tile"><span class="t-emoji">📚</span>
-              <div><div class="t-name">Savoir</div><div class="t-meta">niveau 2 · 14 jours</div></div></div>
-            <div class="tile"><span class="t-emoji">💪</span>
-              <div><div class="t-name">Corps</div><div class="t-meta">niveau 1 · 6 jours</div></div></div>
-            <div class="tile"><span class="t-emoji">🎨</span>
-              <div><div class="t-name">Création</div><div class="t-meta">niveau 3 · 22 jours</div></div></div>
-            <div class="tile"><span class="t-emoji">🧘</span>
-              <div><div class="t-name">Sérénité</div><div class="t-meta">niveau 1 · 3 jours</div></div></div>
-          </div>
-        </section>
-
-        <section class="section" aria-label="Étiquettes">
-          <span class="eyebrow">Chips & raretés</span>
-          <div class="chips">
-            <span class="chip">📚 Savoir</span>
-            <span class="chip">💪 Corps</span>
-            <span class="chip gold">★ Rare</span>
-            <span class="chip gold">✦ Légendaire</span>
-            <span class="chip"><span class="k">×</span> 12</span>
-          </div>
-        </section>
-
-        <section class="section" aria-label="Champ de saisie">
-          <span class="eyebrow">Saisie</span>
-          <label class="field">
-            <span class="lab">Nouvelle habitude</span>
-            <input type="text" placeholder="Ex. Lire 10 pages" />
-          </label>
-        </section>
-
-        <section class="section" aria-label="Liste">
-          <span class="eyebrow">Liste</span>
-          <div class="list">
-            <div class="row">
-              <span class="r-emoji">📚</span>
-              <div class="r-main"><div class="r-title">Lire 10 pages</div>
-                <div class="r-sub">Savoir · chaque jour</div></div>
-              <span class="r-count">12×</span>
-            </div>
-            <div class="row">
-              <span class="r-emoji">🏃</span>
-              <div class="r-main"><div class="r-title">Courir 20 min</div>
-                <div class="r-sub">Corps · 3×/semaine</div></div>
-              <span class="r-count">6×</span>
-            </div>
-          </div>
-        </section>
-
-        <section class="section" aria-label="État vide">
-          <span class="eyebrow">État vide</span>
-          <div class="empty">
-            <div class="e-emoji">🌱</div>
-            <div class="e-title">Ton île est encore endormie</div>
-            <div>Crée ta première habitude pour la réveiller.</div>
-          </div>
-        </section>
-
-        <p class="legend">
-          Contrastes mesurés AA contre le fond rendu (build ${VER}) :
-          <span class="ok">texte</span> = <code>--ink</code> (≥ 12:1) /
-          <code>--ink-2</code> (≥ 5:1) ; <code>--accent</code> & <code>--gold</code>
-          en remplissage, texte posé dessus via <code>--on-accent</code> /
-          <code>--on-gold</code> (≥ 5:1). Plancher 11 px · cibles ≥ 44 px ·
-          reduce-motion respecté · hors-ligne (0 requête externe).
-        </p>
-      </main>
-    `;
+      </main>`;
   }
 
+  /* ------------------------------------------------------------------- montage */
   var mount = document.getElementById('app');
   function paint() { render(h(App), mount); }
+  store.subscribe(function () { paint(); });
   paint();
-  document.getElementById('splash').classList.add('hidden');
+  var splash = document.getElementById('splash');
+  if (splash) splash.classList.add('hidden');
 })();
 
 </script>
