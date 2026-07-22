@@ -241,6 +241,24 @@ body {
 }
 .habit .h-count .u { font-size: 11px; font-weight: 600; color: var(--ink-2); }
 
+/* Indice « prochain jalon » (Phase 1.5) — INVITATION, jamais menace : discret, doré, non
+   punitif. Apparaît une fois l'habitude entamée (≥ 1 validation) et disparaît au-delà du 100ᵉ. */
+.habit .h-goal {
+  display: flex; align-items: center; gap: 7px;
+  margin-top: 10px; font-size: 12px; color: var(--ink-2);
+}
+.habit .h-goal .hg-ico { font-size: 13px; line-height: 1; }
+.habit .h-goal strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* Bandeau doux après un JALON franchi (Phase 1.5) — même grammaire que « quête accomplie ». */
+.milestone-done {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--gold-soft); border: 1px solid var(--gold);
+  border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 14px;
+  font-size: 14px; color: var(--ink);
+}
+.milestone-done .lnk { margin-left: auto; }
+
 .habit-foot {
   display: flex; align-items: center; gap: 10px;
   margin-top: 14px; flex-wrap: wrap;
@@ -318,12 +336,14 @@ body {
   width: 8px; height: 13px; transform: translateX(-50%);
   border-radius: 2px; background: var(--gold); border: 1px solid var(--on-gold);
 }
-/* Palette PAR MATÉRIAU = niveau de rareté (arbitrage Leo, Phase 1.4). En 1.4 les quêtes
-   produisent bois·fer·or → seuls ces trois ont une palette (cristal/obsidienne/aube arrivent
-   avec leur phase — zéro palette orpheline). */
-.chest-vig--bois { --chest-body: #A9743F; --chest-lid: #BC854B; --chest-edge: #6F4A28; }
-.chest-vig--fer  { --chest-body: #8B939E; --chest-lid: #A7AFBA; --chest-edge: #565C66; }
-.chest-vig--or   { --chest-body: #C79A3C; --chest-lid: #E0BB60; --chest-edge: #8A6A22; }
+/* Palette PAR MATÉRIAU = niveau de rareté (arbitrage Leo, Phase 1.4). Phase 1.5 : les jalons
+   d'habitude produisent aussi CRISTAL (légendaire, 50ᵉ) et AUBE (unique, 100ᵉ) → ils gagnent
+   leur palette ici (obsidienne reste déclarée sans source → sans palette : zéro palette orpheline). */
+.chest-vig--bois    { --chest-body: #A9743F; --chest-lid: #BC854B; --chest-edge: #6F4A28; }
+.chest-vig--fer     { --chest-body: #8B939E; --chest-lid: #A7AFBA; --chest-edge: #565C66; }
+.chest-vig--or      { --chest-body: #C79A3C; --chest-lid: #E0BB60; --chest-edge: #8A6A22; }
+.chest-vig--cristal { --chest-body: #7E6FD6; --chest-lid: #9E90EC; --chest-edge: #52439E; } /* violet gemme */
+.chest-vig--aube    { --chest-body: #E58AA6; --chest-lid: #F4B7C8; --chest-edge: #BC5C79; } /* rose d'aube */
 
 /* ==================== TA COLLECTION (Phase 1.3, amorce) ==================== */
 /* Amorce accessible de l'écran Collection (complet = Phase 3.1). Même grammaire que la
@@ -389,11 +409,15 @@ body {
   font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
   padding: 3px 12px; border-radius: var(--r-pill);
 }
-/* En 1.4 les quêtes produisent commun·rare·épique → ces trois sont stylées (légendaire+
-   arrivent avec leur coffre — zéro palette orpheline). Texte sur --surface (AA respecté). */
-.rc-rarity--commun { background: var(--accent-soft); color: var(--ink);        border: 1px solid var(--accent); }
-.rc-rarity--rare   { background: var(--accent);      color: var(--on-accent);  border: 1px solid var(--accent); }
-.rc-rarity--epique { background: var(--gold);        color: var(--on-gold);    border: 1px solid var(--gold); }
+/* Chips : commun·rare·épique (quêtes 1.4) + légendaire·unique (cartes-jalons 1.5, cristal/aube).
+   Les trois premiers suivent les tokens d'ambiance ; les deux jalons portent des teintes gemme
+   FIXES (texte blanc AA sur leur propre fond → lisibles quelle que soit l'ambiance). Obsidienne/
+   exceptionnel reste sans source → sans chip (zéro palette orpheline). */
+.rc-rarity--commun     { background: var(--accent-soft); color: var(--ink);       border: 1px solid var(--accent); }
+.rc-rarity--rare       { background: var(--accent);      color: var(--on-accent); border: 1px solid var(--accent); }
+.rc-rarity--epique     { background: var(--gold);        color: var(--on-gold);   border: 1px solid var(--gold); }
+.rc-rarity--legendaire { background: #6D28D9;            color: #FFFFFF;          border: 1px solid #6D28D9; } /* violet 6.4:1 */
+.rc-rarity--unique     { background: #BE185D;            color: #FFFFFF;          border: 1px solid #BE185D; } /* rose 6.1:1 */
 
 @keyframes cer-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes cer-pop { from { transform: scale(.86); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -1083,6 +1107,42 @@ body {
     'Fleur des champs', 'Rocher moussu', 'Éclat de lumière'
   ];
 
+  /* ------------------------------------------------ jalons d'habitude (Phase 1.5) */
+  // Cartes-jalons UNIQUES et DÉTERMINISTES (GDD §5.3) : franchir un seuil de validations
+  // GARANTIT sa carte-jalon — le hasard ne porte JAMAIS sur le mémorable. Chaque seuil →
+  // un matériau de coffre (montée douce, arbitrage Leo : 10/25 or·épique · 50 cristal·
+  // légendaire · 100 aube·unique) + une vertu. La carte PORTE la rareté du coffre (le pont
+  // chests.rarityOf). Un coffre de jalon force sa carte via `chest.cardId` (derive.drawForChest).
+  //
+  // Id d'une carte-jalon = `mile_<domaine>_<habitId>_<seuil>` → UNIQUE par (habitude × seuil)
+  // donc jamais de doublon dans l'inventaire. resolve() n'a besoin que du DOMAINE (préfixe,
+  // sans underscore) et du SEUIL (suffixe numérique) : le nom/rareté se DÉRIVENT du seuil,
+  // pur et stable même si l'habitude est supprimée. Le souvenir précis (habitude, date) vit
+  // dans le sourceLabel du coffre, repris à l'ouverture (comme toute carte, §5.2).
+  var MILESTONES = [
+    { threshold: 10,  tier: 'or',      virtue: 'Constance' },
+    { threshold: 25,  tier: 'or',      virtue: 'Persévérance' },
+    { threshold: 50,  tier: 'cristal', virtue: 'Maîtrise' },
+    { threshold: 100, tier: 'aube',    virtue: 'Légende' }
+  ];
+  var milestoneByThreshold = {};
+  for (var mi = 0; mi < MILESTONES.length; mi++) milestoneByThreshold[MILESTONES[mi].threshold] = MILESTONES[mi];
+
+  // Rareté d'un matériau de coffre (pont vers chests.js, chargé avant ce fichier). Repli
+  // 'epique' si le module manquait (jamais en pratique) → aucun crash au rendu.
+  function tierRarity(tier) {
+    return (window.AscendChests && window.AscendChests.rarityOf) ? window.AscendChests.rarityOf(tier) : 'epique';
+  }
+  // Le jalon franchi À CE compteur (exactement un seuil ou aucun) : appelé après validation,
+  // count === seuil ⇒ jalon atteint. Retourne le descripteur { threshold, tier, virtue } ou null.
+  function milestoneAt(count) {
+    return milestoneByThreshold[count] || null;
+  }
+  // Fabrique l'id de la carte-jalon d'une (habitude, seuil) — source unique de la convention d'id.
+  function milestoneCardId(domain, habitId, threshold) {
+    return 'mile_' + domain + '_' + habitId + '_' + threshold;
+  }
+
   // Hash de chaîne déterministe (FNV-1a 32 bits) — sert au tirage (derive.js) ET au choix
   // de saveur générative. Pur, sans réseau, stable entre sessions.
   function hash(s) {
@@ -1111,6 +1171,20 @@ body {
       var flavor = GEN_FLAVORS[hash(itemId) % GEN_FLAVORS.length];
       return { id: itemId, domain: domain, name: flavor, rarity: 'commun', generative: true };
     }
+    if (itemId.indexOf('mile_') === 0) {        // carte-jalon : mile_<domaine>_<habitId...>_<seuil>
+      var mp = itemId.split('_');
+      var mdomain = mp[1] || '';
+      var th = parseInt(mp[mp.length - 1], 10); // le seuil = suffixe numérique (habitId au milieu ignoré)
+      var ms = milestoneByThreshold[th];
+      if (ms) {
+        return {
+          id: itemId, domain: mdomain,
+          name: th + 'ᵉ — ' + ms.virtue,         // ex. « 10ᵉ — Constance » (déterministe)
+          rarity: tierRarity(ms.tier), milestone: true, threshold: th
+        };
+      }
+      return unknown(itemId);
+    }
     return unknown(itemId);
   }
 
@@ -1135,6 +1209,10 @@ body {
     get: resolve,
     resolve: resolve,
     makeGenerative: makeGenerative,
+    // Jalons d'habitude (Phase 1.5) : catalogue + résolution déterministe des cartes-jalons.
+    milestones: MILESTONES,
+    milestoneAt: milestoneAt,
+    milestoneCardId: milestoneCardId,
     hash: hash
   };
 })();
@@ -1254,6 +1332,18 @@ body {
     return n;
   }
 
+  // Prochain jalon d'habitude à partir d'un compteur cumulatif (Phase 1.5). DÉRIVÉ, jamais
+  // stocké, jamais punitif : c'est une INVITATION (« Plus que N avant le jalon des S »), pas
+  // une menace. Retourne { threshold, remaining } pour le plus petit seuil encore devant, ou
+  // null si tous les jalons déclarés sont franchis (au-delà de 100 : aucune pression).
+  function nextMilestone(count) {
+    var ms = cards.milestones;
+    for (var i = 0; i < ms.length; i++) {
+      if (ms[i].threshold > count) return { threshold: ms[i].threshold, remaining: ms[i].threshold - count };
+    }
+    return null;
+  }
+
   // Une habitude est-elle déjà validée pour le jour civil `day` (clé todayKey()) ?
   // Garde d'or : on ne valide JAMAIS deux fois la même habitude le même jour civil.
   function isHabitValidatedOn(state, habitId, day) {
@@ -1304,7 +1394,11 @@ body {
   // fonction (généralisée), pas de nouveau canal. Sans remise dans le vivier de cette rareté ;
   // vivier épuisé (pools v0 : 1 rare / 1 épique par domaine) → déco générative (GDD §4.3).
   function drawForChest(state, chest) {
-    if (!chest || !chest.domain) return null;
+    if (!chest) return null;
+    // Coffre de JALON (Phase 1.5) : il porte une carte-jalon GARANTIE (cardId déterministe).
+    // Le hasard ne porte JAMAIS sur le mémorable (GDD §5.3) → on force cette carte, pas de tirage.
+    if (chest.cardId) return cards.resolve(chest.cardId);
+    if (!chest.domain) return null;
     var rarity = chestTypes.rarityOf(chest.type);
     var seed = cards.hash((state && state.createdAt ? state.createdAt : '') + '|' + chest.id);
     var owned = ownedItemIds(state);
@@ -1389,6 +1483,7 @@ body {
 
   window.AscendDerive = {
     habitCount: habitCount,
+    nextMilestone: nextMilestone,
     isHabitValidatedOn: isHabitValidatedOn,
     drawForChest: drawForChest,
     isValidActiveQuest: isValidActiveQuest,
@@ -1415,6 +1510,7 @@ body {
   var store = window.AscendStore;
   var derive = window.AscendDerive;
   var domains = window.AscendDomains;
+  var cards = window.AscendCards;
 
   function uid(prefix) {
     // Identifiant local unique (aucun réseau) : temps + aléa, base36 compact.
@@ -1501,11 +1597,34 @@ body {
       sourceLabel: 'Obtenu en validant « ' + habit.title + ' »',
       day: day
     };
+    var newChests = [chest];
+
+    // Jalon d'habitude (Phase 1.5) — détecté ICI, au moment de la validation, APRÈS la garde
+    // d'or (donc jamais deux fois le même seuil). Le cumul est DÉRIVÉ de history (jamais stocké) :
+    // cette entrée ajoute exactement 1 → newCount = compteur d'avant + 1. Franchir un seuil pousse
+    // EN PLUS du Coffre de bois un coffre de jalon (montée douce : or/or/cristal/aube), qui PORTE
+    // sa carte-jalon garantie (cardId déterministe — le hasard ne touche jamais le mémorable, §5.3).
+    var newCount = derive.habitCount(st, id) + 1;
+    var ms = cards.milestoneAt(newCount);
+    var milestone = null;
+    if (ms) {
+      var mileId = cards.milestoneCardId(habit.domain, id, ms.threshold);
+      newChests.push({
+        id: uid('c'),
+        type: ms.tier,
+        domain: habit.domain,
+        sourceLabel: ms.threshold + 'ᵉ fois « ' + habit.title + ' » — un cap franchi',
+        day: day,
+        cardId: mileId                        // carte-jalon GARANTIE (forcée par derive.drawForChest)
+      });
+      milestone = { threshold: ms.threshold, tier: ms.tier, virtue: ms.virtue };
+    }
+
     store.set({
       history: st.history.concat([entry]),
-      chests: st.chests.concat([chest])
+      chests: st.chests.concat(newChests)
     });
-    return { ok: true, reason: 'valide', count: derive.habitCount(store.get(), id), chest: chest };
+    return { ok: true, reason: 'valide', count: newCount, chest: chest, milestone: milestone };
   }
 
   function findChest(state, id) {
@@ -1644,7 +1763,7 @@ body {
   var chestTypes = window.AscendChests;
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
-  var VER = '0.07';
+  var VER = '0.08';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
@@ -1654,6 +1773,7 @@ body {
     editingId: null,
     edit: { title: '', domain: '', freq: '' },
     confirmDeleteId: null,
+    milestoneDone: null,      // { threshold, chestLabel } — bandeau doux après un jalon franchi
     ceremony: null,           // { phase:'suspense'|'reveal', chestType, item, sourceLabel } | null
     quest: {
       domain: domains.list[0].id,                                   // filtre du catalogue
@@ -1694,7 +1814,16 @@ body {
     if (created) resetForm();
     paint();
   }
-  function validate(id) { actions.validateHabit(id); } // store.set → subscribe → paint
+  // Valider une habitude. Si la validation FRANCHIT un jalon (Phase 1.5), on lève le bandeau
+  // doux qui guide vers la pile (le coffre de jalon y attend, à côté du Coffre de bois).
+  function validate(id) {
+    var res = actions.validateHabit(id);
+    if (res && res.ok && res.milestone) {
+      var t = chestTypes.get(res.milestone.tier);
+      ui.milestoneDone = { threshold: res.milestone.threshold, chestLabel: t ? t.label : 'un coffre' };
+    }
+    paint();                                            // store.set a déjà notifié ; ce paint pose le bandeau
+  }
 
   /* --- ouverture de coffre : la cérémonie (Phase 1.3) --- */
   // On MUTE d'abord (openChest fige le tirage en inventory) puis on JOUE la présentation :
@@ -1827,6 +1956,7 @@ body {
     var st = store.get();
     var count = derive.habitCount(st, hb.id);
     var done = derive.isHabitValidatedOn(st, hb.id, store.todayKey());
+    var next = derive.nextMilestone(count);            // prochain jalon (invitation, non punitif)
     var d = domains.get(hb.domain);
     var sub = (d ? d.label : hb.domain) + (hb.freq ? ' · ' + hb.freq : '');
     return html`
@@ -1842,6 +1972,12 @@ body {
                      ${count}<span class="u">fois</span></span>`
             : null}
         </div>
+        ${count >= 1 && next
+          ? html`<div class="h-goal" aria-label=${'Plus que ' + next.remaining + ' avant le jalon des ' + next.threshold}>
+                   <span class="hg-ico" aria-hidden="true">🏆</span>
+                   <span>Plus que <strong>${next.remaining}</strong> avant le jalon des ${next.threshold}</span>
+                 </div>`
+          : null}
         <div class="habit-foot">
           ${done
             ? html`<span class="done" role="status">Fait ✓</span>`
@@ -1863,6 +1999,20 @@ body {
               <button class="btn ghost" type="button" onClick=${cancelDelete}>Annuler</button>
             </div>`
           : null}
+      </div>`;
+  }
+
+  // Bandeau doux après un JALON franchi (Phase 1.5) — même grammaire que « quête accomplie » :
+  // célèbre le cap, guide vers la pile « À découvrir », dismissible, jamais culpabilisant.
+  function MilestoneBanner() {
+    var m = ui.milestoneDone;
+    if (!m) return null;
+    return html`
+      <div class="milestone-done" role="status">
+        <span>✨ Jalon des <strong>${m.threshold}</strong> franchi — ton <strong>${m.chestLabel}</strong>${' '}
+        t’attend plus bas, dans « À découvrir ».</span>
+        <button class="lnk" type="button"
+                onClick=${function () { ui.milestoneDone = null; paint(); }}>OK</button>
       </div>`;
   }
 
@@ -2116,6 +2266,7 @@ body {
         ${Creator()}
 
         <section class="section" aria-label="Tes habitudes">
+          ${MilestoneBanner()}
           ${habits.length
             ? html`<div class="habits">${habits.map(HabitCard)}</div>`
             : EmptyState()}
