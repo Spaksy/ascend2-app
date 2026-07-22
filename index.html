@@ -318,7 +318,12 @@ body {
   width: 8px; height: 13px; transform: translateX(-50%);
   border-radius: 2px; background: var(--gold); border: 1px solid var(--on-gold);
 }
+/* Palette PAR MATÉRIAU = niveau de rareté (arbitrage Leo, Phase 1.4). En 1.4 les quêtes
+   produisent bois·fer·or → seuls ces trois ont une palette (cristal/obsidienne/aube arrivent
+   avec leur phase — zéro palette orpheline). */
 .chest-vig--bois { --chest-body: #A9743F; --chest-lid: #BC854B; --chest-edge: #6F4A28; }
+.chest-vig--fer  { --chest-body: #8B939E; --chest-lid: #A7AFBA; --chest-edge: #565C66; }
+.chest-vig--or   { --chest-body: #C79A3C; --chest-lid: #E0BB60; --chest-edge: #8A6A22; }
 
 /* ==================== TA COLLECTION (Phase 1.3, amorce) ==================== */
 /* Amorce accessible de l'écran Collection (complet = Phase 3.1). Même grammaire que la
@@ -384,9 +389,11 @@ body {
   font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
   padding: 3px 12px; border-radius: var(--r-pill);
 }
-/* En 1.3 seule la rareté « commun » est produite → seule elle est stylée (les autres
-   arrivent avec leur coffre — zéro palette orpheline). */
-.rc-rarity--commun { background: var(--accent-soft); color: var(--ink); border: 1px solid var(--accent); }
+/* En 1.4 les quêtes produisent commun·rare·épique → ces trois sont stylées (légendaire+
+   arrivent avec leur coffre — zéro palette orpheline). Texte sur --surface (AA respecté). */
+.rc-rarity--commun { background: var(--accent-soft); color: var(--ink);        border: 1px solid var(--accent); }
+.rc-rarity--rare   { background: var(--accent);      color: var(--on-accent);  border: 1px solid var(--accent); }
+.rc-rarity--epique { background: var(--gold);        color: var(--on-gold);    border: 1px solid var(--gold); }
 
 @keyframes cer-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes cer-pop { from { transform: scale(.86); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -395,6 +402,98 @@ body {
   25%      { transform: scale(2.3) translateX(-2px) rotate(-2.2deg); }
   75%      { transform: scale(2.3) translateX(2px) rotate(2.2deg); }
 }
+
+/* ==================== QUÊTES MINUTÉES (Phase 1.4) ==================== */
+.quest-section { margin-top: 26px; }
+
+/* Bandeau doux après un accomplissement (guide vers la pile, jamais culpabilisant) */
+.quest-done {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--gold-soft); border: 1px solid var(--gold);
+  border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 14px;
+  font-size: 14px; color: var(--ink);
+}
+.quest-done .lnk { margin-left: auto; }
+
+/* --- Lanceur : catalogue + quête perso --- */
+.quest-launcher { display: flex; flex-direction: column; }
+.quest-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.quest-row {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 14px 16px;
+  box-shadow: 0 6px 20px -12px var(--shadow);
+}
+.qr-main { flex: 1; min-width: 0; }
+.qr-title { font-weight: 700; font-size: 15px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.qr-min {
+  font-size: 12px; font-weight: 700; color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: var(--r-pill); padding: 2px 9px;
+}
+.qr-why { color: var(--ink-2); font-size: 13px; margin-top: 3px; word-break: break-word; }
+.qr-start { flex: 0 0 auto; min-height: 44px; padding: 0 18px; font-size: 14px; }
+
+/* Quête perso */
+.perso-quest {
+  margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column;
+}
+.pq-head { font-weight: 700; font-size: 15px; margin-bottom: 10px; }
+.perso-quest .in { margin-bottom: 4px; }
+.pq-note { color: var(--ink-2); font-size: 13px; margin: 12px 0 14px; max-width: 46ch; }
+
+.dur-select { display: flex; flex-wrap: wrap; gap: 8px; }
+.dur-chip {
+  min-height: 44px; padding: 0 14px;
+  border: 1px solid var(--line); border-radius: var(--r-pill);
+  background: var(--surface); color: var(--ink);
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition: background-color var(--dur-ui) ease, border-color var(--dur-ui) ease, transform var(--dur-ui) ease;
+}
+.dur-chip:hover { border-color: var(--accent); }
+.dur-chip:active { transform: scale(.97); }
+.dur-chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+
+/* --- Quête en cours : anneau + compte à rebours --- */
+.active-quest {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 18px;
+  box-shadow: 0 6px 20px -12px var(--shadow);
+}
+.aq-head { display: flex; align-items: center; gap: 18px; }
+
+/* Anneau de progression : conic-gradient piloté en inline-style (progress → deg), disque
+   intérieur en --surface pour le rebours. Passe au doré à 50 % (classe .ready). Aucune
+   animation continue (reduce-motion-safe ; il ne fait que se re-peindre chaque seconde). */
+.qring {
+  flex: 0 0 auto; width: 104px; height: 104px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.qring-in {
+  width: 82px; height: 82px; border-radius: 50%;
+  background: var(--surface);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.qring-time { font-size: 22px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1; }
+.qring-unit { font-size: 11px; font-weight: 600; color: var(--ink-2); margin-top: 3px; }
+.qring.ready .qring-time { color: var(--ink); }
+
+.aq-main { flex: 1; min-width: 0; }
+.aq-title { font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; word-break: break-word; }
+.aq-title .h-emoji { font-size: 20px; }
+.aq-sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.aq-note { color: var(--ink-2); font-size: 12px; margin-top: 8px; max-width: 40ch; }
+
+.aq-foot { display: flex; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+.aq-gate { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 6px; }
+.aq-finish { min-width: 150px; }
+.aq-gate .aq-finish { width: 100%; }
+.aq-gatehint { font-size: 12px; color: var(--ink-2); }
+.aq-abandon { margin-left: auto; }
 
 /* ============================ REDUCED MOTION ============================ */
 @media (prefers-reduced-motion: reduce) {
@@ -819,24 +918,36 @@ body {
   };
 })();
 
-/* ASCEND v2 — Types de coffre (données pures, Phase 1.2).
-   LE canal unique de récompense (GDD §4.1). Chaque TYPE est lié à sa SOURCE
-   (lisibilité immédiate) : bois=habitude, fer=quête, or=jalon, légendaire=objectif/niveau.
-   Phase 1.2 ne PRODUIT que le Coffre de bois (via la validation d'habitude) ; les autres
-   types sont déclarés pour la lisibilité du modèle et seront alimentés dans LEUR phase
-   (fer=1.4, or=1.5, légendaire=2.2/4.1). Raretés et POOLS d'objets = Phase 1.3 (tirage
-   à l'ouverture) — RIEN de tout cela ici. Aucune logique : la liste + deux accès. */
+/* ASCEND v2 — Coffres : LE canal unique de récompense (données pures ; Phase 1.2, refondu
+   Phase 1.4). Arbitrage Leo (Phase 1.4) : le MATÉRIAU du coffre = le NIVEAU DE RARETÉ de
+   l'objet qu'il contient (échelle à 6, cards.js). Plus le matériau est précieux, plus le
+   coffre est rare à obtenir. La SOURCE de l'effort (habitude ? quête ? objectif ?) n'est
+   plus portée par le matériau : elle est dite par le `sourceLabel` de chaque coffre.
+
+   | matériau      | rareté de l'objet | produit par (Phase) |
+   |---------------|-------------------|---------------------|
+   | bois          | commun            | habitude 1.2 · quête courte 1.4 |
+   | fer           | rare              | quête 1.4 |
+   | or            | epique            | quête longue 1.4 · jalon 1.5 |
+   | cristal       | legendaire        | objectif · niveau de bâtiment (2.2/4.1) — DÉCLARÉ |
+   | obsidienne    | exceptionnel      | (source à venir) — DÉCLARÉ |
+   | aube          | unique            | relique / collection complète — DÉCLARÉ |
+
+   En Phase 1.4 seuls bois/fer/or sont PRODUITS (donc seuls eux ont une vignette CSS —
+   zéro palette orpheline) ; cristal/obsidienne/aube sont déclarés pour la lisibilité du
+   modèle et alimentés dans leur phase. Aucune logique : la liste + accès (dont rarityOf,
+   consommé par le tirage derive.drawForChest). Apostrophes FR = ’ (U+2019). */
 (function () {
   'use strict';
 
-  // Ordre = rareté croissante de la SOURCE (effort réel). `emoji` sert d'étiquette
-  // de secours accessible ; la VIGNETTE visible est un placeholder géométrique CSS
-  // (les SVG Claude Design la remplaceront, jamais redessinés — CLAUDE.md).
+  // Ordre = rareté croissante (aligné sur cards.RARITIES). `rarity` fait le pont matériau→objet.
   var TYPES = [
-    { id: 'bois',       label: 'Coffre de bois',    source: 'validation d’une habitude' },
-    { id: 'fer',        label: 'Coffre de fer',     source: 'quête minutée accomplie' },
-    { id: 'or',         label: 'Coffre d’or',       source: 'jalon franchi' },
-    { id: 'legendaire', label: 'Coffre légendaire', source: 'objectif accompli · niveau de bâtiment' }
+    { id: 'bois',       label: 'Coffre de bois',       rarity: 'commun',       source: 'validation d’une habitude · quête courte' },
+    { id: 'fer',        label: 'Coffre de fer',        rarity: 'rare',         source: 'quête minutée accomplie' },
+    { id: 'or',         label: 'Coffre d’or',          rarity: 'epique',       source: 'quête longue · jalon franchi' },
+    { id: 'cristal',    label: 'Coffre de cristal',    rarity: 'legendaire',   source: 'objectif accompli · niveau de bâtiment' },
+    { id: 'obsidienne', label: 'Coffre d’obsidienne',  rarity: 'exceptionnel', source: 'récompense d’exception (à venir)' },
+    { id: 'aube',       label: 'Coffre d’aube',        rarity: 'unique',       source: 'relique · collection complète (à venir)' }
   ];
 
   var byId = {};
@@ -845,7 +956,10 @@ body {
   window.AscendChests = {
     list: TYPES,
     get: function (id) { return byId[id] || null; },
-    has: function (id) { return Object.prototype.hasOwnProperty.call(byId, id); }
+    has: function (id) { return Object.prototype.hasOwnProperty.call(byId, id); },
+    // Rareté de l'objet qu'un coffre de ce matériau révèle (le pont consommé par le tirage).
+    // Matériau inconnu (save bricolée) → 'commun' (repli serein, jamais de crash au tirage).
+    rarityOf: function (id) { return byId[id] ? byId[id].rarity : 'commun'; }
   };
 })();
 
@@ -871,13 +985,19 @@ body {
 (function () {
   'use strict';
 
-  // Table des raretés (§4.2) : id → libellé FR. Sert au rendu (rarityLabel) et de
-  // référence unique de l'échelle. Ordre = valeur croissante.
+  // Échelle des raretés (§4.2, étendue Phase 1.4 — arbitrage Leo : 6 niveaux). id → libellé
+  // FR + `rank` (ordre CROISSANT, seule source de vérité de la valeur d'une rareté).
+  // Chaque rareté a son COFFRE du même niveau (chests.js : matériau = rareté). En Phase 1.4
+  // les quêtes ne PRODUISENT que commun·rare·epique (bois/fer/or) ; legendaire·exceptionnel·
+  // unique sont DÉCLARÉS pour le modèle (comme chests.js déclare leurs coffres) et tirés dans
+  // LEUR phase — d'où l'absence de palette rc-rarity pour eux ici (zéro palette orpheline).
   var RARITIES = [
-    { id: 'commun',     label: 'Commun' },
-    { id: 'rare',       label: 'Rare' },
-    { id: 'epique',     label: 'Épique' },
-    { id: 'legendaire', label: 'Légendaire' }
+    { id: 'commun',       label: 'Commun',       rank: 1 },
+    { id: 'rare',         label: 'Rare',         rank: 2 },
+    { id: 'epique',       label: 'Épique',       rank: 3 },
+    { id: 'legendaire',   label: 'Légendaire',   rank: 4 },
+    { id: 'exceptionnel', label: 'Exceptionnel', rank: 5 },
+    { id: 'unique',       label: 'Unique',       rank: 6 }
   ];
   var rarityById = {};
   for (var r = 0; r < RARITIES.length; r++) rarityById[RARITIES[r].id] = RARITIES[r];
@@ -940,18 +1060,19 @@ body {
   };
 
   // Index plat id → objet enrichi de son domaine (le domaine vient de la clé de POOLS,
-  // pas dupliqué dans chaque record).
+  // pas dupliqué dans chaque record). `byRarityDom[domain][rarity]` = le vivier d'un tirage
+  // (le tirage pioche SANS REMISE dans le vivier de la rareté du coffre — derive.js).
   var byId = {};
-  var commonsByDom = {};
+  var byRarityDom = {};
   for (var dom in POOLS) {
     if (!POOLS.hasOwnProperty(dom)) continue;
-    commonsByDom[dom] = [];
+    byRarityDom[dom] = {};
     var arr = POOLS[dom];
     for (var i = 0; i < arr.length; i++) {
       var it = arr[i];
       var card = { id: it.id, domain: dom, name: it.name, rarity: it.rarity };
       byId[card.id] = card;
-      if (card.rarity === 'commun') commonsByDom[dom].push(card);
+      (byRarityDom[dom][card.rarity] || (byRarityDom[dom][card.rarity] = [])).push(card);
     }
   }
 
@@ -1003,11 +1124,101 @@ body {
     pools: POOLS,
     rarities: RARITIES,
     rarityLabel: function (id) { return rarityById[id] ? rarityById[id].label : 'Commun'; },
-    commonsByDomain: function (domain) { return commonsByDom[domain] ? commonsByDom[domain].slice() : []; },
+    rarityRank: function (id) { return rarityById[id] ? rarityById[id].rank : 1; },
+    // Vivier d'un domaine pour une rareté donnée (copie défensive). Vide si le domaine n'a
+    // pas (encore) d'objet de cette rareté — le tirage retombera alors sur une déco générative.
+    byDomainRarity: function (domain, rarity) {
+      return (byRarityDom[domain] && byRarityDom[domain][rarity]) ? byRarityDom[domain][rarity].slice() : [];
+    },
+    // Conservé (Phase 1.3) : le vivier commun d'un domaine = cas particulier de byDomainRarity.
+    commonsByDomain: function (domain) { return this.byDomainRarity(domain, 'commun'); },
     get: resolve,
     resolve: resolve,
     makeGenerative: makeGenerative,
     hash: hash
+  };
+})();
+
+/* ASCEND v2 — Catalogue de quêtes minutées (données pures, Phase 1.4).
+   Quêtes PONCTUELLES (GDD §3.2) : une action unique avec une durée estimée. Chaque
+   entrée porte un « pourquoi » (héritage v1) qui parle de la VIE, jamais des mécaniques
+   (GDD §12). 8 quêtes curées par domaine × 5 domaines MVP.
+
+   La RÉCOMPENSE n'est JAMAIS dans ces données : elle est DÉRIVÉE de la durée à
+   l'accomplissement (derive.rollQuestChestTier) — invariant d'intégrité (rien de précieux
+   n'est saisi). Ici : seulement le titre, le domaine, la durée cible (minutes) et le pourquoi.
+
+   Apostrophes FR = ’ (U+2019). Durées 5–90 min (GDD §13). Ids globalement uniques (préfixe
+   domaine) — ils servent de refId d'historique (traçabilité de l'effort réel). */
+(function () {
+  'use strict';
+
+  // { id, domain, title, minutes, why } — `minutes` = durée CIBLE (l'effort que la quête
+  // représente ; la pondération de récompense s'appuie dessus, jamais sur le temps d'app).
+  var QUESTS = [
+    /* 🏋️ Physique */
+    { id: 'phys_q1', domain: 'physique', title: 'Marche rapide',        minutes: 20, why: 'Bouger relance le corps et l’esprit d’un seul coup.' },
+    { id: 'phys_q2', domain: 'physique', title: 'Séance de gainage',    minutes: 10, why: 'Dix minutes suffisent à réveiller tout le tronc.' },
+    { id: 'phys_q3', domain: 'physique', title: 'Course légère',        minutes: 30, why: 'Le souffle qui revient, c’est déjà la forme qui monte.' },
+    { id: 'phys_q4', domain: 'physique', title: 'Étirements du matin',  minutes: 8,  why: 'Un corps souple traverse la journée sans accroc.' },
+    { id: 'phys_q5', domain: 'physique', title: 'Montée d’escaliers',   minutes: 5,  why: 'Le cœur qui bat un peu plus fort, c’est un cadeau.' },
+    { id: 'phys_q6', domain: 'physique', title: 'Vélo tranquille',      minutes: 45, why: 'Rouler longtemps, c’est de l’endurance qui s’installe.' },
+    { id: 'phys_q7', domain: 'physique', title: 'Renforcement complet', minutes: 40, why: 'Chaque série te rend un peu plus solide.' },
+    { id: 'phys_q8', domain: 'physique', title: 'Grande randonnée',     minutes: 90, why: 'Marcher loin, c’est prouver que tu peux tenir la distance.' },
+
+    /* 🧠 Mental */
+    { id: 'ment_q1', domain: 'mental', title: 'Méditation guidée',      minutes: 10, why: 'Poser l’esprit quelques minutes change tout le reste.' },
+    { id: 'ment_q2', domain: 'mental', title: 'Journal du soir',        minutes: 15, why: 'Écrire ce qui pèse, c’est déjà le déposer.' },
+    { id: 'ment_q3', domain: 'mental', title: 'Respiration profonde',   minutes: 5,  why: 'Cinq minutes de souffle pour dénouer la tension.' },
+    { id: 'ment_q4', domain: 'mental', title: 'Marche sans téléphone',  minutes: 20, why: 'Laisser le silence revenir remet les idées en place.' },
+    { id: 'ment_q5', domain: 'mental', title: 'Séance de concentration',minutes: 25, why: 'S’entraîner à rester présent, ça se muscle aussi.' },
+    { id: 'ment_q6', domain: 'mental', title: 'Bilan de la semaine',    minutes: 30, why: 'Regarder d’où tu viens éclaire où tu vas.' },
+    { id: 'ment_q7', domain: 'mental', title: 'Déconnexion totale',     minutes: 60, why: 'Une heure loin des écrans repose vraiment la tête.' },
+    { id: 'ment_q8', domain: 'mental', title: 'Visualisation d’objectif',minutes: 12, why: 'Voir clairement ce que tu veux, c’est déjà avancer.' },
+
+    /* 📖 Connaissances */
+    { id: 'conn_q1', domain: 'connaissances', title: 'Lecture concentrée',       minutes: 30, why: 'Trente pages aujourd’hui, un livre de plus bientôt.' },
+    { id: 'conn_q2', domain: 'connaissances', title: 'Fiche de révision',        minutes: 20, why: 'Résumer, c’est comprendre pour de bon.' },
+    { id: 'conn_q3', domain: 'connaissances', title: 'Podcast instructif',       minutes: 25, why: 'Apprendre en marchant, le temps travaille pour toi.' },
+    { id: 'conn_q4', domain: 'connaissances', title: 'Cours en ligne',           minutes: 45, why: 'Une leçon suivie, une compétence qui pousse.' },
+    { id: 'conn_q5', domain: 'connaissances', title: 'Vocabulaire d’une langue', minutes: 10, why: 'Dix mots par jour, une langue en un an.' },
+    { id: 'conn_q6', domain: 'connaissances', title: 'Documentaire',             minutes: 50, why: 'Comprendre le monde, c’est l’habiter mieux.' },
+    { id: 'conn_q7', domain: 'connaissances', title: 'Prise de notes structurée',minutes: 15, why: 'Ce qui est bien noté ne se perd jamais.' },
+    { id: 'conn_q8', domain: 'connaissances', title: 'Étude en profondeur',      minutes: 90, why: 'Une longue plongée sans distraction fait la différence.' },
+
+    /* 🎨 Créativité */
+    { id: 'crea_q1', domain: 'creativite', title: 'Croquis rapide',        minutes: 15, why: 'Un carnet qui se remplit, c’est un œil qui s’aiguise.' },
+    { id: 'crea_q2', domain: 'creativite', title: 'Écriture libre',        minutes: 20, why: 'Vider la page, c’est trouver ce qu’on a à dire.' },
+    { id: 'crea_q3', domain: 'creativite', title: 'Session musique',       minutes: 30, why: 'Jouer un peu chaque jour, les doigts s’en souviennent.' },
+    { id: 'crea_q4', domain: 'creativite', title: 'Brainstorm d’idées',    minutes: 10, why: 'Dix minutes d’idées folles, une bonne en sort souvent.' },
+    { id: 'crea_q5', domain: 'creativite', title: 'Photo en balade',       minutes: 25, why: 'Chercher la belle lumière change ton regard.' },
+    { id: 'crea_q6', domain: 'creativite', title: 'Projet créatif',        minutes: 60, why: 'Avancer sur ta création, brique après brique.' },
+    { id: 'crea_q7', domain: 'creativite', title: 'Bricolage',             minutes: 40, why: 'Fabriquer de tes mains ancre dans le réel.' },
+    { id: 'crea_q8', domain: 'creativite', title: 'Grande session d’atelier',minutes: 90, why: 'Se donner le temps, c’est laisser l’œuvre grandir.' },
+
+    /* 🧘 Bien-être */
+    { id: 'bien_q1', domain: 'bienetre', title: 'Rangement apaisant',     minutes: 20, why: 'Un espace clair, une tête plus claire.' },
+    { id: 'bien_q2', domain: 'bienetre', title: 'Étirement doux',         minutes: 10, why: 'Relâcher le corps invite le calme.' },
+    { id: 'bien_q3', domain: 'bienetre', title: 'Douche consciente',      minutes: 15, why: 'Un moment pour soi, sans rien devoir à personne.' },
+    { id: 'bien_q4', domain: 'bienetre', title: 'Préparer un repas sain', minutes: 30, why: 'Bien te nourrir, c’est prendre soin de demain.' },
+    { id: 'bien_q5', domain: 'bienetre', title: 'Sieste réparatrice',     minutes: 20, why: 'Un vrai repos vaut mille cafés.' },
+    { id: 'bien_q6', domain: 'bienetre', title: 'Balade nature',          minutes: 45, why: 'Le vert autour de toi fait baisser la pression.' },
+    { id: 'bien_q7', domain: 'bienetre', title: 'Soirée sans écran',      minutes: 60, why: 'La lumière douce du soir prépare un bon sommeil.' },
+    { id: 'bien_q8', domain: 'bienetre', title: 'Grand ménage bien-être', minutes: 90, why: 'Remettre son lieu d’aplomb, c’est se remettre d’aplomb.' }
+  ];
+
+  var byId = {};
+  var byDomain = {};
+  for (var i = 0; i < QUESTS.length; i++) {
+    var q = QUESTS[i];
+    byId[q.id] = q;
+    (byDomain[q.domain] || (byDomain[q.domain] = [])).push(q);
+  }
+
+  window.AscendQuests = {
+    list: QUESTS,
+    get: function (id) { return byId[id] || null; },
+    byDomain: function (domain) { return byDomain[domain] ? byDomain[domain].slice() : []; }
   };
 })();
 
@@ -1021,6 +1232,8 @@ body {
   'use strict';
 
   var cards = window.AscendCards;
+  var chestTypes = window.AscendChests;
+  var domains = window.AscendDomains;
 
   function historyOf(state) {
     return (state && Array.isArray(state.history)) ? state.history : [];
@@ -1086,20 +1299,103 @@ body {
     return n;
   }
 
+  // Le contenu tiré = un objet de la RARETÉ du coffre (matériau → rareté, chests.rarityOf).
+  // En 1.3 le bois donnait un commun ; en 1.4 le fer donne un rare, l'or un épique — MÊME
+  // fonction (généralisée), pas de nouveau canal. Sans remise dans le vivier de cette rareté ;
+  // vivier épuisé (pools v0 : 1 rare / 1 épique par domaine) → déco générative (GDD §4.3).
   function drawForChest(state, chest) {
     if (!chest || !chest.domain) return null;
+    var rarity = chestTypes.rarityOf(chest.type);
     var seed = cards.hash((state && state.createdAt ? state.createdAt : '') + '|' + chest.id);
     var owned = ownedItemIds(state);
-    var pool = cards.commonsByDomain(chest.domain).filter(function (c) { return !owned[c.id]; });
+    var pool = cards.byDomainRarity(chest.domain, rarity).filter(function (c) { return !owned[c.id]; });
     if (pool.length) return pool[seed % pool.length];
-    // Pool épuisé → déco générative (embellit toujours, GDD §4.3).
+    // Vivier épuisé → déco générative (embellit toujours l'île, rareté commune, GDD §4.3).
     return cards.makeGenerative(chest.domain, generativeCountInDomain(state, chest.domain));
+  }
+
+  /* -------------------------------------------- quêtes minutées (Phase 1.4) */
+  // Une quête active est-elle EXPLOITABLE ? (obj?, non type-validé en profondeur au chargement
+  // — une save bricolée peut porter un activeQuest incohérent → on le traite comme « aucune »
+  // pour ne jamais bloquer le boot ni fausser le chrono.)
+  function isValidActiveQuest(aq) {
+    return !!(aq && typeof aq.id === 'string' &&
+      domains.has(aq.domain) &&
+      typeof aq.minutes === 'number' && isFinite(aq.minutes) && aq.minutes > 0 &&
+      typeof aq.startedAt === 'number' && isFinite(aq.startedAt) && aq.startedAt > 0);
+  }
+
+  // Élan d'une quête selon sa durée (GDD §6.2 : quête = +2 à +4). Nourrit l'historique dès
+  // maintenant (les niveaux de bâtiment le consommeront en Phase 2.2). Court/moyen/long.
+  function questElan(minutes) {
+    if (!(minutes > 0)) return 2;
+    if (minutes < 15) return 2;
+    if (minutes < 45) return 3;
+    return 4;
+  }
+
+  // Progression d'une quête à l'instant `nowMs` (Date.now() passé par l'appelant → fonction
+  // PURE et testable). Le chrono est RÉEL : elapsed = maintenant − startedAt (persistant,
+  // repris après reload — leçon v1 P0-7). Gate NON punitif à 50 % ; « longue reprise »
+  // automatiquement débloquée puisque elapsed croît avec l'horloge murale.
+  function questProgress(aq, nowMs) {
+    var targetMs = aq.minutes * 60000;
+    var elapsedMs = Math.max(0, nowMs - aq.startedAt);
+    var gateMs = targetMs * 0.5;
+    var ratio = targetMs > 0 ? elapsedMs / targetMs : 1;   // 0→1+ vers la durée CIBLE (l'anneau)
+    return {
+      elapsedMs: elapsedMs,
+      targetMs: targetMs,
+      remainingToTargetMs: Math.max(0, targetMs - elapsedMs),
+      remainingToGateMs: Math.max(0, gateMs - elapsedMs),
+      progress: Math.max(0, Math.min(1, ratio)),           // borné pour l'anneau
+      gateReached: elapsedMs >= gateMs                      // « J'ai fini » débloqué
+    };
+  }
+
+  // Tables de PONDÉRATION du tier de coffre par durée (arbitrage : plus la quête est longue,
+  // meilleures les probas — GDD §4.2 « la rareté reflète l'effort réel »). Quêtes plafonnées
+  // à or/épique (arbitrage Leo) : jamais cristal+ ici. Poids sur 10000 (bois·fer·or cumulés).
+  var TIER_WEIGHTS = {
+    court: { bois: 8000, fer: 1800, or: 200 },   // < 15 min
+    moyen: { bois: 5500, fer: 3500, or: 1000 },  // 15–44 min
+    long:  { bois: 3500, fer: 4500, or: 2000 }   // ≥ 45 min
+  };
+  function durationBucket(minutes) {
+    if (minutes < 15) return 'court';
+    if (minutes < 45) return 'moyen';
+    return 'long';
+  }
+  var PITY_N = 7; // arbitrage Leo : 1 coffre « rare ou mieux » (fer+) garanti tous les 7 (pity.ironSinceRare).
+
+  // Tire le MATÉRIAU (= rareté) du coffre d'une quête accomplie. Décidé À L'ACCOMPLISSEMENT
+  // (le coffre PORTE ensuite sa rareté, visible dans la pile — arbitrage Leo « un niveau de
+  // coffre par niveau de rareté ») ; l'OBJET précis reste tiré à l'ouverture (drawForChest).
+  // DÉTERMINISTE : seed = hash(createdAt + quest.id + startedAt). PITIÉ : si l'on a déjà eu
+  // PITY_N−1 bois d'affilée, ce coffre est remonté à `fer` minimum (malchance bornée).
+  // Retourne { tier, wouldResetPity } — pity effectivement écrit par actions au moment du push.
+  function rollQuestChestTier(state, aq) {
+    var w = TIER_WEIGHTS[durationBucket(aq.minutes)];
+    var seed = cards.hash((state && state.createdAt ? state.createdAt : '') + '|tier|' + aq.id + '|' + aq.startedAt);
+    var roll = seed % 10000;
+    var tier = 'bois';
+    if (roll < w.or) tier = 'or';
+    else if (roll < w.or + w.fer) tier = 'fer';
+    else tier = 'bois';
+    var since = (state && state.pity && typeof state.pity.ironSinceRare === 'number') ? state.pity.ironSinceRare : 0;
+    if (tier === 'bois' && since >= PITY_N - 1) tier = 'fer';   // pitié : rare garanti
+    return { tier: tier, resetsPity: tier !== 'bois' };
   }
 
   window.AscendDerive = {
     habitCount: habitCount,
     isHabitValidatedOn: isHabitValidatedOn,
-    drawForChest: drawForChest
+    drawForChest: drawForChest,
+    isValidActiveQuest: isValidActiveQuest,
+    questElan: questElan,
+    questProgress: questProgress,
+    rollQuestChestTier: rollQuestChestTier,
+    PITY_N: PITY_N
   };
 })();
 
@@ -1245,12 +1541,86 @@ body {
     return { ok: true, reason: 'ouvert', item: item, entry: entry, chestType: chest.type, sourceLabel: chest.sourceLabel };
   }
 
+  /* ------------------------------------------------ quêtes minutées (Phase 1.4) */
+  // Démarre une quête (catalogue OU perso). UN SEUL chrono actif (arbitrage Leo) : si une
+  // quête VALIDE tourne déjà, on refuse (l'UI le dit doucement). Un activeQuest incohérent
+  // (save bricolée) n'est PAS un obstacle → il est écrasé. `startedAt` = horloge murale
+  // RÉELLE (Date.now()), persistée → reprise exacte après reload (leçon v1 P0-7). Aucune
+  // récompense n'est SAISIE : elle sera dérivée de la durée à l'accomplissement.
+  // spec = { questId|null, title, domain, minutes }. Retourne { ok, reason, quest }.
+  function startQuest(spec) {
+    spec = spec || {};
+    var title = trim(spec.title);
+    var minutes = +spec.minutes;
+    if (!title || !domains.has(spec.domain) || !(minutes > 0)) return { ok: false, reason: 'invalide' };
+    var st = store.get();
+    if (derive.isValidActiveQuest(st.activeQuest)) return { ok: false, reason: 'deja_active' };
+    var quest = {
+      id: uid('q'),
+      questId: (typeof spec.questId === 'string' && spec.questId) ? spec.questId : null,
+      title: title,
+      domain: spec.domain,
+      minutes: minutes,
+      startedAt: Date.now()
+    };
+    store.set({ activeQuest: quest });
+    return { ok: true, reason: 'demarree', quest: quest };
+  }
+
+  // Accomplit la quête active. Gate NON punitif : refus PROPRE tant que < 50 % (rien n'est
+  // retiré, aucune trace). Sinon : tire le MATÉRIAU du coffre (durée + pitié, decidé ICI →
+  // le coffre porte sa rareté), pousse le coffre dans `chests` (ouverture = cérémonie 1.3),
+  // date l'historique (kind:'quest', elan §6.2), met à jour la PITIÉ (bois → +1 ; fer+ → 0),
+  // et libère le chrono. Une seule écriture. Retourne { ok, reason, chest, tier, elan }.
+  function finishQuest() {
+    var st = store.get();
+    var aq = st.activeQuest;
+    if (!derive.isValidActiveQuest(aq)) return { ok: false, reason: 'aucune' };
+    var prog = derive.questProgress(aq, Date.now());
+    if (!prog.gateReached) return { ok: false, reason: 'trop_tot', remainingToGateMs: prog.remainingToGateMs };
+
+    var roll = derive.rollQuestChestTier(st, aq);
+    var tier = roll.tier;                                   // 'bois' | 'fer' | 'or'
+    var day = store.todayKey();
+    var elan = derive.questElan(aq.minutes);
+    var chest = {
+      id: uid('c'),
+      type: tier,
+      domain: aq.domain,
+      sourceLabel: 'Obtenu en accomplissant « ' + aq.title + ' » (' + aq.minutes + ' min)',
+      day: day
+    };
+    var entry = { kind: 'quest', refId: (aq.questId || aq.id), domain: aq.domain, day: day, elan: elan };
+    var since = (st.pity && typeof st.pity.ironSinceRare === 'number') ? st.pity.ironSinceRare : 0;
+    var nextSince = (tier === 'bois') ? (since + 1) : 0;    // pitié : reset dès un fer+ (rare ou mieux)
+
+    store.set({
+      history: st.history.concat([entry]),
+      chests: st.chests.concat([chest]),
+      pity: { ironSinceRare: nextSince },
+      activeQuest: null
+    });
+    return { ok: true, reason: 'accompli', chest: chest, tier: tier, elan: elan };
+  }
+
+  // Abandonne la quête active. NON punitif (avant OU après 50 %) : rien n'est retiré, aucune
+  // trace d'historique, aucune honte — le chrono est simplement libéré (GDD §3.2). Idempotent.
+  function abandonQuest() {
+    var st = store.get();
+    if (!st.activeQuest) return { ok: false, reason: 'aucune' };
+    store.set({ activeQuest: null });
+    return { ok: true, reason: 'abandonnee' };
+  }
+
   window.AscendActions = {
     createHabit: createHabit,
     editHabit: editHabit,
     deleteHabit: deleteHabit,
     validateHabit: validateHabit,
-    openChest: openChest
+    openChest: openChest,
+    startQuest: startQuest,
+    finishQuest: finishQuest,
+    abandonQuest: abandonQuest
   };
 })();
 
@@ -1273,7 +1643,10 @@ body {
   var domains = window.AscendDomains;
   var chestTypes = window.AscendChests;
   var cards = window.AscendCards;
-  var VER = '0.06';
+  var quests = window.AscendQuests;
+  var VER = '0.07';
+
+  var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
   /* ------------------------------------------------------------ état d'UI éphémère */
   var ui = {
@@ -1281,9 +1654,31 @@ body {
     editingId: null,
     edit: { title: '', domain: '', freq: '' },
     confirmDeleteId: null,
-    ceremony: null            // { phase:'suspense'|'reveal', chestType, item, sourceLabel } | null
+    ceremony: null,           // { phase:'suspense'|'reveal', chestType, item, sourceLabel } | null
+    quest: {
+      domain: domains.list[0].id,                                   // filtre du catalogue
+      perso: { title: '', domain: domains.list[0].id, minutes: 20 },// quête personnalisée
+      confirmAbandon: false,
+      done: null              // { label } — bandeau doux après un accomplissement (guide vers la pile)
+    }
   };
   function resetForm() { ui.form = { title: '', domain: domains.list[0].id, freq: '' }; }
+  function resetPerso() { ui.quest.perso = { title: '', domain: domains.list[0].id, minutes: 20 }; }
+
+  // Chrono d'affichage : tant qu'une quête VALIDE tourne, on repeint chaque seconde pour
+  // faire descendre le compte à rebours (aucune écriture — juste un paint dérivé de Date.now()).
+  var questTick = null;
+  function syncQuestTick() {
+    var active = derive.isValidActiveQuest(store.get().activeQuest);
+    if (active && !questTick) { questTick = setInterval(paint, 1000); }
+    else if (!active && questTick) { clearInterval(questTick); questTick = null; }
+  }
+  // mm:ss d'une durée en ms (arrondi au plafond → le rebours n'affiche 0:00 qu'une fois écoulé).
+  function fmtClock(ms) {
+    var s = Math.max(0, Math.ceil(ms / 1000));
+    var m = Math.floor(s / 60);
+    return m + ':' + ('0' + (s % 60)).slice(-2);
+  }
 
   var ceremonyTimer = null;
   // Respecte le réglage système : reduce-motion → cérémonie INSTANTANÉE (pas de suspense).
@@ -1330,6 +1725,31 @@ body {
     if (ceremonyTimer) { clearTimeout(ceremonyTimer); ceremonyTimer = null; }
     ui.ceremony = null; paint();
   }
+
+  /* --- quêtes minutées (Phase 1.4) --- */
+  function startCatalogueQuest(q) {
+    actions.startQuest({ questId: q.id, title: q.title, domain: q.domain, minutes: q.minutes });
+    ui.quest.done = null; ui.quest.confirmAbandon = false;
+    paint();
+  }
+  function startPersoQuest() {
+    var p = ui.quest.perso;
+    var res = actions.startQuest({ questId: null, title: p.title, domain: p.domain, minutes: p.minutes });
+    if (res && res.ok) { resetPerso(); ui.quest.done = null; ui.quest.confirmAbandon = false; }
+    paint();
+  }
+  function finishActiveQuest() {
+    var res = actions.finishQuest();
+    if (res && res.ok) {
+      var t = chestTypes.get(res.tier);
+      ui.quest.done = { label: t ? t.label : 'un coffre' };
+      ui.quest.confirmAbandon = false;
+    }
+    paint();
+  }
+  function askAbandon() { ui.quest.confirmAbandon = true; paint(); }
+  function cancelAbandon() { ui.quest.confirmAbandon = false; paint(); }
+  function confirmAbandon() { actions.abandonQuest(); ui.quest.confirmAbandon = false; paint(); }
 
   function startEdit(hb) {
     ui.editingId = hb.id;
@@ -1561,6 +1981,126 @@ body {
       </section>`;
   }
 
+  /* ------------------------------------------------ quêtes minutées (Phase 1.4) */
+  // Carte de la quête EN COURS : anneau de progression + compte à rebours (arbitrage Leo).
+  // L'anneau se remplit vers la durée CIBLE et passe au DORÉ à 50 % (gate débloqué). Le
+  // bouton « J'ai fini » reste grisé avant 50 % avec « encore ~X min » (non punitif) ; abandon
+  // possible à tout moment, sans rien retirer. Le chrono est RÉEL (repris après reload).
+  function ActiveQuestCard(aq) {
+    var prog = derive.questProgress(aq, Date.now());
+    var deg = Math.round(prog.progress * 360);
+    var ringCol = prog.gateReached ? 'var(--gold)' : 'var(--accent)';
+    var ringStyle = 'background: conic-gradient(' + ringCol + ' ' + deg + 'deg, var(--line) ' + deg + 'deg);';
+    var d = domains.get(aq.domain);
+    var gateMin = Math.max(1, Math.ceil(prog.remainingToGateMs / 60000));
+    var aria = 'Quête en cours : ' + aq.title + '. Temps restant ' + fmtClock(prog.remainingToTargetMs) +
+      '. ' + (prog.gateReached ? 'Tu peux valider.' : 'Encore environ ' + gateMin + ' minutes avant de pouvoir valider.');
+    return html`
+      <div class="active-quest" role="group" aria-label=${aria}>
+        <div class="aq-head">
+          <div class="qring ${prog.gateReached ? 'ready' : ''}" style=${ringStyle} aria-hidden="true">
+            <div class="qring-in">
+              <span class="qring-time">${fmtClock(prog.remainingToTargetMs)}</span>
+              <span class="qring-unit">restant</span>
+            </div>
+          </div>
+          <div class="aq-main">
+            <div class="aq-title"><span class="h-emoji" aria-hidden="true">${d ? d.emoji : '•'}</span>${aq.title}</div>
+            <div class="aq-sub">${(d ? d.label : aq.domain)} · ${aq.minutes} min estimées</div>
+            <p class="aq-note">Le chrono tourne pour de vrai — même si tu fermes l’app, il reprend où il en était.</p>
+          </div>
+        </div>
+        <div class="aq-foot">
+          ${prog.gateReached
+            ? html`<button class="btn gold aq-finish" type="button" onClick=${finishActiveQuest}>J’ai fini</button>`
+            : html`
+              <div class="aq-gate">
+                <button class="btn aq-finish" type="button" disabled>J’ai fini</button>
+                <span class="aq-gatehint">Encore ~${gateMin} min avant de pouvoir valider — rien ne presse.</span>
+              </div>`}
+          ${ui.quest.confirmAbandon
+            ? null
+            : html`<button class="lnk aq-abandon" type="button" onClick=${askAbandon}>Arrêter</button>`}
+        </div>
+        ${ui.quest.confirmAbandon
+          ? html`
+            <div class="del-confirm" role="group" aria-label="Confirmer l’arrêt de la quête">
+              <span class="msg">Arrêter cette quête ? Rien n’est perdu, tu pourras la relancer.</span>
+              <button class="btn ghost" type="button" onClick=${confirmAbandon}>Oui, arrêter</button>
+              <button class="btn" type="button" onClick=${cancelAbandon}>Continuer</button>
+            </div>`
+          : null}
+      </div>`;
+  }
+
+  // Une ligne du catalogue curé : titre + durée + « pourquoi » + démarrer.
+  function QuestRow(q) {
+    return html`
+      <li class="quest-row">
+        <div class="qr-main">
+          <div class="qr-title">${q.title}<span class="qr-min">${q.minutes} min</span></div>
+          <div class="qr-why">${q.why}</div>
+        </div>
+        <button class="btn qr-start" type="button" aria-label=${'Démarrer : ' + q.title + ', ' + q.minutes + ' minutes'}
+                onClick=${function () { startCatalogueQuest(q); }}>Démarrer</button>
+      </li>`;
+  }
+
+  // Le lanceur de quêtes (visible quand AUCUNE quête ne tourne) : catalogue filtré par domaine
+  // + création d'une quête perso (récompense JAMAIS saisie — dérivée de la durée à la fin).
+  function QuestLauncher() {
+    var list = quests.byDomain(ui.quest.domain);
+    var p = ui.quest.perso;
+    return html`
+      <div class="quest-launcher">
+        <span class="lab2" style="margin-top:0">Choisis un domaine</span>
+        ${DomainChips(ui.quest.domain, function (id) { ui.quest.domain = id; paint(); })}
+        <ul class="quest-list">${list.map(QuestRow)}</ul>
+
+        <div class="perso-quest">
+          <div class="pq-head">Ou lance la tienne</div>
+          <input class="in" type="text" value=${p.title} placeholder="Ex. Ranger le bureau"
+                 aria-label="Titre de ta quête" autocomplete="off"
+                 onInput=${function (e) { ui.quest.perso.title = e.target.value; paint(); }} />
+          <span class="lab2">Domaine</span>
+          ${DomainChips(p.domain, function (id) { ui.quest.perso.domain = id; paint(); })}
+          <span class="lab2">Durée</span>
+          <div class="dur-select" role="group" aria-label="Durée en minutes">
+            ${DURATION_PRESETS.map(function (m) {
+              var on = m === p.minutes;
+              return html`
+                <button type="button" class="dur-chip" aria-pressed=${on ? 'true' : 'false'}
+                        onClick=${function () { ui.quest.perso.minutes = m; paint(); }}>${m} min</button>`;
+            })}
+          </div>
+          <p class="pq-note">Ta récompense dépendra de la durée — elle se révélera à la fin, jamais avant.</p>
+          <button class="btn" type="button" disabled=${!p.title.trim()}
+                  onClick=${startPersoQuest}>Démarrer cette quête</button>
+        </div>
+      </div>`;
+  }
+
+  // Section Quêtes : soit la quête en cours (un seul chrono), soit le lanceur. Un bandeau doux
+  // guide vers la pile « À découvrir » juste après un accomplissement.
+  function QuestSection() {
+    var aq = store.get().activeQuest;
+    var active = derive.isValidActiveQuest(aq);
+    return html`
+      <section class="section quest-section" aria-label="Quêtes minutées">
+        <h2 class="sec-title">Quêtes minutées</h2>
+        <p class="sec-note">Une action, un chrono honnête. À la moitié du temps, tu peux valider —
+        et tu reçois un coffre à la hauteur de l’effort.</p>
+        ${ui.quest.done
+          ? html`
+            <div class="quest-done" role="status">
+              <span>Quête accomplie 🎉 — ton <strong>${ui.quest.done.label}</strong> t’attend plus bas, dans « À découvrir ».</span>
+              <button class="lnk" type="button" onClick=${function () { ui.quest.done = null; paint(); }}>OK</button>
+            </div>`
+          : null}
+        ${active ? ActiveQuestCard(aq) : QuestLauncher()}
+      </section>`;
+  }
+
   function App() {
     var habits = (store.get().habits || []).filter(function (hb) { return hb && hb.id; });
     return html`
@@ -1581,6 +2121,7 @@ body {
             : EmptyState()}
         </section>
 
+        ${QuestSection()}
         ${ChestPile()}
         ${CollectionSection()}
       </main>
@@ -1589,7 +2130,7 @@ body {
 
   /* ------------------------------------------------------------------- montage */
   var mount = document.getElementById('app');
-  function paint() { render(h(App), mount); }
+  function paint() { render(h(App), mount); syncQuestTick(); }
   store.subscribe(function () { paint(); });
   paint();
   var splash = document.getElementById('splash');
