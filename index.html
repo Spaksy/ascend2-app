@@ -315,8 +315,10 @@ body {
 .empty .e-title { color: var(--ink); font-weight: 700; font-size: 17px; margin: 10px 0 6px; }
 .empty p { font-size: 14px; max-width: 36ch; margin: 0 auto; }
 
-/* ==================== COFFRES — À DÉCOUVRIR (Phase 1.2) ==================== */
-.chest-section { margin-top: 26px; }
+/* ==================== COFFRES — À DÉCOUVRIR (Phase 1.2) ====================
+   Brique lobby (b) : la pile a quitté M1 ; ces règles servent désormais le HUB DU PONTON
+   (`.chest-hub`, île Phase 3.2), seul lieu des coffres. `.chest-section` (marge de la
+   section M1) est partie avec elle — zéro règle orpheline. */
 .sec-title { font-size: 18px; font-weight: 700; letter-spacing: .01em; }
 .sec-note { color: var(--ink-2); font-size: 13px; margin: 4px 0 14px; max-width: 46ch; }
 
@@ -793,7 +795,8 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 .isl-ponton-tx { fill: var(--ink); font-size: 12px; font-weight: 800; dominant-baseline: middle; font-variant-numeric: tabular-nums; }
 
 /* Hub des coffres (Phase 3.2) — réutilise le dialog du menu du domaine (.dom-menu / .dm-panel)
-   et les cartes de coffre de M1 (.chest / .chest-list). Seule la note d'état vide est propre. */
+   et les cartes de coffre (.chest / .chest-list, bloc « COFFRES » plus haut) dont il est, depuis
+   la brique lobby (b), le SEUL consommateur. Seule la note d'état vide est propre. */
 .chest-hub .ch-empty { font-size: 14px; color: var(--ink-2); text-align: center; line-height: 1.5; padding: 22px 8px; }
 
 /* Habillages posés sur la scène */
@@ -3396,7 +3399,8 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
      lobby » : la pile de coffres « À découvrir » vit désormais sur l'île. « Ouvrir » lance
      la cérémonie 1.3 (ctx.onOpenChest, RÉUTILISÉE) qui s'affiche par-dessus la scène ;
      l'objet rejoint alors sa collection (menu du domaine). Dialog focus-trappé, Échap ferme.
-     La pile de M1 reste en place pour l'instant (aucune régression). */
+     Depuis la brique (b), c'est le SEUL accès aux coffres : la pile jumelle de M1 est partie
+     (plus de doublon), seule la cérémonie reste partagée à la racine de l'App. */
   function HubChestCard(c) {
     var t = chestTypes.get(c.type);
     var typeLabel = t ? t.label : 'Coffre';
@@ -3491,7 +3495,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.14';
+  var VER = '0.15';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
@@ -3559,7 +3563,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 
   // Pose le bandeau doux « montée de niveau » (Phase 2.2) à partir du résultat d'une action.
   // Célébration SOBRE (arbitrage Leo) : on cite le niveau le plus haut atteint et le nombre de
-  // Coffres de cristal tombés dans « À découvrir ». Non bloquant, dismissible, jamais punitif.
+  // Coffres de cristal accostés au ponton de l'île. Non bloquant, dismissible, jamais punitif.
   function noteLevelUps(res) {
     if (!res || !res.ok || !res.levelUps || !res.levelUps.length) return;
     var top = res.levelUps[res.levelUps.length - 1];    // le niveau le plus élevé franchi
@@ -3746,21 +3750,22 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   }
 
   // Bandeau doux après un JALON franchi (Phase 1.5) — même grammaire que « quête accomplie » :
-  // célèbre le cap, guide vers la pile « À découvrir », dismissible, jamais culpabilisant.
+  // célèbre le cap, guide vers le PONTON de l'île (brique lobby (b) : les coffres n'ont plus de
+  // pile ici, ils accostent au ponton), dismissible, jamais culpabilisant.
   function MilestoneBanner() {
     var m = ui.milestoneDone;
     if (!m) return null;
     return html`
       <div class="milestone-done" role="status">
         <span>✨ Jalon des <strong>${m.threshold}</strong> franchi — ton <strong>${m.chestLabel}</strong>${' '}
-        t’attend plus bas, dans « À découvrir ».</span>
+        vient d’accoster au ponton de ton île.</span>
         <button class="lnk" type="button"
                 onClick=${function () { ui.milestoneDone = null; paint(); }}>OK</button>
       </div>`;
   }
 
   // Bandeau doux après une MONTÉE DE NIVEAU (Phase 2.2) — même grammaire que jalon/quête :
-  // célèbre le cap du bâtiment, guide vers la pile « À découvrir » où t'attend le Coffre de
+  // célèbre le cap du bâtiment, guide vers le PONTON de l'île où accoste le Coffre de
   // cristal, dismissible, jamais culpabilisant. Célébration SOBRE (arbitrage Leo).
   function LevelBanner() {
     var m = ui.levelDone;
@@ -3769,7 +3774,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     return html`
       <div class="milestone-done level-done" role="status">
         <span>🏛️ Ton <strong>${m.domainLabel}</strong> atteint le <strong>niveau ${m.level}</strong> —
-        ${plural ? 'des Coffres de cristal t’attendent' : 'un Coffre de cristal t’attend'} plus bas, dans « À découvrir ».</span>
+        ${plural ? 'des Coffres de cristal ont accosté' : 'un Coffre de cristal a accosté'} au ponton de ton île.</span>
         <button class="lnk" type="button"
                 onClick=${function () { ui.levelDone = null; paint(); }}>OK</button>
       </div>`;
@@ -3782,41 +3787,6 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
         <div class="e-title">Ton île attend sa première graine</div>
         <p>Crée une habitude que tu veux faire souvent — elle réveillera ton île.</p>
       </div>`;
-  }
-
-  /* ------------------------------------------------------- coffres (Phase 1.2) */
-  // Une entrée de la pile : vignette placeholder + type + libellé de source.
-  // Non interactive : en 1.2 le coffre s'affiche seulement (l'ouverture = Phase 1.3).
-  function ChestCard(c) {
-    var t = chestTypes.get(c.type);
-    var typeLabel = t ? t.label : 'Coffre';
-    return html`
-      <li class="chest">
-        <span class="chest-vig chest-vig--${c.type}" aria-hidden="true"></span>
-        <div class="chest-main">
-          <div class="chest-title">${typeLabel}</div>
-          <div class="chest-src">${c.sourceLabel}</div>
-        </div>
-        <button class="btn gold chest-open" type="button"
-                aria-label=${'Ouvrir : ' + typeLabel}
-                onClick=${function () { openChest(c.id); }}>Ouvrir</button>
-      </li>`;
-  }
-
-  // Pile SEREINE : pas de badge rouge, pas de compteur culpabilisant, pas d'« ouvre
-  // vite ». Absente tant qu'il n'y a aucun coffre (0 coffre = rien ne s'affiche → état
-  // vide serein). Les plus récents en haut ; c'est déjà une vue liste accessible.
-  function ChestPile() {
-    var list = (store.get().chests || []).filter(function (c) { return c && c.id; });
-    if (!list.length) return null;
-    var display = list.slice().reverse();
-    return html`
-      <section class="section chest-section" aria-label="Coffres à découvrir">
-        <h2 class="sec-title">À découvrir</h2>
-        <p class="sec-note">Tes coffres s’accumulent tranquillement — chacun garde le
-        souvenir de ce que tu as accompli. Rien ne presse.</p>
-        <ul class="chest-list">${display.map(ChestCard)}</ul>
-      </section>`;
   }
 
   /* ------------------------------------------------ carte-récompense (placeholder) */
@@ -3960,7 +3930,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   }
 
   // Section Quêtes : soit la quête en cours (un seul chrono), soit le lanceur. Un bandeau doux
-  // guide vers la pile « À découvrir » juste après un accomplissement.
+  // guide vers le PONTON de l'île juste après un accomplissement.
   function QuestSection() {
     var aq = store.get().activeQuest;
     var active = derive.isValidActiveQuest(aq);
@@ -3972,7 +3942,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
         ${ui.quest.done
           ? html`
             <div class="quest-done" role="status">
-              <span>Quête accomplie 🎉 — ton <strong>${ui.quest.done.label}</strong> t’attend plus bas, dans « À découvrir ».</span>
+              <span>Quête accomplie 🎉 — ton <strong>${ui.quest.done.label}</strong> vient d’accoster au ponton de ton île.</span>
               <button class="lnk" type="button" onClick=${function () { ui.quest.done = null; paint(); }}>OK</button>
             </div>`
           : null}
@@ -3980,7 +3950,9 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
       </section>`;
   }
 
-  // Écran M1 (habitudes / quêtes / coffres / collection) — inchangé, désormais un onglet.
+  // Écran M1 (habitudes / quêtes) — un onglet. Brique lobby (b) : la pile de coffres « À
+  // découvrir » a QUITTÉ cet écran (les coffres accostent au ponton de l'île, Phase 3.2) ;
+  // seule la cérémonie 1.3 reste montée à la racine de l'App, partagée avec l'île.
   function HabitScreen() {
     var habits = (store.get().habits || []).filter(function (hb) { return hb && hb.id; });
     return html`
@@ -4003,7 +3975,6 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
         </section>
 
         ${QuestSection()}
-        ${ChestPile()}
       </main>`;
   }
 
