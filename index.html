@@ -605,6 +605,75 @@ body {
 .isl-deco-pad { fill: var(--plot-2); opacity: .5; }
 .isl-emoji { dominant-baseline: middle; }
 
+/* ---- Placement des décorations (Phase 2.3) ---- */
+/* Emplacement libre : pastille discrète ; devient une cible qui pulse quand un objet attend. */
+.isl-slot .isl-deco-pad { stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 5; }
+.isl-slot.pulse { cursor: pointer; }
+.isl-slot.pulse .isl-deco-pad {
+  fill: var(--accent-soft); opacity: .95; stroke: var(--accent); stroke-dasharray: none;
+  animation: isl-pulse 1.4s ease-in-out infinite;
+}
+.isl-slot-plus { fill: var(--accent); font-size: 20px; font-weight: 800; dominant-baseline: middle; }
+@keyframes isl-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+
+/* Déco posée : pad + pastille de l'objet (placeholder ; les SVG Claude Design suivront en 2.4). */
+.isl-placed { cursor: grab; }
+.isl-placed:active { cursor: grabbing; }
+.isl-placed .placed-pad { fill: var(--plot-2); opacity: .55; stroke: none; }
+.isl-placed .isl-pdot { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.isl-placed.special .isl-pdot { stroke: var(--gold); stroke-width: 2; }
+.isl-placed.sel .isl-pdot { stroke: var(--accent); stroke-width: 2.5; }
+.isl-placed .isl-pemoji { font-size: 17px; dominant-baseline: middle; }
+
+/* Barre de placement (remplace le hint pendant qu'un objet attend une case). */
+.isl-place-bar {
+  position: absolute; top: 10px; left: 12px; right: 12px; z-index: 3;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 12px; border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid var(--accent); box-shadow: 0 6px 20px -12px var(--shadow);
+}
+.isl-place-bar .ipb-emoji { font-size: 20px; line-height: 1; flex: 0 0 auto; }
+.isl-place-bar .ipb-txt { font-size: 13px; color: var(--ink); min-width: 0; flex: 1 1 140px; }
+.isl-place-bar .ipb-btn {
+  min-height: 40px; padding: 0 14px; border-radius: var(--r-pill); border: 1px solid var(--accent);
+  background: var(--accent-soft); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.isl-place-bar .ipb-btn.ghost { background: transparent; border-color: var(--line); color: var(--ink-2); }
+
+/* Pioche « À placer » (bas de la scène) : chips horizontales, au-dessus des onglets. */
+.isl-tray {
+  position: absolute; left: 10px; right: 10px; z-index: 3;
+  bottom: calc(var(--nav-h) + 12px + env(safe-area-inset-bottom));
+  padding: 8px 10px 10px; border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid var(--line); box-shadow: 0 10px 28px -16px var(--shadow);
+}
+.isl-tray .itray-head { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); margin: 0 2px 6px; }
+.isl-tray .itray-scroll { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+.isl-tray .itray-item {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 8px; min-height: 44px;
+  padding: 6px 12px; border-radius: var(--r-pill); border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.isl-tray .itray-item.on { border-color: var(--accent); background: var(--accent-soft); }
+.isl-tray .itray-item .iti-emoji { font-size: 18px; }
+.isl-tray .itray-item .iti-name { white-space: nowrap; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
+
+/* Contrôles de placement dans la vue LISTE (sélecteur + bouton). */
+.ii-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 8px; }
+.isl-place-ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.isl-place-ctl .ipl-lab { font-size: 12px; color: var(--ink-2); }
+.isl-select {
+  min-height: 44px; padding: 0 12px; border-radius: var(--r-md);
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px;
+}
+.isl-place-ctl .ipl-go { min-height: 44px; padding: 0 16px; }
+.isl-place-ctl .ipl-none { font-size: 12px; color: var(--ink-2); }
+.isl-empty-note { font-size: 13px; color: var(--ink-2); margin: 2px 0 4px; }
+.isl-item.placed-item { border-color: var(--accent); }
+.isl-item .ii-main { flex: 1 1 auto; }
+
 /* Bâtiment relevé (Phase 2.2) : la ruine qui se relève — tour géométrique + lumière.
    Placeholder ; les assets Claude Design (2.4) prendront le relais sur la même ancre. */
 .isl-glow  { fill: var(--gold); }
@@ -1907,6 +1976,63 @@ body {
     return null;
   }
 
+  /* ------------------------------------------------ placement sur l'île (Phase 2.3) */
+  // SEUL état stocké = la POSITION : placements = [{invId, zone:'ile', x, y}] (TDD §4).
+  // L'objet affiché reste DÉRIVÉ de inventory (cards.resolve) — non destructif : poser,
+  // déplacer, ranger ne touchent JAMAIS inventory ni history. Ranger = simplement retirer
+  // la position (l'objet reste dans la collection).
+  function invHas(st, invId) {
+    var inv = st.inventory || [];
+    for (var i = 0; i < inv.length; i++) if (inv[i] && inv[i].id === invId) return true;
+    return false;
+  }
+  function nearCoord(a, b) { return Math.abs((+a) - (+b)) < 0.5; } // ancres = entiers, stockées exactes
+
+  // Pose (ou déplace) `invId` sur l'emplacement de l'île en (x,y). Non destructif, indulgent :
+  // - si l'emplacement est occupé par un AUTRE objet et que `invId` était DÉJÀ posé ailleurs
+  //   (glisser-déposer) → ÉCHANGE POSITIONNEL : l'occupant reprend l'ancienne case ;
+  // - si l'emplacement est occupé et que `invId` venait de l'inventaire (choisir-puis-poser)
+  //   → l'occupant repart dans l'inventaire (sa position est retirée, l'objet est conservé).
+  // On ne touche que les positions de ZONE 'ile' (un futur placement au musée survivrait).
+  function putOnIsland(invId, x, y) {
+    if (typeof invId !== 'string' || !invId) return { ok: false, reason: 'invalide' };
+    if (!(typeof x === 'number' && isFinite(x) && typeof y === 'number' && isFinite(y))) return { ok: false, reason: 'invalide' };
+    var st = store.get();
+    if (!invHas(st, invId)) return { ok: false, reason: 'introuvable' };
+    var pls = (st.placements || []).filter(function (p) { return p && typeof p === 'object' && typeof p.invId === 'string'; });
+    var prev = null;   // position ACTUELLE de invId sur l'île (déplacement) ou null (depuis l'inventaire)
+    var occ = null;    // objet occupant DÉJÀ l'emplacement cible
+    for (var i = 0; i < pls.length; i++) {
+      var p = pls[i];
+      if (p.zone !== 'ile') continue;
+      if (p.invId === invId) { prev = p; continue; }
+      if (occ === null && nearCoord(p.x, x) && nearCoord(p.y, y)) occ = p;
+    }
+    var kept = [];
+    for (var k = 0; k < pls.length; k++) {
+      var q = pls[k];
+      if (q.zone === 'ile' && q.invId === invId) continue;               // on ré-écrit la position de invId
+      if (occ && q.zone === 'ile' && q.invId === occ.invId) continue;    // occupant : géré ci-dessous
+      kept.push(q);
+    }
+    if (occ && prev) kept.push({ invId: occ.invId, zone: 'ile', x: prev.x, y: prev.y }); // échange positionnel
+    // (occ && !prev) → occupant retiré = repart dans l'inventaire (aucun re-push).
+    kept.push({ invId: invId, zone: 'ile', x: x, y: y });
+    store.set({ placements: kept });
+    return { ok: true, reason: 'pose', swapped: !!occ };
+  }
+
+  // Range un objet (retire sa position sur l'île) — l'objet RESTE dans inventory (collection).
+  // Idempotent : rien de posé → no-op propre.
+  function takeOffIsland(invId) {
+    var st = store.get();
+    var pls = (st.placements || []).filter(function (p) { return p && typeof p === 'object'; });
+    var next = pls.filter(function (p) { return !(p.invId === invId && p.zone === 'ile'); });
+    if (next.length === pls.length) return { ok: false, reason: 'aucune' };
+    store.set({ placements: next });
+    return { ok: true, reason: 'range' };
+  }
+
   // Ouvre un coffre : c'est ICI que le tirage (dérivé, idempotent tant que non ouvert) est
   // FIGÉ en une entrée d'inventory (GDD §4.3, TDD §4). Le coffre quitte la pile ; l'objet
   // rejoint la collection avec ses métadonnées-souvenir (§5.2) : date + source reprise du
@@ -2021,25 +2147,33 @@ body {
     openChest: openChest,
     startQuest: startQuest,
     finishQuest: finishQuest,
-    abandonQuest: abandonQuest
+    abandonQuest: abandonQuest,
+    putOnIsland: putOnIsland,
+    takeOffIsland: takeOffIsland
   };
 })();
 
-/* ASCEND v2 — La scène de l'île (Phase 2.1, début du jalon M2).
+/* ASCEND v2 — La scène de l'île (Phases 2.1 → 2.3, jalon M2).
    PREMIER écran du monde, à côté de M1 (habitudes/quêtes/coffres/collection).
 
    Contenu :
-   - une SCÈNE SVG en calques (mer · île · parcelles en ruines · brume), pilotée au
-     doigt en PAN + ZOOM via Pointer Events NATIFS (leçon v1 : pas de lib), bornes douces ;
-   - une VUE LISTE MIROIR sémantique (accessibilité NON négociable) : équivalent 1:1
-     de la scène, navigable clavier / lecteur d'écran ; bascule Scène ↔ Liste.
+   - une SCÈNE SVG en calques (mer · île · parcelles/bâtiments · emplacements · brume),
+     pilotée au doigt en PAN + ZOOM via Pointer Events NATIFS (leçon v1 : pas de lib) ;
+   - le PLACEMENT des décorations (2.3) : poser un objet de l'inventaire sur un emplacement
+     libre (« choisir puis poser » — arbitrage Leo), le DÉPLACER au glisser (échange positionnel
+     si occupé), le RANGER (retire la position ; l'objet reste dans la collection) ;
+   - une VUE LISTE MIROIR sémantique (accessibilité NON négociable) : équivalent complet
+     de la scène — placer/déplacer/ranger AUSSI au clavier via un sélecteur d'emplacement.
 
-   En 2.1 les 5 parcelles sont VIDES : on montre des FONDATIONS EN RUINES qui s'éveillent
-   (les bâtiments/niveaux = 2.2). Rien d'achetable, rien de dérivable stocké : la scène ne
-   lit que la LISTE des domaines (domains.js). Placeholders géométriques propres ; les SVG
-   Claude Design viendront en 2.4 sur des ids/ancres STABLES (voir GEO ci-dessous).
+   Invariant d'intégrité (TDD §4) : le SEUL état stocké est la POSITION
+   (placements = [{invId, zone:'ile', x, y}]) ; l'objet affiché reste DÉRIVÉ de inventory
+   (cards.resolve). Le NOMBRE d'emplacements est DÉRIVÉ de l'élan (jamais stocké) : 3 de base
+   + 1 par niveau de bâtiment gagné (l'île s'étend quand les bâtiments montent — GDD §6.1),
+   plafonné au nombre d'ancres STABLES. Placeholders géométriques ; les SVG Claude Design
+   viendront en 2.4 sur ces ancres.
 
-   API : window.AscendIsland = { Screen(ctx) } où ctx = { view:'scene'|'liste', onView, ver }. */
+   API : window.AscendIsland = { Screen(ctx) } où
+   ctx = { view:'scene'|'liste', onView, ver, repaint }. */
 (function () {
   'use strict';
   var h = window.preact.h;
@@ -2047,6 +2181,8 @@ body {
   var domains = window.AscendDomains;
   var derive = window.AscendDerive;
   var store = window.AscendStore;
+  var actions = window.AscendActions;
+  var cards = window.AscendCards;
 
   /* ------------------------------------------------------------------ géométrie
      Monde fixe (unités SVG) ; ancres STABLES (2.4 y posera les assets réels).
@@ -2063,32 +2199,87 @@ body {
     { x: 610, y: 516 },
     { x: 714, y: 470 }
   ];
-  // Emplacements de décoration neutres (quelques-uns ; ancres stables : deco-1…).
-  var DECO = [
-    { x: 402, y: 402 },
-    { x: 598, y: 402 }
-  ];
 
-  // Chaque parcelle porte désormais son niveau + son élan (Phase 2.2), DÉRIVÉS de history
-  // (jamais stockés) via derive.buildingInfo — la scène ET la vue liste lisent la même source.
-  function parcelles() {
-    var list = domains.list, st = store.get(), out = [];
-    for (var i = 0; i < list.length && i < ARC.length; i++) {
-      var d = list[i];
-      var info = derive.buildingInfo(st, d.id);
-      out.push({
-        domain: d, x: ARC[i].x, y: ARC[i].y, id: 'parcelle-' + d.id,
-        level: info.level, elan: info.elan, remaining: info.remaining
-      });
+  // Emplacements de décoration — ancres STABLES, append-only (ids deco-1…deco-12). Réparties
+  // sur le « jardin » de l'île (derrière les bâtiments de l'avant, hors du centre réservé au
+  // musée). L'ORDRE = ordre de déblocage : les 3 premières sont ouvertes d'emblée, puis une de
+  // plus par niveau de bâtiment gagné. Cases LARGES, bien espacées (jamais un Tetris — §6.1).
+  var SLOTS = [
+    { x: 380, y: 258 }, { x: 620, y: 258 }, { x: 500, y: 205 },   // 1-3 : base
+    { x: 255, y: 335 }, { x: 745, y: 335 },                       // 4-5
+    { x: 400, y: 340 }, { x: 600, y: 340 },                       // 6-7
+    { x: 255, y: 258 }, { x: 745, y: 258 },                       // 8-9
+    { x: 200, y: 420 }, { x: 800, y: 420 },                       // 10-11
+    { x: 500, y: 278 }                                            // 12
+  ];
+  var BASE_SLOTS = 3;
+
+  /* ------------------------------------------------------------ état d'UI (module) */
+  // JAMAIS persisté (le store ne voit que putOnIsland/takeOffIsland). Survit aux re-rendus.
+  var pending = null;       // { invId, from:'tray'|'placed' } — objet en attente d'un emplacement
+  var drag = null;          // { invId, id, node, sx, sy, base:{x,y}, cur:{x,y}, moved } — glisser en cours
+  var listSel = {};         // invId -> index de slot choisi dans la vue liste (sélecteur)
+  var repaint = function () {}; // fourni par ctx.repaint (app.js) pour les changements d'UI éphémère
+
+  /* ---------------------------------------------------------------- dérivés de lecture */
+  function unlockedCount(st) {
+    return Math.max(BASE_SLOTS, Math.min(SLOTS.length, BASE_SLOTS + derive.totalBuildingLevels(st)));
+  }
+  function invEntry(st, invId) {
+    var inv = st.inventory || [];
+    for (var i = 0; i < inv.length; i++) if (inv[i] && inv[i].id === invId) return inv[i];
+    return null;
+  }
+  // Placements valides de l'île : zone 'ile', invId encore présent dans inventory, x/y finis.
+  function islePlacements(st) {
+    var pls = st.placements || [], out = [];
+    for (var i = 0; i < pls.length; i++) {
+      var p = pls[i];
+      if (!p || p.zone !== 'ile' || typeof p.invId !== 'string') continue;
+      if (!(typeof p.x === 'number' && isFinite(p.x) && typeof p.y === 'number' && isFinite(p.y))) continue;
+      if (!invEntry(st, p.invId)) continue;   // save bricolée : position orpheline ignorée (jamais de crash)
+      out.push(p);
     }
     return out;
+  }
+  function isPlaced(st, invId) {
+    var pls = islePlacements(st);
+    for (var i = 0; i < pls.length; i++) if (pls[i].invId === invId) return true;
+    return false;
+  }
+  // Inventaire « à placer » : tout objet obtenu dont la position n'est pas (encore) sur l'île.
+  function unplaced(st) {
+    var inv = (st.inventory || []).filter(function (e) { return e && e.id; });
+    return inv.filter(function (e) { return !isPlaced(st, e.id); });
+  }
+  // Emplacements débloqués + occupation. free = débloqué & sans objet posé dessus.
+  function slotState(st) {
+    var count = unlockedCount(st), pls = islePlacements(st);
+    var unlocked = [];
+    for (var i = 0; i < count; i++) {
+      var s = SLOTS[i], occ = null;
+      for (var j = 0; j < pls.length; j++) {
+        if (Math.abs(pls[j].x - s.x) < 0.5 && Math.abs(pls[j].y - s.y) < 0.5) { occ = pls[j].invId; break; }
+      }
+      unlocked.push({ index: i, id: 'deco-' + (i + 1), x: s.x, y: s.y, occupant: occ });
+    }
+    return unlocked;
+  }
+  function freeSlots(st) { return slotState(st).filter(function (s) { return !s.occupant; }); }
+
+  // Glyphe placeholder d'un objet posé (les vrais SVG Claude Design suivront en 2.4).
+  function glyph(item) {
+    if (!item) return '✨';
+    if (item.milestone) return '🏆';
+    if (item.generative) return '🌿';
+    var d = domains.get(item.domain);
+    return d ? d.emoji : '✨';
   }
 
   /* --------------------------------------------------- contrôleur PAN + ZOOM (natif)
      Manipule le viewBox du <svg> (coordonnées MONDE naturelles, focal-point exact).
      Un seul pointeur = pan ; deux = pinch ; molette = zoom au curseur (desktop).
-     Bornes DOUCES (petite marge). Aucune animation → reduce-motion-safe d'office.
-     L'état de vue est conservé au niveau module pour survivre aux re-rendus Preact. */
+     Bornes DOUCES. Expose clientToWorld pour le glisser-déposer d'une déco. */
   var AR = WORLD.h / WORLD.w;
   var MINW = WORLD.w / 3.2;     // zoom max (~3,2×)
   var MAXW = WORLD.w;           // dézoom max = île entière (fit)
@@ -2099,9 +2290,9 @@ body {
     var view = savedView
       ? { x: savedView.x, y: savedView.y, w: savedView.w, h: savedView.h }
       : { x: (WORLD.w - MAXW) / 2, y: (WORLD.h - MAXW * AR) / 2, w: MAXW, h: MAXW * AR };
-    var pointers = {};           // pointerId -> { x, y }
-    var panAnchor = null;        // point MONDE sous le doigt au début du pan
-    var pinch = null;            // { dist, baseW } — figés au début du geste à 2 doigts
+    var pointers = {};
+    var panAnchor = null;
+    var pinch = null;
 
     function count() { return Object.keys(pointers).length; }
 
@@ -2118,7 +2309,6 @@ body {
       svg.setAttribute('viewBox', view.x + ' ' + view.y + ' ' + view.w + ' ' + view.h);
       savedView = { x: view.x, y: view.y, w: view.w, h: view.h };
     }
-    // client(px) -> monde, sous le viewBox courant (preserveAspectRatio xMidYMid meet).
     function toWorld(cx, cy) {
       var r = svg.getBoundingClientRect();
       if (!r.width || !r.height) return { x: view.x + view.w / 2, y: view.y + view.h / 2 };
@@ -2126,7 +2316,6 @@ body {
       var ox = (r.width - view.w * s) / 2, oy = (r.height - view.h * s) / 2;
       return { x: view.x + (cx - r.left - ox) / s, y: view.y + (cy - r.top - oy) / s };
     }
-    // Place le monde de sorte que worldPt reste sous le point client (cx,cy) — zoom focal.
     function anchorAt(worldPt, cx, cy) {
       var r = svg.getBoundingClientRect();
       var s = Math.min(r.width / view.w, r.height / view.h);
@@ -2142,7 +2331,6 @@ body {
       var ks = Object.keys(pointers), a = pointers[ks[0]], b = pointers[ks[1]];
       return Math.hypot(a.x - b.x, a.y - b.y);
     }
-    // (Re)fige les repères du geste courant selon le nombre de doigts posés.
     function rebaseGesture() {
       var n = count();
       pinch = null; panAnchor = null;
@@ -2150,7 +2338,7 @@ body {
         var k = Object.keys(pointers)[0];
         panAnchor = toWorld(pointers[k].x, pointers[k].y);
       } else if (n >= 2) {
-        pinch = { dist: dist(), baseW: view.w };   // distance + largeur de référence figées
+        pinch = { dist: dist(), baseW: view.w };
       }
     }
 
@@ -2167,20 +2355,20 @@ body {
         var cur = toWorld(e.clientX, e.clientY);
         view.x -= (cur.x - panAnchor.x);
         view.y -= (cur.y - panAnchor.y);
-        apply();                                   // panAnchor reste collé au doigt
+        apply();
       } else if (n >= 2 && pinch && pinch.dist > 0) {
-        var m = midClient();                       // milieu client courant
-        var midWorld = toWorld(m.x, m.y);          // point monde sous ce milieu (avant zoom)
+        var m = midClient();
+        var midWorld = toWorld(m.x, m.y);
         var nd = dist();
         if (nd > 0) { view.w = Math.max(MINW, Math.min(MAXW, pinch.baseW * (pinch.dist / nd))); view.h = view.w * AR; }
-        anchorAt(midWorld, m.x, m.y);              // garde le milieu collé aux doigts
+        anchorAt(midWorld, m.x, m.y);
         apply();
       }
     }
     function onUp(e) {
       delete pointers[e.pointerId];
       try { svg.releasePointerCapture(e.pointerId); } catch (err) {}
-      rebaseGesture();                             // 2→1 : repasse en pan proprement
+      rebaseGesture();
     }
     function onWheel(e) {
       e.preventDefault();
@@ -2200,6 +2388,7 @@ body {
     apply();
 
     return {
+      clientToWorld: toWorld,
       reset: function () {
         view.x = (WORLD.w - MAXW) / 2; view.y = (WORLD.h - MAXW * AR) / 2;
         view.w = MAXW; view.h = MAXW * AR; apply();
@@ -2225,12 +2414,79 @@ body {
   }
   function recenter() { if (controller) controller.reset(); }
 
-  /* --------------------------------------------------------------- rendu SVG (calques)
-     Placeholders géométriques : chaque parcelle = une FONDATION EN RUINES (socle de
-     pierre + moignons de colonnes brisées + pastille domaine en sommeil). La brume
-     DOUCE voile la périphérie (zones « à débloquer », 2.2) sans rien dévoiler. */
-  // Aiguilleur : parcelle DORMANTE (niveau 0 = ruine en sommeil) ou BÂTIMENT relevé (niveau ≥ 1).
-  // Même ancre stable `parcelle-<domain>` dans les deux cas (2.4 y posera les assets réels).
+  /* --------------------------------------------------- interactions de placement */
+  function selectFromTray(invId) {
+    pending = (pending && pending.from === 'tray' && pending.invId === invId) ? null : { invId: invId, from: 'tray' };
+    repaint();
+  }
+  function placeOnSlot(slot) {
+    if (!pending) return;
+    var invId = pending.invId;
+    pending = null;                              // AVANT la mutation : le re-rendu qu'elle déclenche voit l'état à jour
+    actions.putOnIsland(invId, slot.x, slot.y);  // mutation → re-render via subscribe
+  }
+  function rangePending() {
+    if (!pending) return;
+    var invId = pending.invId;
+    pending = null;
+    actions.takeOffIsland(invId);
+  }
+  function cancelPending() { pending = null; repaint(); }
+
+  // Emplacement débloqué le PLUS PROCHE d'un point monde (pour le lâcher d'un glisser).
+  function nearestSlot(st, pt) {
+    var us = slotState(st), best = null, bd = 1e9;
+    for (var i = 0; i < us.length; i++) {
+      var d = Math.hypot(us[i].x - pt.x, us[i].y - pt.y);
+      if (d < bd) { bd = d; best = us[i]; }
+    }
+    return (best && bd < 80) ? best : null;   // tolérance de lâcher (unités monde)
+  }
+
+  // Glisser-déposer d'une déco POSÉE : tap (sans mouvement) = sélection ; glisser = déplacement
+  // (échange positionnel si l'on lâche sur une case occupée — via actions.putOnIsland).
+  function onDecoDown(e, invId, base) {
+    if (!controller) return;
+    e.stopPropagation();                       // empêche le pan de démarrer sous le doigt
+    var node = e.currentTarget;
+    try { node.setPointerCapture(e.pointerId); } catch (err) {}
+    drag = { invId: invId, id: e.pointerId, node: node, sx: e.clientX, sy: e.clientY, base: base, cur: { x: base.x, y: base.y }, moved: false };
+  }
+  function onDecoMove(e) {
+    if (!drag || e.pointerId !== drag.id || !controller) return;
+    var w0 = controller.clientToWorld(drag.sx, drag.sy);
+    var w1 = controller.clientToWorld(e.clientX, e.clientY);
+    drag.cur = { x: drag.base.x + (w1.x - w0.x), y: drag.base.y + (w1.y - w0.y) };
+    if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 6) drag.moved = true;
+    if (drag.node) drag.node.setAttribute('transform', 'translate(' + drag.cur.x + ',' + drag.cur.y + ')');
+  }
+  function onDecoUp(e, invId, pos) {
+    if (!drag || e.pointerId !== drag.id) return;
+    try { drag.node.releasePointerCapture(e.pointerId); } catch (err) {}
+    var moved = drag.moved, cur = drag.cur;
+    drag = null;
+    if (moved) {                                // glisser → déplacer (échange si occupé)
+      var slot = nearestSlot(store.get(), cur);
+      if (slot) { actions.putOnIsland(invId, slot.x, slot.y); }
+      else { repaint(); }                       // hors cible → re-render remet la déco à sa place
+      return;
+    }
+    // tap sans mouvement → poser l'objet en attente ICI, sinon (dé)sélectionner cette déco
+    if (pending && pending.invId !== invId) { var pv = pending.invId; pending = null; actions.putOnIsland(pv, pos.x, pos.y); }
+    else if (pending && pending.invId === invId) { pending = null; repaint(); }
+    else { pending = { invId: invId, from: 'placed' }; repaint(); }
+  }
+
+  /* --------------------------------------------------------------- rendu SVG (calques) */
+  function parcelles() {
+    var list = domains.list, st = store.get(), out = [];
+    for (var i = 0; i < list.length && i < ARC.length; i++) {
+      var d = list[i];
+      var info = derive.buildingInfo(st, d.id);
+      out.push({ domain: d, x: ARC[i].x, y: ARC[i].y, id: 'parcelle-' + d.id, level: info.level, elan: info.elan, remaining: info.remaining });
+    }
+    return out;
+  }
   function parcelleNode(p) { return (p.level >= 1) ? building(p) : ruin(p); }
 
   function ruin(p) {
@@ -2240,28 +2496,21 @@ body {
          data-domain=${d.id} data-level="0">
         <ellipse class="isl-plot" cx="0" cy="0" rx="58" ry="27" />
         <ellipse class="isl-plot-in" cx="0" cy="-2" rx="44" ry="19" />
-        <!-- moignons de colonnes brisées (ruine qui s'éveille) -->
         <rect class="isl-ruin" x="-34" y="-30" width="11" height="24" rx="3" />
         <rect class="isl-ruin" x="-6"  y="-38" width="12" height="33" rx="3" />
         <rect class="isl-ruin" x="22"  y="-26" width="10" height="20" rx="3" />
-        <!-- pastille domaine, en sommeil (basse opacité) -->
         <circle class="isl-badge" cx="0" cy="-8" r="17" />
         <text class="isl-emoji" x="0" y="-1" text-anchor="middle">${d.emoji}</text>
       </g>`;
   }
 
-  // La ruine RELEVÉE (arbitrage Leo : « tour à étages qui grandit + lumière »). Placeholder
-  // GÉOMÉTRIQUE : un corps qui monte d'un étage par niveau (plafond visuel à 6 stades), des
-  // fenêtres allumées, une corniche + une lanterne-pastille du domaine (éveillée), et un halo
-  // de lumière dont l'intensité croît avec le niveau. Aucune animation → reduce-motion d'office.
-  // Les vrais SVG Claude Design remplaceront ceci en 2.4, sur la MÊME ancre.
   function building(p) {
     var d = p.domain;
-    var L = Math.min(p.level, 6);            // stades visuels plafonnés (placeholder)
+    var L = Math.min(p.level, 6);
     var floorH = 15, bodyW = 46;
-    var bodyH = 18 + (L - 1) * floorH;       // le corps grandit avec le niveau
-    var baseY = 6;                           // pose sur le socle (un poil sous le centre du plot)
-    var topY = baseY - bodyH;                // sommet du corps
+    var bodyH = 18 + (L - 1) * floorH;
+    var baseY = 6;
+    var topY = baseY - bodyH;
     var glowOp = Math.min(0.5, 0.12 + L * 0.06);
     var wins = [];
     for (var f = 0; f < L; f++) {
@@ -2276,36 +2525,67 @@ body {
                  style=${'opacity:' + glowOp} />
         <ellipse class="isl-plot" cx="0" cy="0" rx="58" ry="27" />
         <ellipse class="isl-plot-in" cx="0" cy="-2" rx="44" ry="19" />
-        <!-- corps de la tour (grandit avec le niveau) -->
         <rect class="isl-tower" x=${-bodyW / 2} y=${topY} width=${bodyW} height=${bodyH} rx="4" />
-        <!-- fenêtres allumées (une rangée par étage) -->
         ${wins}
-        <!-- corniche + lanterne du domaine (éveillée) -->
         <rect class="isl-cap" x=${-bodyW / 2 - 2} y=${topY - 6} width=${bodyW + 4} height="7" rx="2" />
         <rect class="isl-stem" x="-2" y=${topY - 20} width="4" height="15" />
         <circle class="isl-badge" cx="0" cy=${topY - 26} r="15" />
         <text class="isl-emoji" x="0" y=${topY - 19} text-anchor="middle">${d.emoji}</text>
       </g>`;
   }
-  function decoSlot(p, i) {
+
+  // Emplacement LIBRE : pastille discrète en pointillés. Interactive (cible de pose) uniquement
+  // quand un objet est en attente (`pending`) → elle pulse et accepte le tap.
+  function freeSlotNode(slot) {
+    var active = !!pending;
     return html`
-      <g id=${'deco-' + (i + 1)} class="isl-deco" transform=${'translate(' + p.x + ',' + p.y + ')'}>
+      <g class="isl-slot ${active ? 'pulse' : ''}" transform=${'translate(' + slot.x + ',' + slot.y + ')'}
+         data-slot=${slot.id}
+         onpointerdown=${active ? function (e) { e.stopPropagation(); } : null}
+         onclick=${active ? function () { placeOnSlot(slot); } : null}>
         <ellipse class="isl-deco-pad" cx="0" cy="0" rx="30" ry="14" />
+        ${active ? html`<text class="isl-slot-plus" x="0" y="1" text-anchor="middle">+</text>` : null}
+      </g>`;
+  }
+
+  // Déco POSÉE : pad + glyphe placeholder. Glissable (déplacer) et tappable (sélectionner).
+  function placedNode(pl) {
+    var st = store.get();
+    var e = invEntry(st, pl.invId);
+    var item = e ? cards.resolve(e.itemId) : null;
+    var pos = (drag && drag.invId === pl.invId) ? drag.cur : { x: pl.x, y: pl.y };
+    var special = item && cards.rarityRank(item.rarity) >= 2;
+    var sel = pending && pending.invId === pl.invId;
+    var name = item ? item.name : 'Objet';
+    return html`
+      <g key=${pl.invId} class="isl-placed ${special ? 'special' : ''} ${sel ? 'sel' : ''}"
+         transform=${'translate(' + pos.x + ',' + pos.y + ')'} data-inv=${pl.invId} role="img"
+         aria-label=${'Décoration posée : ' + name}
+         onpointerdown=${function (ev) { onDecoDown(ev, pl.invId, { x: pl.x, y: pl.y }); }}
+         onpointermove=${onDecoMove}
+         onpointerup=${function (ev) { onDecoUp(ev, pl.invId, { x: pl.x, y: pl.y }); }}
+         onpointercancel=${function (ev) { onDecoUp(ev, pl.invId, { x: pl.x, y: pl.y }); }}>
+        <ellipse class="isl-deco-pad placed-pad" cx="0" cy="6" rx="30" ry="13" />
+        <circle class="isl-pdot" cx="0" cy="-6" r="17" />
+        <text class="isl-pemoji" x="0" y="-2" text-anchor="middle">${glyph(item)}</text>
       </g>`;
   }
 
   function Scene() {
+    var st = store.get();
     var ps = parcelles();
-    // Brume qui RECULE, progressive & globale (arbitrage Leo) : plus l'île mûrit (somme des
-    // niveaux), plus le voile clair s'étend (offset médian poussé vers l'extérieur) et plus la
-    // brume périphérique s'allège. DÉRIVÉ de history — rien de stocké.
-    var totalLv = derive.totalBuildingLevels(store.get());
+    var placed = islePlacements(st);
+    var free = freeSlots(st);
+    var toPlace = unplaced(st);
+    var totalLv = derive.totalBuildingLevels(st);
     var clear = Math.min(0.94, 0.72 + totalLv * 0.02).toFixed(3);
     var fogOut = Math.max(0.4, 0.9 - totalLv * 0.03).toFixed(3);
     var fit = ((WORLD.w - MAXW) / 2) + ' ' + ((WORLD.h - MAXW * AR) / 2) + ' ' + MAXW + ' ' + (MAXW * AR);
-    var initBox = savedView
-      ? (savedView.x + ' ' + savedView.y + ' ' + savedView.w + ' ' + savedView.h)
-      : fit;
+    var initBox = savedView ? (savedView.x + ' ' + savedView.y + ' ' + savedView.w + ' ' + savedView.h) : fit;
+
+    var pendingItem = null;
+    if (pending) { var pe = invEntry(st, pending.invId); pendingItem = pe ? cards.resolve(pe.itemId) : null; }
+
     return html`
       <div class="isl-stage">
         <svg class="isl-svg" viewBox=${initBox} preserveAspectRatio="xMidYMid meet"
@@ -2327,50 +2607,104 @@ body {
             </radialGradient>
           </defs>
 
-          <!-- CALQUE mer (déborde le monde pour couvrir l'overscroll) -->
-          <rect class="isl-mer" x="-80" y="-80" width=${WORLD.w + 160} height=${WORLD.h + 160}
-                fill="url(#isl-sea)" />
+          <rect class="isl-mer" x="-80" y="-80" width=${WORLD.w + 160} height=${WORLD.h + 160} fill="url(#isl-sea)" />
 
-          <!-- CALQUE île -->
           <g class="isl-land">
             <ellipse class="isl-shore" cx=${ISLE.cx} cy=${ISLE.cy + 10} rx=${ISLE.rx + 14} ry=${ISLE.ry + 12} />
             <ellipse cx=${ISLE.cx} cy=${ISLE.cy} rx=${ISLE.rx} ry=${ISLE.ry} fill="url(#isl-land)" />
           </g>
 
-          <!-- CALQUE emplacements + parcelles (ruine dormante OU bâtiment relevé selon le niveau) -->
-          <g class="isl-slots">${DECO.map(decoSlot)}</g>
+          <!-- CALQUE emplacements libres (cibles de pose quand un objet est en attente) -->
+          <g class="isl-slots">${free.map(freeSlotNode)}</g>
+          <!-- CALQUE parcelles (ruine dormante OU bâtiment relevé selon le niveau) -->
           <g class="isl-parcelles">${ps.map(parcelleNode)}</g>
+          <!-- CALQUE décorations posées (glissables) -->
+          <g class="isl-placeds">${placed.map(placedNode)}</g>
 
-          <!-- CALQUE brume DOUCE (voile la périphérie « à débloquer ») -->
-          <rect class="isl-brume" x="-80" y="-80" width=${WORLD.w + 160} height=${WORLD.h + 160}
-                fill="url(#isl-fog)" />
+          <rect class="isl-brume" x="-80" y="-80" width=${WORLD.w + 160} height=${WORLD.h + 160} fill="url(#isl-fog)" />
         </svg>
 
-        <div class="isl-hint" aria-hidden="true">Glisse pour explorer · pince ou molette pour zoomer</div>
-        <button class="isl-recenter" type="button" onClick=${recenter}
-                aria-label="Recentrer la vue de l’île">Recentrer</button>
-
-        ${totalLv === 0
+        ${pending
           ? html`
-            <div class="isl-wake" role="note">
-              <span class="iw-emoji" aria-hidden="true">🌱</span>
-              <p>Ton île s’éveille. Ces fondations en ruines attendent que ton élan les
-              relève — chaque domaine que tu fais vivre y bâtira son lieu.</p>
+            <div class="isl-place-bar" role="status">
+              <span class="ipb-emoji" aria-hidden="true">${glyph(pendingItem)}</span>
+              <span class="ipb-txt">Choisis un emplacement libre pour <strong>${pendingItem ? pendingItem.name : 'cet objet'}</strong>.</span>
+              ${pending.from === 'placed'
+                ? html`<button class="ipb-btn" type="button" onClick=${rangePending}
+                          aria-label=${'Ranger ' + (pendingItem ? pendingItem.name : 'cet objet') + ' dans ta collection'}>Ranger</button>`
+                : null}
+              <button class="ipb-btn ghost" type="button" onClick=${cancelPending} aria-label="Annuler le placement">Annuler</button>
             </div>`
-          : null}
+          : html`<div class="isl-hint" aria-hidden="true">Glisse pour explorer · pince ou molette pour zoomer</div>`}
+
+        <button class="isl-recenter" type="button" onClick=${recenter} aria-label="Recentrer la vue de l’île">Recentrer</button>
+
+        ${toPlace.length
+          ? html`
+            <div class="isl-tray" role="group" aria-label=${'Objets à placer (' + toPlace.length + ')'}>
+              <div class="itray-head">À placer · ${toPlace.length}</div>
+              <div class="itray-scroll">
+                ${toPlace.map(function (e) {
+                  var it = cards.resolve(e.itemId);
+                  var on = pending && pending.from === 'tray' && pending.invId === e.id;
+                  return html`
+                    <button type="button" class="itray-item ${on ? 'on' : ''}"
+                            aria-pressed=${on ? 'true' : 'false'}
+                            aria-label=${'Placer « ' + it.name + ' » sur l’île'}
+                            onClick=${function () { selectFromTray(e.id); }}>
+                      <span class="iti-emoji" aria-hidden="true">${glyph(it)}</span>
+                      <span class="iti-name">${it.name}</span>
+                    </button>`;
+                })}
+              </div>
+            </div>`
+          : (totalLv === 0
+            ? html`
+              <div class="isl-wake" role="note">
+                <span class="iw-emoji" aria-hidden="true">🌱</span>
+                <p>Ton île s’éveille. Ces fondations en ruines attendent que ton élan les relève —
+                et bientôt, les objets de tes coffres viendront la décorer.</p>
+              </div>`
+            : null)}
       </div>`;
   }
 
   /* ------------------------------------------------------------- vue LISTE (miroir 1:1)
-     Équivalent sémantique exact de la scène : chaque parcelle (par domaine) et chaque
-     emplacement de déco, avec le MÊME statut « fondation dormante » qu'en 2.1.
-     Navigable clavier / lecteur d'écran. */
+     Équivalent sémantique complet de la scène — le placement y est possible SANS le doigt :
+     sélecteur d'emplacement + boutons Placer / Déplacer / Ranger. */
+  function slotLabel(i) { return 'Emplacement ' + (i + 1); }
+
+  function ListPlaceControl(st, invId, isMove) {
+    var free = freeSlots(st);
+    if (!free.length) return html`<span class="ipl-none">Aucun emplacement libre — fais grandir tes bâtiments pour en débloquer.</span>`;
+    var cur = (typeof listSel[invId] === 'number' && free.some(function (s) { return s.index === listSel[invId]; }))
+      ? listSel[invId] : free[0].index;
+    return html`
+      <div class="isl-place-ctl">
+        <label class="ipl-lab" for=${'sel-' + invId}>Emplacement</label>
+        <select id=${'sel-' + invId} class="isl-select" onChange=${function (ev) { listSel[invId] = +ev.target.value; repaint(); }}>
+          ${free.map(function (s) {
+            return html`<option value=${s.index} selected=${s.index === cur ? true : null}>${slotLabel(s.index)}</option>`;
+          })}
+        </select>
+        <button class="btn ipl-go" type="button"
+                aria-label=${(isMove ? 'Déplacer vers ' : 'Placer sur ') + slotLabel(cur)}
+                onClick=${function () { var s = SLOTS[cur]; actions.putOnIsland(invId, s.x, s.y); }}>${isMove ? 'Déplacer' : 'Placer'}</button>
+      </div>`;
+  }
+
   function List() {
+    var st = store.get();
     var ps = parcelles();
+    var placed = islePlacements(st);
+    var toPlace = unplaced(st);
+    var slots = slotState(st);
+    var freeCount = slots.filter(function (s) { return !s.occupant; }).length;
     return html`
       <div class="isl-list">
-        <p class="isl-list-lead">Vue liste de ton île — équivalent complet de la scène.
-        Chaque parcelle porte son niveau et son élan ; les bâtiments s’élèvent avec ton élan.</p>
+        <p class="isl-list-lead">Vue liste de ton île — équivalent complet de la scène. Tu peux y
+        placer, déplacer et ranger tes décorations sans passer par le doigt.</p>
+
         <h3 class="isl-list-h">Parcelles de domaine (5)</h3>
         <ul class="isl-items">
           ${ps.map(function (p) {
@@ -2392,25 +2726,61 @@ body {
               </li>`;
           })}
         </ul>
-        <h3 class="isl-list-h">Emplacements de décoration (${DECO.length})</h3>
-        <ul class="isl-items">
-          ${DECO.map(function (_, i) {
-            return html`
-              <li class="isl-item" tabindex="0"
-                  aria-label=${'Emplacement de décoration ' + (i + 1) + ' — libre.'}>
-                <span class="ii-emoji" aria-hidden="true">✨</span>
-                <span class="ii-main">
-                  <span class="ii-title">Emplacement ${i + 1}</span>
-                  <span class="ii-state">Libre · à décorer plus tard</span>
-                </span>
-              </li>`;
-          })}
-        </ul>
+
+        <h3 class="isl-list-h">Décorations sur ton île (${placed.length})</h3>
+        ${placed.length
+          ? html`<ul class="isl-items">
+              ${placed.map(function (pl) {
+                var e = invEntry(st, pl.invId);
+                var it = e ? cards.resolve(e.itemId) : null;
+                var name = it ? it.name : 'Objet';
+                var idx = -1;
+                for (var i = 0; i < slots.length; i++) if (Math.abs(slots[i].x - pl.x) < 0.5 && Math.abs(slots[i].y - pl.y) < 0.5) { idx = slots[i].index; break; }
+                var where = idx >= 0 ? slotLabel(idx) : 'Sur l’île';
+                return html`
+                  <li class="isl-item placed-item" aria-label=${'Décoration « ' + name + ' » sur ' + where + '.'}>
+                    <span class="ii-emoji" aria-hidden="true">${glyph(it)}</span>
+                    <span class="ii-main">
+                      <span class="ii-title">${name}</span>
+                      <span class="ii-state">${where}</span>
+                      <div class="ii-actions">
+                        ${ListPlaceControl(st, pl.invId, true)}
+                        <button class="lnk" type="button" aria-label=${'Ranger « ' + name + ' » dans ta collection'}
+                                onClick=${function () { actions.takeOffIsland(pl.invId); }}>Ranger</button>
+                      </div>
+                    </span>
+                  </li>`;
+              })}
+            </ul>`
+          : html`<p class="isl-empty-note">Rien de posé pour l’instant — place un objet ci-dessous.</p>`}
+
+        <h3 class="isl-list-h">Objets à placer (${toPlace.length})</h3>
+        ${toPlace.length
+          ? html`<ul class="isl-items">
+              ${toPlace.map(function (e) {
+                var it = cards.resolve(e.itemId);
+                return html`
+                  <li class="isl-item" aria-label=${'Objet à placer : « ' + it.name + ' ».'}>
+                    <span class="ii-emoji" aria-hidden="true">${glyph(it)}</span>
+                    <span class="ii-main">
+                      <span class="ii-title">${it.name}</span>
+                      <span class="ii-state">${e.sourceLabel || 'Dans ta collection'}</span>
+                      <div class="ii-actions">${ListPlaceControl(st, e.id, false)}</div>
+                    </span>
+                  </li>`;
+              })}
+            </ul>`
+          : html`<p class="isl-empty-note">Tous tes objets sont posés — ouvre de nouveaux coffres pour en obtenir d’autres.</p>`}
+
+        <h3 class="isl-list-h">Emplacements (${slots.length})</h3>
+        <p class="isl-empty-note">${freeCount} libre${freeCount > 1 ? 's' : ''} sur ${slots.length}. Chaque niveau de
+        bâtiment gagné débloque un nouvel emplacement (jusqu’à ${SLOTS.length}).</p>
       </div>`;
   }
 
   /* --------------------------------------------------------------------- écran complet */
   function Screen(ctx) {
+    repaint = (ctx && typeof ctx.repaint === 'function') ? ctx.repaint : function () {};
     var view = ctx.view === 'liste' ? 'liste' : 'scene';
     return html`
       <main class="island-screen">
@@ -2451,7 +2821,7 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.10';
+  var VER = '0.11';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
@@ -3026,7 +3396,8 @@ body {
       ${onIsland
         ? island.Screen({
             view: ui.islandView, ver: VER,
-            onView: function (v) { if (ui.islandView !== v) { ui.islandView = v; paint(); } }
+            onView: function (v) { if (ui.islandView !== v) { ui.islandView = v; paint(); } },
+            repaint: paint      // Phase 2.3 : re-rendu pour l'UI de placement éphémère (sélection, glisser)
           })
         : HabitScreen()}
       ${TabBar()}
