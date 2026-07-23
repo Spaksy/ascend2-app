@@ -358,21 +358,80 @@ body {
 .chest-vig--cristal { --chest-body: #7E6FD6; --chest-lid: #9E90EC; --chest-edge: #52439E; } /* violet gemme */
 .chest-vig--aube    { --chest-body: #E58AA6; --chest-lid: #F4B7C8; --chest-edge: #BC5C79; } /* rose d'aube */
 
-/* ==================== TA COLLECTION (Phase 1.3, amorce) ==================== */
-/* Amorce accessible de l'écran Collection (complet = Phase 3.1). Même grammaire que la
-   pile de coffres : liste sémantique, cartes sobres. */
-.card-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-.coll-card {
-  display: flex; align-items: flex-start; gap: 14px;
-  background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--r-lg); padding: 14px 16px;
-  box-shadow: 0 6px 20px -12px var(--shadow);
+/* ==================== MENU DU DOMAINE / COLLECTION (Phase 3.1) ==================== */
+/* Cap « l'île = lobby » : taper un bâtiment ouvre le hub de son domaine. En 3.1 = état du
+   bâtiment + sa collection (obtenues/manquantes X/Y + détail-souvenir). Dialog focus-trappé,
+   au-dessus de la scène et des onglets (la cérémonie 1.3, z-80, reste au-dessus). */
+.dom-menu { position: fixed; inset: 0; z-index: 60; display: flex; }
+.dm-backdrop { position: absolute; inset: 0; background: rgba(10, 14, 22, .5); animation: dm-fade var(--dur-ui) ease; }
+.dm-panel {
+  position: relative; margin: auto; width: min(560px, 100%); max-height: 100%;
+  display: flex; flex-direction: column; outline: none;
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--r-lg); box-shadow: 0 24px 64px -20px var(--shadow);
+  animation: dm-pop var(--dur-ui) ease;
 }
-.cc-emoji { font-size: 24px; line-height: 1.2; flex: 0 0 auto; }
-.cc-main { min-width: 0; }
-.cc-name { font-weight: 700; font-size: 15px; word-break: break-word; }
-.cc-meta { color: var(--ink-2); font-size: 12px; margin-top: 2px; font-variant-numeric: tabular-nums; }
-.cc-src { color: var(--ink-2); font-size: 13px; margin-top: 4px; word-break: break-word; }
+@media (min-width: 480px) { .dm-panel { max-height: 88%; } }
+.dm-head {
+  display: flex; align-items: center; gap: 12px; flex: 0 0 auto;
+  padding: 16px 16px 12px; border-bottom: 1px solid var(--line);
+}
+.dm-emoji { font-size: 30px; line-height: 1; flex: 0 0 auto; }
+.dm-headmain { flex: 1 1 auto; min-width: 0; }
+.dm-title { font-size: 20px; font-weight: 800; color: var(--ink); }
+.dm-state { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+.dm-close {
+  flex: 0 0 auto; width: 44px; height: 44px; border-radius: var(--r-pill);
+  background: var(--surface); border: 1px solid var(--line); color: var(--ink);
+  font: inherit; font-size: 16px; cursor: pointer;
+}
+.dm-close:hover { border-color: var(--accent); }
+.dm-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; }
+.dm-collhead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.dm-h { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+.dm-h-extra { margin-top: 22px; }
+.dm-count { font-size: 15px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dm-note { font-size: 12px; color: var(--ink-2); margin: 6px 0 14px; }
+.dm-grid { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.dm-card {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+  width: 100%; min-height: 112px; padding: 12px 8px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+}
+button.dm-card { cursor: pointer; font: inherit; color: var(--ink); }
+button.dm-card:hover { border-color: var(--accent); }
+button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.dm-card.got { border-color: var(--accent-soft); }
+.dm-card.locked { opacity: .72; border-style: dashed; }
+.dmc-emoji { font-size: 30px; line-height: 1; }
+.dm-card.locked .dmc-emoji { color: var(--ink-2); opacity: .5; }
+.dmc-name { font-size: 12px; font-weight: 700; color: var(--ink); line-height: 1.25; word-break: break-word; }
+.dm-card.locked .dmc-name { color: var(--ink-2); font-weight: 600; }
+.rc-rarity.dim { opacity: .5; }
+
+/* Détail-souvenir d'un objet (dans le menu) — histoire (placeholder v0, 6.1) + métadonnées. */
+.dm-back {
+  min-height: 44px; padding: 0 16px; border-radius: var(--r-pill); margin-bottom: 14px;
+  background: var(--surface); border: 1px solid var(--line); color: var(--ink);
+  font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.dm-back:hover { border-color: var(--accent); }
+.dm-detail-card {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 22px 16px; background: var(--surface); border: 1px solid var(--gold);
+  border-radius: var(--r-lg); box-shadow: 0 12px 32px -16px var(--shadow);
+}
+.dmd-emoji { font-size: 52px; line-height: 1; }
+.dmd-name { font-size: 18px; font-weight: 800; color: var(--ink); text-align: center; word-break: break-word; }
+.dm-detail-info { margin-top: 16px; }
+.dmd-h { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); margin-top: 14px; }
+.dmd-h:first-child { margin-top: 0; }
+.dmd-story { font-size: 14px; color: var(--ink); margin-top: 6px; }
+.dmd-meta { font-size: 13px; color: var(--ink-2); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.dmd-src { font-size: 13px; color: var(--ink-2); margin-top: 4px; word-break: break-word; }
+
+@keyframes dm-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dm-pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
 /* ==================== CÉRÉMONIE D'OUVERTURE (Phase 1.3) ==================== */
 /* < 6 s, skippable (tap/« Passer »), INSTANTANÉE en reduce-motion. Voile sombre fixe pour
@@ -683,6 +742,11 @@ body {
 .isl-win   { fill: var(--gold); opacity: .92; }
 .isl-built .isl-badge { fill: var(--surface); opacity: .95; }
 .isl-built .isl-emoji { opacity: 1; }
+
+/* Pastille « X/Y » sous la parcelle (Phase 3.1) : affordance « tappable » + progression de
+   collection à même la scène (cap « île = lobby »). Décorative (la vue Liste est le miroir a11y). */
+.isl-colltag-bg { fill: var(--surface); opacity: .9; stroke: var(--line); stroke-width: 1; }
+.isl-colltag-tx { fill: var(--ink-2); font-size: 11px; font-weight: 700; dominant-baseline: middle; font-variant-numeric: tabular-nums; }
 
 /* Habillages posés sur la scène */
 .isl-hint {
@@ -2219,6 +2283,8 @@ body {
   var pending = null;       // { invId, from:'tray'|'placed' } — objet en attente d'un emplacement
   var drag = null;          // { invId, id, node, sx, sy, base:{x,y}, cur:{x,y}, moved } — glisser en cours
   var listSel = {};         // invId -> index de slot choisi dans la vue liste (sélecteur)
+  var openDomainId = null;  // domaine dont le « menu du domaine » est ouvert (éphémère, jamais persisté)
+  var detailInvId = null;   // objet (invId) dont le détail-souvenir est affiché dans le menu, ou null
   var repaint = function () {}; // fourni par ctx.repaint (app.js) pour les changements d'UI éphémère
 
   /* ---------------------------------------------------------------- dérivés de lecture */
@@ -2276,6 +2342,71 @@ body {
     return d ? d.emoji : '✨';
   }
 
+  /* ------------------------------------------ collection d'un domaine (Phase 3.1)
+     La collection VIT dans la parcelle du domaine (cap « l'île = lobby ») : taper un
+     bâtiment ouvre son « menu du domaine ». Tout est DÉRIVÉ (rien de stocké ici) :
+     - catalogue FINI du domaine = cards.pools[domain] → dénominateur X/Y ;
+     - obtenu = un objet de l'inventaire porte cet itemId (souvenir = day + sourceLabel) ;
+     - « et aussi » = trouvailles hors-catalogue du domaine (décos génératives, cartes-jalons),
+       méritées mais non comptées dans X/Y (infinies/uniques). */
+  function invByItemId(st) {
+    var inv = st.inventory || [], m = {};
+    for (var i = 0; i < inv.length; i++) {
+      var e = inv[i];
+      if (e && e.id && typeof e.itemId === 'string' && !m[e.itemId]) m[e.itemId] = e;
+    }
+    return m;
+  }
+  function domainCollection(st, domain) {
+    var cat = (cards.pools && cards.pools[domain]) ? cards.pools[domain] : [];
+    var byItem = invByItemId(st), catIds = {}, items = [], got = 0;
+    for (var i = 0; i < cat.length; i++) {
+      var it = cat[i]; catIds[it.id] = true;
+      var e = byItem[it.id] || null;
+      if (e) got++;
+      items.push({ id: it.id, name: it.name, rarity: it.rarity, obtained: !!e, entry: e });
+    }
+    var extra = [], inv = st.inventory || [];
+    for (var j = 0; j < inv.length; j++) {
+      var e2 = inv[j];
+      if (!e2 || !e2.id || typeof e2.itemId !== 'string' || catIds[e2.itemId]) continue;
+      var it2 = cards.resolve(e2.itemId);
+      if (it2 && it2.domain === domain) extra.push({ item: it2, entry: e2 });
+    }
+    return { catalogue: items, extra: extra, got: got, total: items.length };
+  }
+  // Histoire d'un objet — placeholder v0 honnête (les histoires complètes = Phase 6.1).
+  function storyFor(item) {
+    if (item.milestone) return 'Une carte-jalon : elle marque un cap que tu as vraiment franchi, à force de constance. Le hasard n’y est pour rien.';
+    if (item.generative) return 'Un petit trésor trouvé en chemin — l’île en garde la trace.';
+    return 'Son histoire complète s’écrira bientôt. Pour l’instant, l’essentiel tient en une phrase : tu l’as mérité pour de vrai.';
+  }
+
+  /* ------------------------------------------ ouverture / navigation du menu (éphémère) */
+  function openDomain(dom) { openDomainId = dom; detailInvId = null; repaint(); }
+  function closeDomain() { openDomainId = null; detailInvId = null; repaint(); }
+  function showDetail(invId) { detailInvId = invId; repaint(); }
+  function backToGrid() { detailInvId = null; repaint(); }
+  // Quelle parcelle sous ce point monde ? (bâtiment large ; le plus proche en x l'emporte).
+  function parcelleDomainAt(pt) {
+    var best = null, bd = 1e9;
+    for (var i = 0; i < ARC.length && i < domains.list.length; i++) {
+      var dx = pt.x - ARC[i].x, dy = pt.y - ARC[i].y;
+      if (Math.abs(dx) <= 56 && dy <= 44 && dy >= -150) {
+        var d = Math.abs(dx);
+        if (d < bd) { bd = d; best = domains.list[i].id; }
+      }
+    }
+    return best;
+  }
+  // Tap (sans pan, sans placement en cours) sur un bâtiment → ouvre son menu de domaine.
+  function handleTap(pt) {
+    if (pending) return;              // en cours de placement : le tap est géré par cases/décos
+    var dom = parcelleDomainAt(pt);
+    if (dom) openDomain(dom);
+  }
+  function focusPanel(node) { if (node && node.focus) { try { node.focus(); } catch (e) {} } }
+
   /* --------------------------------------------------- contrôleur PAN + ZOOM (natif)
      Manipule le viewBox du <svg> (coordonnées MONDE naturelles, focal-point exact).
      Un seul pointeur = pan ; deux = pinch ; molette = zoom au curseur (desktop).
@@ -2293,6 +2424,7 @@ body {
     var pointers = {};
     var panAnchor = null;
     var pinch = null;
+    var tapOk = false, tapDown = null;   // détection d'un TAP (vs pan/pinch) → ouvre un menu de domaine
 
     function count() { return Object.keys(pointers).length; }
 
@@ -2345,11 +2477,14 @@ body {
     function onDown(e) {
       pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
       try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+      if (count() === 1) { tapOk = true; tapDown = { x: e.clientX, y: e.clientY }; }
+      else { tapOk = false; }
       rebaseGesture();
     }
     function onMove(e) {
       if (!pointers[e.pointerId]) return;
       pointers[e.pointerId].x = e.clientX; pointers[e.pointerId].y = e.clientY;
+      if (tapOk && tapDown && Math.hypot(e.clientX - tapDown.x, e.clientY - tapDown.y) > 6) tapOk = false;
       var n = count();
       if (n === 1 && panAnchor) {
         var cur = toWorld(e.clientX, e.clientY);
@@ -2366,12 +2501,16 @@ body {
       }
     }
     function onUp(e) {
+      var wasTap = tapOk && count() === 1;      // ce pointeur est le dernier levé, sans mouvement
+      var ux = e.clientX, uy = e.clientY;
       delete pointers[e.pointerId];
       try { svg.releasePointerCapture(e.pointerId); } catch (err) {}
+      if (wasTap && count() === 0) { tapOk = false; handleTap(toWorld(ux, uy)); return; }
       rebaseGesture();
     }
     function onWheel(e) {
       e.preventDefault();
+      tapOk = false;
       var w = toWorld(e.clientX, e.clientY);
       var f = e.deltaY > 0 ? 1.12 : 1 / 1.12;
       view.w = Math.max(MINW, Math.min(MAXW, view.w * f));
@@ -2483,11 +2622,23 @@ body {
     for (var i = 0; i < list.length && i < ARC.length; i++) {
       var d = list[i];
       var info = derive.buildingInfo(st, d.id);
-      out.push({ domain: d, x: ARC[i].x, y: ARC[i].y, id: 'parcelle-' + d.id, level: info.level, elan: info.elan, remaining: info.remaining });
+      var coll = domainCollection(st, d.id);
+      out.push({ domain: d, x: ARC[i].x, y: ARC[i].y, id: 'parcelle-' + d.id, level: info.level,
+                 elan: info.elan, remaining: info.remaining, collGot: coll.got, collTotal: coll.total });
     }
     return out;
   }
   function parcelleNode(p) { return (p.level >= 1) ? building(p) : ruin(p); }
+
+  // Petite pastille « X/Y » sous la parcelle : signale que le bâtiment est TAPPABLE (ouvre son
+  // menu de domaine) et montre la progression de collection à même la scène (cap « île = lobby »).
+  function collTag(got, total) {
+    return html`
+      <g class="isl-colltag" aria-hidden="true">
+        <rect class="isl-colltag-bg" x="-24" y="30" width="48" height="18" rx="9" />
+        <text class="isl-colltag-tx" x="0" y="39" text-anchor="middle">${got + '/' + total}</text>
+      </g>`;
+  }
 
   function ruin(p) {
     var d = p.domain;
@@ -2501,6 +2652,7 @@ body {
         <rect class="isl-ruin" x="22"  y="-26" width="10" height="20" rx="3" />
         <circle class="isl-badge" cx="0" cy="-8" r="17" />
         <text class="isl-emoji" x="0" y="-1" text-anchor="middle">${d.emoji}</text>
+        ${collTag(p.collGot, p.collTotal)}
       </g>`;
   }
 
@@ -2531,6 +2683,7 @@ body {
         <rect class="isl-stem" x="-2" y=${topY - 20} width="4" height="15" />
         <circle class="isl-badge" cx="0" cy=${topY - 26} r="15" />
         <text class="isl-emoji" x="0" y=${topY - 19} text-anchor="middle">${d.emoji}</text>
+        ${collTag(p.collGot, p.collTotal)}
       </g>`;
   }
 
@@ -2635,7 +2788,7 @@ body {
                 : null}
               <button class="ipb-btn ghost" type="button" onClick=${cancelPending} aria-label="Annuler le placement">Annuler</button>
             </div>`
-          : html`<div class="isl-hint" aria-hidden="true">Glisse pour explorer · pince ou molette pour zoomer</div>`}
+          : html`<div class="isl-hint" aria-hidden="true">Touche un bâtiment pour ouvrir son domaine · glisse pour explorer</div>`}
 
         <button class="isl-recenter" type="button" onClick=${recenter} aria-label="Recentrer la vue de l’île">Recentrer</button>
 
@@ -2722,6 +2875,11 @@ body {
                 <span class="ii-main">
                   <span class="ii-title">${p.domain.label}${built ? html`<span class="ii-lv">Nv ${p.level}</span>` : null}</span>
                   <span class="ii-state">${state}</span>
+                  <div class="ii-actions">
+                    <button class="lnk dm-open" type="button"
+                            aria-label=${'Ouvrir le domaine ' + p.domain.label + ' — collection ' + p.collGot + ' sur ' + p.collTotal}
+                            onClick=${function () { openDomain(p.domain.id); }}>Voir le domaine · ${p.collGot}/${p.collTotal}</button>
+                  </div>
                 </span>
               </li>`;
           })}
@@ -2778,6 +2936,113 @@ body {
       </div>`;
   }
 
+  /* ------------------------------------------------------- menu du domaine (Phase 3.1)
+     Ouvert en tapant un bâtiment (ou via la vue Liste). Première brique du cap « l'île =
+     lobby » : le hub d'un domaine. En 3.1 il contient l'état du bâtiment + SA COLLECTION
+     (obtenues avec souvenir · manquantes en silhouettes · X/Y · détail). Habitudes & quêtes
+     du domaine viendront s'y greffer dans les phases suivantes. Dialog focus-trappé, Échap
+     ferme (ou revient au grille depuis le détail). */
+  function CollCard(c) {
+    if (!c.obtained) {
+      return html`
+        <li class="dm-card locked" aria-label=${'À découvrir — un objet ' + cards.rarityLabel(c.rarity) + ' de ce domaine, pas encore obtenu.'}>
+          <span class="dmc-emoji" aria-hidden="true">◈</span>
+          <span class="dmc-name">À découvrir</span>
+          <span class="rc-rarity rc-rarity--${c.rarity} dim">${cards.rarityLabel(c.rarity)}</span>
+        </li>`;
+    }
+    var item = cards.resolve(c.id);
+    return html`
+      <li>
+        <button class="dm-card got" type="button"
+                aria-label=${'Obtenu : ' + c.name + ' (' + cards.rarityLabel(c.rarity) + '). Voir le souvenir.'}
+                onClick=${function () { showDetail(c.entry.id); }}>
+          <span class="dmc-emoji" aria-hidden="true">${glyph(item)}</span>
+          <span class="dmc-name">${c.name}</span>
+          <span class="rc-rarity rc-rarity--${c.rarity}">${cards.rarityLabel(c.rarity)}</span>
+        </button>
+      </li>`;
+  }
+  function ExtraCard(x) {
+    var item = x.item;
+    return html`
+      <li>
+        <button class="dm-card got" type="button"
+                aria-label=${'Obtenu : ' + item.name + '. Voir le souvenir.'}
+                onClick=${function () { showDetail(x.entry.id); }}>
+          <span class="dmc-emoji" aria-hidden="true">${glyph(item)}</span>
+          <span class="dmc-name">${item.name}</span>
+          <span class="rc-rarity rc-rarity--${item.rarity}">${cards.rarityLabel(item.rarity)}</span>
+        </button>
+      </li>`;
+  }
+  function CollectionView(st, coll) {
+    return html`
+      <div class="dm-body">
+        <div class="dm-collhead">
+          <h3 class="dm-h">Collection</h3>
+          <span class="dm-count" aria-label=${coll.got + ' objets du catalogue obtenus sur ' + coll.total}>${coll.got}/${coll.total}</span>
+        </div>
+        <p class="dm-note">Chaque objet obtenu garde le souvenir de l’action réelle qui l’a mérité.
+        Les silhouettes restent à découvrir — rien ne presse.</p>
+        <ul class="dm-grid">${coll.catalogue.map(CollCard)}</ul>
+        ${coll.extra.length
+          ? html`
+            <h3 class="dm-h dm-h-extra">Et aussi · ${coll.extra.length}</h3>
+            <p class="dm-note">Des trouvailles hors-catalogue (décos, jalons) que tu as méritées dans ce domaine.</p>
+            <ul class="dm-grid">${coll.extra.map(ExtraCard)}</ul>`
+          : null}
+      </div>`;
+  }
+  function DetailView(st) {
+    var e = invEntry(st, detailInvId);
+    if (!e) { detailInvId = null; return CollectionView(st, domainCollection(st, openDomainId)); }
+    var item = cards.resolve(e.itemId);
+    var d = domains.get(item.domain);
+    var meta = (d ? d.label : (item.domain || '—')) + ' · ' + cards.rarityLabel(item.rarity) + ' · obtenu le ' + e.day;
+    return html`
+      <div class="dm-body dm-detail">
+        <button class="dm-back" type="button" onClick=${backToGrid} aria-label="Retour à la collection">← Retour</button>
+        <div class="dm-detail-card">
+          <span class="dmd-emoji" aria-hidden="true">${glyph(item)}</span>
+          <div class="dmd-name">${item.name}</div>
+          <span class="rc-rarity rc-rarity--${item.rarity}">${cards.rarityLabel(item.rarity)}</span>
+        </div>
+        <div class="dm-detail-info">
+          <h4 class="dmd-h">Son histoire</h4>
+          <p class="dmd-story">${storyFor(item)}</p>
+          <h4 class="dmd-h">Souvenir</h4>
+          <p class="dmd-meta">${meta}</p>
+          <p class="dmd-src">${e.sourceLabel || 'Dans ta collection'}</p>
+        </div>
+      </div>`;
+  }
+  function DomainMenu() {
+    var st = store.get();
+    var dom = domains.get(openDomainId);
+    if (!dom) return null;
+    var info = derive.buildingInfo(st, openDomainId);
+    var stateLine = info.level >= 1
+      ? ('Niveau ' + info.level + ' · élan ' + info.elan + ' · plus que ' + info.remaining + ' avant le niveau ' + (info.level + 1))
+      : 'Fondation en sommeil — relève-la par tes actions de ce domaine';
+    return html`
+      <div class="dom-menu" role="dialog" aria-modal="true" aria-label=${'Domaine ' + dom.label}
+           onKeyDown=${function (e) { if (e.key === 'Escape') { if (detailInvId) backToGrid(); else closeDomain(); } }}>
+        <div class="dm-backdrop" onClick=${closeDomain} aria-hidden="true"></div>
+        <div class="dm-panel" tabindex="-1" ref=${focusPanel}>
+          <header class="dm-head">
+            <span class="dm-emoji" aria-hidden="true">${dom.emoji}</span>
+            <div class="dm-headmain">
+              <h2 class="dm-title">${dom.label}</h2>
+              <p class="dm-state">${stateLine}</p>
+            </div>
+            <button class="dm-close" type="button" aria-label="Fermer" onClick=${closeDomain}>✕</button>
+          </header>
+          ${detailInvId ? DetailView(st) : CollectionView(st, domainCollection(st, openDomainId))}
+        </div>
+      </div>`;
+  }
+
   /* --------------------------------------------------------------------- écran complet */
   function Screen(ctx) {
     repaint = (ctx && typeof ctx.repaint === 'function') ? ctx.repaint : function () {};
@@ -2794,6 +3059,7 @@ body {
           </div>
         </header>
         ${view === 'scene' ? Scene() : List()}
+        ${openDomainId ? DomainMenu() : null}
       </main>`;
   }
 
@@ -2821,7 +3087,7 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.11';
+  var VER = '0.12';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
@@ -3190,36 +3456,6 @@ body {
       </div>`;
   }
 
-  /* ------------------------------------------------ ta collection (Phase 1.3, amorce) */
-  // L'écran Collection complet = Phase 3.1 ; ici, une liste sémantique accessible qui
-  // prouve que la carte révélée porte bien ses métadonnées-souvenir (date + source).
-  // Absente tant qu'aucune carte n'a été obtenue (état vide serein). Récentes en haut.
-  function CollectionCard(e) {
-    var it = cards.resolve(e.itemId);
-    var d = domains.get(it.domain);
-    var meta = (d ? d.label : (it.domain || '—')) + ' · ' + cards.rarityLabel(it.rarity) + ' · ' + e.day;
-    return html`
-      <li class="coll-card">
-        <span class="cc-emoji" aria-hidden="true">${d ? d.emoji : '✨'}</span>
-        <div class="cc-main">
-          <div class="cc-name">${it.name}</div>
-          <div class="cc-meta">${meta}</div>
-          <div class="cc-src">${e.sourceLabel}</div>
-        </div>
-      </li>`;
-  }
-  function CollectionSection() {
-    var inv = (store.get().inventory || []).filter(function (e) { return e && e.id; });
-    if (!inv.length) return null;
-    var display = inv.slice().reverse();
-    return html`
-      <section class="section collection-section" aria-label="Ta collection">
-        <h2 class="sec-title">Ta collection</h2>
-        <p class="sec-note">Chaque carte garde la date et l’action réelle qui l’a méritée.</p>
-        <ul class="card-list">${display.map(CollectionCard)}</ul>
-      </section>`;
-  }
-
   /* ------------------------------------------------ quêtes minutées (Phase 1.4) */
   // Carte de la quête EN COURS : anneau de progression + compte à rebours (arbitrage Leo).
   // L'anneau se remplit vers la durée CIBLE et passe au DORÉ à 50 % (gate débloqué). Le
@@ -3364,7 +3600,6 @@ body {
 
         ${QuestSection()}
         ${ChestPile()}
-        ${CollectionSection()}
       </main>`;
   }
 
