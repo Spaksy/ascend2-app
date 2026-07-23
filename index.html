@@ -605,6 +605,16 @@ body {
 .isl-deco-pad { fill: var(--plot-2); opacity: .5; }
 .isl-emoji { dominant-baseline: middle; }
 
+/* Bâtiment relevé (Phase 2.2) : la ruine qui se relève — tour géométrique + lumière.
+   Placeholder ; les assets Claude Design (2.4) prendront le relais sur la même ancre. */
+.isl-glow  { fill: var(--gold); }
+.isl-tower { fill: var(--ruin-2); stroke: var(--ruin); stroke-width: 1.5; }
+.isl-cap   { fill: var(--shore); }
+.isl-stem  { fill: var(--ruin); }
+.isl-win   { fill: var(--gold); opacity: .92; }
+.isl-built .isl-badge { fill: var(--surface); opacity: .95; }
+.isl-built .isl-emoji { opacity: 1; }
+
 /* Habillages posés sur la scène */
 .isl-hint {
   position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
@@ -650,8 +660,17 @@ body {
 .isl-item:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .isl-item .ii-emoji { font-size: 24px; flex: 0 0 auto; opacity: .85; }
 .isl-item .ii-main { display: flex; flex-direction: column; min-width: 0; }
-.isl-item .ii-title { font-weight: 700; font-size: 15px; color: var(--ink); }
+.isl-item .ii-title { font-weight: 700; font-size: 15px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
 .isl-item .ii-state { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+/* Parcelle bâtie (Phase 2.2) : petit badge de niveau + liseré doré (jamais la couleur seule —
+   l'état est aussi écrit en toutes lettres dans ii-state et l'aria-label). */
+.isl-item.built { border-color: var(--gold); }
+.isl-item .ii-lv {
+  font-size: 11px; font-weight: 800; letter-spacing: .02em;
+  padding: 2px 7px; border-radius: var(--r-pill);
+  background: var(--gold-soft); color: var(--ink); border: 1px solid var(--gold);
+  font-variant-numeric: tabular-nums;
+}
 
 /* ============================ REDUCED MOTION ============================ */
 @media (prefers-reduced-motion: reduce) {
@@ -1596,6 +1615,65 @@ body {
   }
   var PITY_N = 7; // arbitrage Leo : 1 coffre « rare ou mieux » (fer+) garanti tous les 7 (pity.ironSinceRare).
 
+  /* ------------------------------------------ bâtiments & niveaux — élan (Phase 2.2) */
+  // ÉLAN d'un domaine = somme pondérée des validations réelles, DÉRIVÉE de `history`
+  // (JAMAIS stockée) : chaque entrée porte son propre `elan` — habitude +1, quête +2/+3/+4
+  // (kind:'quest'), jalon +10 (kind:'milestone', câblé Phase 2.2). Il suffit donc de sommer
+  // les entrées du domaine. Une save éditée à la main ne peut pas s'inventer d'élan : il
+  // vient d'entrées datées de l'historique (invariant d'intégrité TDD §4).
+  function domainElan(state, domain) {
+    var hist = historyOf(state), sum = 0;
+    for (var i = 0; i < hist.length; i++) {
+      var e = hist[i];
+      if (e && e.domain === domain && typeof e.elan === 'number' && isFinite(e.elan)) sum += e.elan;
+    }
+    return sum;
+  }
+
+  // Paliers de niveau (GDD §13, arbitrage Leo : Nv 2 à 12 d'élan, croissance ×1,6/niveau).
+  // Coût d'un passage L→L+1 = 12·1,6^(L-1) ; SEUIL cumulé pour ATTEINDRE le niveau L (L ≥ 2)
+  // = 12·(1,6^(L-1) − 1)/0,6. Paliers COURTS au début (Nv 2 atteignable en ~1 semaine active
+  // — leçon directe de l'audit v1 : le 1er palier doit être visible), puis progressifs, jamais
+  // un mur. Le niveau ne descend JAMAIS (l'history ne perd rien → l'élan est monotone).
+  var ELAN_NV2 = 12, ELAN_GROWTH = 1.6, LEVEL_CAP = 99;
+  function levelThreshold(level) {
+    if (level <= 1) return 0;                 // niveau 1 = fondation posée (1er élan)
+    return ELAN_NV2 * (Math.pow(ELAN_GROWTH, level - 1) - 1) / (ELAN_GROWTH - 1);
+  }
+  // NIVEAU d'un bâtiment à partir de son élan. 0 = parcelle dormante (aucun élan) ; 1 =
+  // fondation posée ; 2+ via paliers. MONOTONE (l'élan ne décroît jamais → le niveau non plus).
+  function levelFromElan(elan) {
+    if (!(elan > 0)) return 0;
+    var lvl = 1;
+    while (lvl < LEVEL_CAP && elan >= levelThreshold(lvl + 1)) lvl++;
+    return lvl;
+  }
+  function buildingLevel(state, domain) { return levelFromElan(domainElan(state, domain)); }
+
+  // Vue complète d'un bâtiment pour l'UI (scène + liste) — DÉRIVÉE, jamais stockée.
+  // { elan, level, nextAt, remaining } : remaining = élan restant avant le niveau suivant
+  // (invitation non punitive dans la vue liste). Pour un domaine dormant (level 0), remaining
+  // pointe vers le niveau 1 (le 1er élan) ; sinon vers le palier du niveau supérieur.
+  function buildingInfo(state, domain) {
+    var elan = domainElan(state, domain);
+    var level = levelFromElan(elan);
+    var nextAt = levelThreshold(level + 1);
+    return {
+      elan: elan,
+      level: level,
+      nextAt: nextAt,
+      remaining: Math.max(0, Math.ceil(nextAt - elan))
+    };
+  }
+
+  // Somme des niveaux de tous les domaines — pilote le recul GLOBAL de la brume (arbitrage
+  // Leo : plus l'île mûrit, plus le voile s'éloigne). DÉRIVÉE de history (jamais stockée).
+  function totalBuildingLevels(state) {
+    var list = domains.list, sum = 0;
+    for (var i = 0; i < list.length; i++) sum += buildingLevel(state, list[i].id);
+    return sum;
+  }
+
   // Tire le MATÉRIAU (= rareté) du coffre d'une quête accomplie. Décidé À L'ACCOMPLISSEMENT
   // (le coffre PORTE ensuite sa rareté, visible dans la pile — arbitrage Leo « un niveau de
   // coffre par niveau de rareté ») ; l'OBJET précis reste tiré à l'ouverture (drawForChest).
@@ -1624,7 +1702,16 @@ body {
     questElan: questElan,
     questProgress: questProgress,
     rollQuestChestTier: rollQuestChestTier,
-    PITY_N: PITY_N
+    PITY_N: PITY_N,
+    // Bâtiments & niveaux (Phase 2.2) — tout DÉRIVÉ de history.
+    domainElan: domainElan,
+    levelThreshold: levelThreshold,
+    levelFromElan: levelFromElan,
+    buildingLevel: buildingLevel,
+    buildingInfo: buildingInfo,
+    totalBuildingLevels: totalBuildingLevels,
+    ELAN_NV2: ELAN_NV2,
+    ELAN_GROWTH: ELAN_GROWTH
   };
 })();
 
@@ -1656,6 +1743,44 @@ body {
     var hs = state.habits || [];
     for (var i = 0; i < hs.length; i++) if (hs[i] && hs[i].id === id) return hs[i];
     return null;
+  }
+
+  /* ---------------------------------------- bâtiments & niveaux — élan (Phase 2.2) */
+  // Pose la FONDATION du domaine (`buildings.<domain>.placed = true`) au 1er élan — SEUL
+  // bool stocké, non destructif (le NIVEAU reste DÉRIVÉ de history, jamais stocké : TDD §4).
+  // Idempotent : rien à faire si déjà posée. Écrit dans `patch.buildings` (copie défensive).
+  function stampPlaced(st, domain, patch) {
+    var b = (st.buildings && typeof st.buildings === 'object') ? st.buildings : {};
+    if (b[domain] && b[domain].placed) return;
+    var nb = {};
+    for (var k in b) if (b.hasOwnProperty(k)) nb[k] = b[k];
+    nb[domain] = { placed: true };
+    patch.buildings = nb;
+  }
+
+  // Franchissement de niveau(x) : si l'élan du domaine passe d'un niveau à un supérieur,
+  // pousse UN Coffre LÉGENDAIRE (cristal — GDD §6.2) PAR niveau franchi, dans `outChests`.
+  // JAMAIS pour le niveau 1 (= simple pose de la fondation, pas une montée). Le coffre rejoint
+  // « À découvrir » ; la cérémonie 1.3 est réutilisée à l'ouverture (canal coffre unique).
+  // Retourne la liste des niveaux atteints [{level, domain}] pour le bandeau doux (célébration
+  // SOBRE, non punitive). DÉTERMINISTE : le niveau vient de l'élan dérivé, pas du hasard.
+  function pushLevelChests(st, domain, elanBefore, delta, day, outChests) {
+    var before = derive.levelFromElan(elanBefore);
+    var after = derive.levelFromElan(elanBefore + delta);
+    var ups = [];
+    var d = domains.get(domain);
+    var label = d ? d.label : domain;
+    for (var L = Math.max(2, before + 1); L <= after; L++) {
+      outChests.push({
+        id: uid('c'),
+        type: 'cristal',                 // matériau légendaire (chests.js : rareté « legendaire »)
+        domain: domain,
+        sourceLabel: 'Niveau ' + L + ' de ton ' + label + ' — ton élan l’a fait grandir',
+        day: day
+      });
+      ups.push({ level: L, domain: domain });
+    }
+    return ups;
   }
 
   // Crée une habitude. Retourne le record créé, ou null si invalide
@@ -1723,11 +1848,15 @@ body {
     if (derive.isHabitValidatedOn(st, id, day)) {
       return { ok: false, reason: 'deja', count: derive.habitCount(st, id) };
     }
-    var entry = { kind: 'habit', refId: id, domain: habit.domain, day: day, elan: 1 };
+    var domain = habit.domain;
+    var elanBefore = derive.domainElan(st, domain);   // élan du domaine AVANT cette validation
+    var entry = { kind: 'habit', refId: id, domain: domain, day: day, elan: 1 };
+    var newHistory = [entry];
+    var delta = entry.elan;                             // élan ajouté par cette validation (≥ 1)
     var chest = {
       id: uid('c'),
       type: 'bois',
-      domain: habit.domain,
+      domain: domain,
       sourceLabel: 'Obtenu en validant « ' + habit.title + ' »',
       day: day
     };
@@ -1742,23 +1871,34 @@ body {
     var ms = cards.milestoneAt(newCount);
     var milestone = null;
     if (ms) {
-      var mileId = cards.milestoneCardId(habit.domain, id, ms.threshold);
+      var mileId = cards.milestoneCardId(domain, id, ms.threshold);
       newChests.push({
         id: uid('c'),
         type: ms.tier,
-        domain: habit.domain,
+        domain: domain,
         sourceLabel: ms.threshold + 'ᵉ fois « ' + habit.title + ' » — un cap franchi',
         day: day,
         cardId: mileId                        // carte-jalon GARANTIE (forcée par derive.drawForChest)
       });
+      // Élan de jalon (+10, GDD §6.2) CÂBLÉ dans l'élan de bâtiment (Phase 2.2) : le jalon
+      // devient une entrée d'historique à part entière (kind:'milestone'), datée, comptée
+      // dans domainElan — sans jamais entrer dans habitCount (qui ne compte que 'habit').
+      newHistory.push({ kind: 'milestone', refId: mileId, domain: domain, day: day, elan: 10 });
+      delta += 10;
       milestone = { threshold: ms.threshold, tier: ms.tier, virtue: ms.virtue };
     }
 
-    store.set({
-      history: st.history.concat([entry]),
+    // Bâtiment (Phase 2.2) : la validation fait-elle franchir un ou plusieurs paliers de niveau ?
+    // (À APPELER avant de figer `newChests` : cette fonction y ajoute les coffres légendaires.)
+    var levelUps = pushLevelChests(st, domain, elanBefore, delta, day, newChests);
+    var patch = {
+      history: st.history.concat(newHistory),
       chests: st.chests.concat(newChests)
-    });
-    return { ok: true, reason: 'valide', count: newCount, chest: chest, milestone: milestone };
+    };
+    stampPlaced(st, domain, patch);           // pose la fondation au 1er élan du domaine
+
+    store.set(patch);
+    return { ok: true, reason: 'valide', count: newCount, chest: chest, milestone: milestone, levelUps: levelUps };
   }
 
   function findChest(state, id) {
@@ -1836,24 +1976,32 @@ body {
     var tier = roll.tier;                                   // 'bois' | 'fer' | 'or'
     var day = store.todayKey();
     var elan = derive.questElan(aq.minutes);
+    var domain = aq.domain;
+    var elanBefore = derive.domainElan(st, domain);         // élan du domaine AVANT cet accomplissement
     var chest = {
       id: uid('c'),
       type: tier,
-      domain: aq.domain,
+      domain: domain,
       sourceLabel: 'Obtenu en accomplissant « ' + aq.title + ' » (' + aq.minutes + ' min)',
       day: day
     };
-    var entry = { kind: 'quest', refId: (aq.questId || aq.id), domain: aq.domain, day: day, elan: elan };
+    var newChests = [chest];
+    var entry = { kind: 'quest', refId: (aq.questId || aq.id), domain: domain, day: day, elan: elan };
     var since = (st.pity && typeof st.pity.ironSinceRare === 'number') ? st.pity.ironSinceRare : 0;
     var nextSince = (tier === 'bois') ? (since + 1) : 0;    // pitié : reset dès un fer+ (rare ou mieux)
 
-    store.set({
+    // Bâtiment (Phase 2.2) : l'élan de quête (+2/+3/+4) fait-il franchir un palier de niveau ?
+    var levelUps = pushLevelChests(st, domain, elanBefore, elan, day, newChests);
+    var patch = {
       history: st.history.concat([entry]),
-      chests: st.chests.concat([chest]),
+      chests: st.chests.concat(newChests),
       pity: { ironSinceRare: nextSince },
       activeQuest: null
-    });
-    return { ok: true, reason: 'accompli', chest: chest, tier: tier, elan: elan };
+    };
+    stampPlaced(st, domain, patch);                         // pose la fondation au 1er élan du domaine
+
+    store.set(patch);
+    return { ok: true, reason: 'accompli', chest: chest, tier: tier, elan: elan, levelUps: levelUps };
   }
 
   // Abandonne la quête active. NON punitif (avant OU après 50 %) : rien n'est retiré, aucune
@@ -1897,6 +2045,8 @@ body {
   var h = window.preact.h;
   var html = window.htm.bind(h);
   var domains = window.AscendDomains;
+  var derive = window.AscendDerive;
+  var store = window.AscendStore;
 
   /* ------------------------------------------------------------------ géométrie
      Monde fixe (unités SVG) ; ancres STABLES (2.4 y posera les assets réels).
@@ -1919,11 +2069,17 @@ body {
     { x: 598, y: 402 }
   ];
 
+  // Chaque parcelle porte désormais son niveau + son élan (Phase 2.2), DÉRIVÉS de history
+  // (jamais stockés) via derive.buildingInfo — la scène ET la vue liste lisent la même source.
   function parcelles() {
-    var list = domains.list;
-    var out = [];
+    var list = domains.list, st = store.get(), out = [];
     for (var i = 0; i < list.length && i < ARC.length; i++) {
-      out.push({ domain: list[i], x: ARC[i].x, y: ARC[i].y, id: 'parcelle-' + list[i].id });
+      var d = list[i];
+      var info = derive.buildingInfo(st, d.id);
+      out.push({
+        domain: d, x: ARC[i].x, y: ARC[i].y, id: 'parcelle-' + d.id,
+        level: info.level, elan: info.elan, remaining: info.remaining
+      });
     }
     return out;
   }
@@ -2073,11 +2229,15 @@ body {
      Placeholders géométriques : chaque parcelle = une FONDATION EN RUINES (socle de
      pierre + moignons de colonnes brisées + pastille domaine en sommeil). La brume
      DOUCE voile la périphérie (zones « à débloquer », 2.2) sans rien dévoiler. */
-  function ruin(p, i) {
+  // Aiguilleur : parcelle DORMANTE (niveau 0 = ruine en sommeil) ou BÂTIMENT relevé (niveau ≥ 1).
+  // Même ancre stable `parcelle-<domain>` dans les deux cas (2.4 y posera les assets réels).
+  function parcelleNode(p) { return (p.level >= 1) ? building(p) : ruin(p); }
+
+  function ruin(p) {
     var d = p.domain;
     return html`
       <g id=${p.id} class="isl-parcelle" transform=${'translate(' + p.x + ',' + p.y + ')'}
-         data-domain=${d.id}>
+         data-domain=${d.id} data-level="0">
         <ellipse class="isl-plot" cx="0" cy="0" rx="58" ry="27" />
         <ellipse class="isl-plot-in" cx="0" cy="-2" rx="44" ry="19" />
         <!-- moignons de colonnes brisées (ruine qui s'éveille) -->
@@ -2089,6 +2249,44 @@ body {
         <text class="isl-emoji" x="0" y="-1" text-anchor="middle">${d.emoji}</text>
       </g>`;
   }
+
+  // La ruine RELEVÉE (arbitrage Leo : « tour à étages qui grandit + lumière »). Placeholder
+  // GÉOMÉTRIQUE : un corps qui monte d'un étage par niveau (plafond visuel à 6 stades), des
+  // fenêtres allumées, une corniche + une lanterne-pastille du domaine (éveillée), et un halo
+  // de lumière dont l'intensité croît avec le niveau. Aucune animation → reduce-motion d'office.
+  // Les vrais SVG Claude Design remplaceront ceci en 2.4, sur la MÊME ancre.
+  function building(p) {
+    var d = p.domain;
+    var L = Math.min(p.level, 6);            // stades visuels plafonnés (placeholder)
+    var floorH = 15, bodyW = 46;
+    var bodyH = 18 + (L - 1) * floorH;       // le corps grandit avec le niveau
+    var baseY = 6;                           // pose sur le socle (un poil sous le centre du plot)
+    var topY = baseY - bodyH;                // sommet du corps
+    var glowOp = Math.min(0.5, 0.12 + L * 0.06);
+    var wins = [];
+    for (var f = 0; f < L; f++) {
+      var wy = baseY - 12 - f * floorH;
+      wins.push(html`<rect class="isl-win" x="-9" y=${wy} width="6" height="8" rx="1.2" />`);
+      wins.push(html`<rect class="isl-win" x="3"  y=${wy} width="6" height="8" rx="1.2" />`);
+    }
+    return html`
+      <g id=${p.id} class="isl-parcelle isl-built" transform=${'translate(' + p.x + ',' + p.y + ')'}
+         data-domain=${d.id} data-level=${p.level}>
+        <ellipse class="isl-glow" cx="0" cy=${topY + bodyH * 0.35} rx=${34 + L * 9} ry=${(34 + L * 9) * 0.7}
+                 style=${'opacity:' + glowOp} />
+        <ellipse class="isl-plot" cx="0" cy="0" rx="58" ry="27" />
+        <ellipse class="isl-plot-in" cx="0" cy="-2" rx="44" ry="19" />
+        <!-- corps de la tour (grandit avec le niveau) -->
+        <rect class="isl-tower" x=${-bodyW / 2} y=${topY} width=${bodyW} height=${bodyH} rx="4" />
+        <!-- fenêtres allumées (une rangée par étage) -->
+        ${wins}
+        <!-- corniche + lanterne du domaine (éveillée) -->
+        <rect class="isl-cap" x=${-bodyW / 2 - 2} y=${topY - 6} width=${bodyW + 4} height="7" rx="2" />
+        <rect class="isl-stem" x="-2" y=${topY - 20} width="4" height="15" />
+        <circle class="isl-badge" cx="0" cy=${topY - 26} r="15" />
+        <text class="isl-emoji" x="0" y=${topY - 19} text-anchor="middle">${d.emoji}</text>
+      </g>`;
+  }
   function decoSlot(p, i) {
     return html`
       <g id=${'deco-' + (i + 1)} class="isl-deco" transform=${'translate(' + p.x + ',' + p.y + ')'}>
@@ -2098,6 +2296,12 @@ body {
 
   function Scene() {
     var ps = parcelles();
+    // Brume qui RECULE, progressive & globale (arbitrage Leo) : plus l'île mûrit (somme des
+    // niveaux), plus le voile clair s'étend (offset médian poussé vers l'extérieur) et plus la
+    // brume périphérique s'allège. DÉRIVÉ de history — rien de stocké.
+    var totalLv = derive.totalBuildingLevels(store.get());
+    var clear = Math.min(0.94, 0.72 + totalLv * 0.02).toFixed(3);
+    var fogOut = Math.max(0.4, 0.9 - totalLv * 0.03).toFixed(3);
     var fit = ((WORLD.w - MAXW) / 2) + ' ' + ((WORLD.h - MAXW * AR) / 2) + ' ' + MAXW + ' ' + (MAXW * AR);
     var initBox = savedView
       ? (savedView.x + ' ' + savedView.y + ' ' + savedView.w + ' ' + savedView.h)
@@ -2118,8 +2322,8 @@ body {
             </radialGradient>
             <radialGradient id="isl-fog" cx="0.5" cy="0.5" r="0.62">
               <stop offset="0" stop-color="var(--fog)" stop-opacity="0" />
-              <stop offset="0.72" stop-color="var(--fog)" stop-opacity="0" />
-              <stop offset="1" stop-color="var(--fog)" stop-opacity="0.9" />
+              <stop offset=${clear} stop-color="var(--fog)" stop-opacity="0" />
+              <stop offset="1" stop-color="var(--fog)" stop-opacity=${fogOut} />
             </radialGradient>
           </defs>
 
@@ -2133,9 +2337,9 @@ body {
             <ellipse cx=${ISLE.cx} cy=${ISLE.cy} rx=${ISLE.rx} ry=${ISLE.ry} fill="url(#isl-land)" />
           </g>
 
-          <!-- CALQUE emplacements + parcelles en ruines -->
+          <!-- CALQUE emplacements + parcelles (ruine dormante OU bâtiment relevé selon le niveau) -->
           <g class="isl-slots">${DECO.map(decoSlot)}</g>
-          <g class="isl-parcelles">${ps.map(ruin)}</g>
+          <g class="isl-parcelles">${ps.map(parcelleNode)}</g>
 
           <!-- CALQUE brume DOUCE (voile la périphérie « à débloquer ») -->
           <rect class="isl-brume" x="-80" y="-80" width=${WORLD.w + 160} height=${WORLD.h + 160}
@@ -2146,11 +2350,14 @@ body {
         <button class="isl-recenter" type="button" onClick=${recenter}
                 aria-label="Recentrer la vue de l’île">Recentrer</button>
 
-        <div class="isl-wake" role="note">
-          <span class="iw-emoji" aria-hidden="true">🌱</span>
-          <p>Ton île s’éveille. Ces fondations en ruines attendent que ton élan les
-          relève — chaque domaine que tu fais vivre y bâtira son lieu.</p>
-        </div>
+        ${totalLv === 0
+          ? html`
+            <div class="isl-wake" role="note">
+              <span class="iw-emoji" aria-hidden="true">🌱</span>
+              <p>Ton île s’éveille. Ces fondations en ruines attendent que ton élan les
+              relève — chaque domaine que tu fais vivre y bâtira son lieu.</p>
+            </div>`
+          : null}
       </div>`;
   }
 
@@ -2163,17 +2370,24 @@ body {
     return html`
       <div class="isl-list">
         <p class="isl-list-lead">Vue liste de ton île — équivalent complet de la scène.
-        En ce début, tout dort : les bâtiments s’élèveront avec ton élan.</p>
+        Chaque parcelle porte son niveau et son élan ; les bâtiments s’élèvent avec ton élan.</p>
         <h3 class="isl-list-h">Parcelles de domaine (5)</h3>
         <ul class="isl-items">
           ${ps.map(function (p) {
+            var built = p.level >= 1;
+            var state = built
+              ? ('Niveau ' + p.level + ' · élan ' + p.elan + ' · plus que ' + p.remaining + ' avant le niveau ' + (p.level + 1))
+              : 'Fondation en ruines · en sommeil';
+            var aria = built
+              ? ('Parcelle ' + p.domain.label + ' — bâtiment de niveau ' + p.level + ', élan ' + p.elan +
+                 '. Plus que ' + p.remaining + ' d’élan avant le niveau ' + (p.level + 1) + '.')
+              : ('Parcelle ' + p.domain.label + ' — fondation en ruines, en sommeil. Le bâtiment s’élèvera avec ton élan.');
             return html`
-              <li class="isl-item" tabindex="0"
-                  aria-label=${'Parcelle ' + p.domain.label + ' — fondation en ruines, en sommeil. Le bâtiment s’élèvera avec ton élan.'}>
+              <li class="isl-item ${built ? 'built' : ''}" tabindex="0" aria-label=${aria}>
                 <span class="ii-emoji" aria-hidden="true">${p.domain.emoji}</span>
                 <span class="ii-main">
-                  <span class="ii-title">${p.domain.label}</span>
-                  <span class="ii-state">Fondation en ruines · en sommeil</span>
+                  <span class="ii-title">${p.domain.label}${built ? html`<span class="ii-lv">Nv ${p.level}</span>` : null}</span>
+                  <span class="ii-state">${state}</span>
                 </span>
               </li>`;
           })}
@@ -2237,7 +2451,7 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.09';
+  var VER = '0.10';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
@@ -2250,6 +2464,7 @@ body {
     edit: { title: '', domain: '', freq: '' },
     confirmDeleteId: null,
     milestoneDone: null,      // { threshold, chestLabel } — bandeau doux après un jalon franchi
+    levelDone: null,          // { level, domainLabel, count } — bandeau doux après une montée de niveau (Phase 2.2)
     ceremony: null,           // { phase:'suspense'|'reveal', chestType, item, sourceLabel } | null
     quest: {
       domain: domains.list[0].id,                                   // filtre du catalogue
@@ -2298,7 +2513,18 @@ body {
       var t = chestTypes.get(res.milestone.tier);
       ui.milestoneDone = { threshold: res.milestone.threshold, chestLabel: t ? t.label : 'un coffre' };
     }
+    noteLevelUps(res);                                  // Phase 2.2 : bandeau doux si un niveau est franchi
     paint();                                            // store.set a déjà notifié ; ce paint pose le bandeau
+  }
+
+  // Pose le bandeau doux « montée de niveau » (Phase 2.2) à partir du résultat d'une action.
+  // Célébration SOBRE (arbitrage Leo) : on cite le niveau le plus haut atteint et le nombre de
+  // Coffres de cristal tombés dans « À découvrir ». Non bloquant, dismissible, jamais punitif.
+  function noteLevelUps(res) {
+    if (!res || !res.ok || !res.levelUps || !res.levelUps.length) return;
+    var top = res.levelUps[res.levelUps.length - 1];    // le niveau le plus élevé franchi
+    var d = domains.get(top.domain);
+    ui.levelDone = { level: top.level, domainLabel: d ? d.label : top.domain, count: res.levelUps.length };
   }
 
   /* --- ouverture de coffre : la cérémonie (Phase 1.3) --- */
@@ -2349,6 +2575,7 @@ body {
       var t = chestTypes.get(res.tier);
       ui.quest.done = { label: t ? t.label : 'un coffre' };
       ui.quest.confirmAbandon = false;
+      noteLevelUps(res);                                // Phase 2.2 : bandeau doux si un niveau est franchi
     }
     paint();
   }
@@ -2489,6 +2716,22 @@ body {
         t’attend plus bas, dans « À découvrir ».</span>
         <button class="lnk" type="button"
                 onClick=${function () { ui.milestoneDone = null; paint(); }}>OK</button>
+      </div>`;
+  }
+
+  // Bandeau doux après une MONTÉE DE NIVEAU (Phase 2.2) — même grammaire que jalon/quête :
+  // célèbre le cap du bâtiment, guide vers la pile « À découvrir » où t'attend le Coffre de
+  // cristal, dismissible, jamais culpabilisant. Célébration SOBRE (arbitrage Leo).
+  function LevelBanner() {
+    var m = ui.levelDone;
+    if (!m) return null;
+    var plural = m.count > 1;
+    return html`
+      <div class="milestone-done level-done" role="status">
+        <span>🏛️ Ton <strong>${m.domainLabel}</strong> atteint le <strong>niveau ${m.level}</strong> —
+        ${plural ? 'des Coffres de cristal t’attendent' : 'un Coffre de cristal t’attend'} plus bas, dans « À découvrir ».</span>
+        <button class="lnk" type="button"
+                onClick=${function () { ui.levelDone = null; paint(); }}>OK</button>
       </div>`;
   }
 
@@ -2742,6 +2985,7 @@ body {
         ${Creator()}
 
         <section class="section" aria-label="Tes habitudes">
+          ${LevelBanner()}
           ${MilestoneBanner()}
           ${habits.length
             ? html`<div class="habits">${habits.map(HabitCard)}</div>`
