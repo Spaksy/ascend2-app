@@ -55,6 +55,11 @@
   --shadow: rgba(30, 42, 46, .10);
   --sky-top: #BFE3EC; --sky-mid: #DCEFF0; --sky-bottom: #F0F4F5;
   --star: transparent;              /* pas d'étoiles en journée */
+  /* --- Scène île (décoratif ; harmonisé à l'ambiance horaire) --- */
+  --sea-1: #86CBDA; --sea-2: #4FA3BE;
+  --land: #C3E4A6; --land-2: #8CC474; --shore: #ECDDA8;
+  --ruin: #CDC3AC; --ruin-2: #A79B80; --plot: #B7CFA0; --plot-2: #A9C692;
+  --fog: #EAF1F3;
 }
 
 [data-ambiance="crepuscule"] {
@@ -74,6 +79,10 @@
   --shadow: rgba(74, 52, 40, .12);
   --sky-top: #F3B9A0; --sky-mid: #F7D3C0; --sky-bottom: #FBF3EC;
   --star: transparent;
+  --sea-1: #EBA98C; --sea-2: #CE8285;
+  --land: #E7C89C; --land-2: #CBA075; --shore: #F3DBB4;
+  --ruin: #CDB69E; --ruin-2: #A98D75; --plot: #DDBE94; --plot-2: #CFAF83;
+  --fog: #FBF0E6;
 }
 
 [data-ambiance="nuit"] {
@@ -93,6 +102,10 @@
   --shadow: rgba(0, 0, 0, .45);
   --sky-top: #0A0E1C; --sky-mid: #12182B; --sky-bottom: #0E1220;
   --star: rgba(255, 255, 255, .85);
+  --sea-1: #1C2A4E; --sea-2: #0C1428;
+  --land: #34425F; --land-2: #283452; --shore: #46567E;
+  --ruin: #566489; --ruin-2: #6E7BA1; --plot: #3B4A69; --plot-2: #45557A;
+  --fog: #0E1424;
 }
 
 /* ============================ BASE ============================ */
@@ -518,6 +531,127 @@ body {
 .aq-gate .aq-finish { width: 100%; }
 .aq-gatehint { font-size: 12px; color: var(--ink-2); }
 .aq-abandon { margin-left: auto; }
+
+/* ==================== NAVIGATION PAR ONGLETS (Phase 2.1) ==================== */
+:root { --nav-h: 60px; }
+
+/* La page habitudes doit dégager la barre d'onglets fixe. */
+.wrap { padding-bottom: calc(var(--nav-h) + 28px + env(safe-area-inset-bottom)); }
+
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  display: flex; gap: 4px;
+  padding: 6px 10px calc(6px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.tab {
+  flex: 1; min-height: 52px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border: 0; border-radius: var(--r-md); background: transparent; cursor: pointer;
+  color: var(--ink-2); font: inherit;
+  transition: color var(--dur-ui) ease, background-color var(--dur-ui) ease;
+}
+.tab:hover { background: var(--surface-2); }
+.tab .tab-emoji { font-size: 21px; line-height: 1; }
+.tab .tab-label { font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+.tab.on { color: var(--ink); }
+.tab.on { background: var(--accent-soft); }
+.tab.on .tab-label { color: var(--ink); }
+
+/* ==================== ÉCRAN ÎLE — SCÈNE v1 (Phase 2.1) ==================== */
+.island-screen {
+  position: relative;
+  height: 100vh; height: 100dvh;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.island-top {
+  flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: max(14px, env(safe-area-inset-top)) 18px 12px;
+}
+.island-top .eyebrow { min-width: 0; }
+
+/* Segmenteur Scène / Liste */
+.seg {
+  flex: 0 0 auto; display: inline-flex; padding: 3px;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-pill);
+}
+.seg-btn {
+  min-height: 38px; padding: 0 16px; border: 0; border-radius: var(--r-pill);
+  background: transparent; color: var(--ink-2); font: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: background-color var(--dur-ui) ease, color var(--dur-ui) ease;
+}
+.seg-btn[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px -2px var(--shadow); }
+
+/* Scène : SVG plein cadre, pilotée au doigt (pan/zoom) */
+.isl-stage { position: relative; flex: 1 1 auto; overflow: hidden; }
+.isl-svg {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+  touch-action: none;                 /* on gère TOUS les gestes (leçon v1) */
+  cursor: grab; -webkit-user-select: none; user-select: none;
+}
+.isl-svg:active { cursor: grabbing; }
+
+/* Calques décoratifs */
+.isl-shore { fill: var(--shore); opacity: .9; }
+.isl-plot { fill: var(--plot); }
+.isl-plot-in { fill: var(--plot-2); }
+.isl-ruin { fill: var(--ruin); opacity: .85; }
+.isl-parcelle .isl-badge { fill: var(--surface); opacity: .55; }
+.isl-parcelle .isl-emoji { font-size: 17px; opacity: .7; }
+.isl-parcelle { opacity: .96; }
+.isl-deco-pad { fill: var(--plot-2); opacity: .5; }
+.isl-emoji { dominant-baseline: middle; }
+
+/* Habillages posés sur la scène */
+.isl-hint {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  padding: 6px 12px; border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  border: 1px solid var(--line); color: var(--ink-2); font-size: 12px; font-weight: 600;
+  pointer-events: none; white-space: nowrap; max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis;
+}
+.isl-recenter {
+  position: absolute; top: 10px; right: 12px;
+  min-height: 40px; padding: 0 14px; border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border: 1px solid var(--line); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; box-shadow: 0 4px 14px -8px var(--shadow);
+}
+.isl-recenter:hover { border-color: var(--accent); }
+.isl-wake {
+  position: absolute; left: 16px; right: 16px; margin: 0 auto; max-width: 420px;
+  bottom: calc(var(--nav-h) + 18px + env(safe-area-inset-bottom));
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px 16px; border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border: 1px solid var(--line); box-shadow: 0 10px 28px -16px var(--shadow);
+}
+.isl-wake .iw-emoji { font-size: 22px; line-height: 1.2; flex: 0 0 auto; }
+.isl-wake p { font-size: 13px; color: var(--ink-2); margin: 0; }
+
+/* Vue LISTE — miroir sémantique de la scène (accessibilité non négociable) */
+.isl-list {
+  flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  max-width: 560px; width: 100%; margin: 0 auto;
+  padding: 4px 20px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom));
+}
+.isl-list-lead { color: var(--ink-2); font-size: 14px; max-width: 48ch; margin: 4px 0 18px; }
+.isl-list-h { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--ink-2); margin: 20px 0 10px; }
+.isl-items { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.isl-item {
+  display: flex; align-items: center; gap: 14px; min-height: 60px;
+  padding: 12px 16px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.isl-item:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.isl-item .ii-emoji { font-size: 24px; flex: 0 0 auto; opacity: .85; }
+.isl-item .ii-main { display: flex; flex-direction: column; min-width: 0; }
+.isl-item .ii-title { font-weight: 700; font-size: 15px; color: var(--ink); }
+.isl-item .ii-state { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
 
 /* ============================ REDUCED MOTION ============================ */
 @media (prefers-reduced-motion: reduce) {
@@ -1743,6 +1877,345 @@ body {
   };
 })();
 
+/* ASCEND v2 — La scène de l'île (Phase 2.1, début du jalon M2).
+   PREMIER écran du monde, à côté de M1 (habitudes/quêtes/coffres/collection).
+
+   Contenu :
+   - une SCÈNE SVG en calques (mer · île · parcelles en ruines · brume), pilotée au
+     doigt en PAN + ZOOM via Pointer Events NATIFS (leçon v1 : pas de lib), bornes douces ;
+   - une VUE LISTE MIROIR sémantique (accessibilité NON négociable) : équivalent 1:1
+     de la scène, navigable clavier / lecteur d'écran ; bascule Scène ↔ Liste.
+
+   En 2.1 les 5 parcelles sont VIDES : on montre des FONDATIONS EN RUINES qui s'éveillent
+   (les bâtiments/niveaux = 2.2). Rien d'achetable, rien de dérivable stocké : la scène ne
+   lit que la LISTE des domaines (domains.js). Placeholders géométriques propres ; les SVG
+   Claude Design viendront en 2.4 sur des ids/ancres STABLES (voir GEO ci-dessous).
+
+   API : window.AscendIsland = { Screen(ctx) } où ctx = { view:'scene'|'liste', onView, ver }. */
+(function () {
+  'use strict';
+  var h = window.preact.h;
+  var html = window.htm.bind(h);
+  var domains = window.AscendDomains;
+
+  /* ------------------------------------------------------------------ géométrie
+     Monde fixe (unités SVG) ; ancres STABLES (2.4 y posera les assets réels).
+     Île = grande ellipse ; les 5 parcelles suivent un ARC EN CROISSANT sur l'avant
+     (le centre reste libre pour le futur musée, M3). Ordre = domains.list. */
+  var WORLD = { w: 1000, h: 700 };
+  var ISLE = { cx: 500, cy: 388, rx: 352, ry: 214 };
+
+  // Arc en croissant (5 ancres, avant de l'île). ids : parcelle-<domain>.
+  var ARC = [
+    { x: 286, y: 470 },
+    { x: 390, y: 516 },
+    { x: 500, y: 530 },
+    { x: 610, y: 516 },
+    { x: 714, y: 470 }
+  ];
+  // Emplacements de décoration neutres (quelques-uns ; ancres stables : deco-1…).
+  var DECO = [
+    { x: 402, y: 402 },
+    { x: 598, y: 402 }
+  ];
+
+  function parcelles() {
+    var list = domains.list;
+    var out = [];
+    for (var i = 0; i < list.length && i < ARC.length; i++) {
+      out.push({ domain: list[i], x: ARC[i].x, y: ARC[i].y, id: 'parcelle-' + list[i].id });
+    }
+    return out;
+  }
+
+  /* --------------------------------------------------- contrôleur PAN + ZOOM (natif)
+     Manipule le viewBox du <svg> (coordonnées MONDE naturelles, focal-point exact).
+     Un seul pointeur = pan ; deux = pinch ; molette = zoom au curseur (desktop).
+     Bornes DOUCES (petite marge). Aucune animation → reduce-motion-safe d'office.
+     L'état de vue est conservé au niveau module pour survivre aux re-rendus Preact. */
+  var AR = WORLD.h / WORLD.w;
+  var MINW = WORLD.w / 3.2;     // zoom max (~3,2×)
+  var MAXW = WORLD.w;           // dézoom max = île entière (fit)
+  var MARGIN = 46;              // overscroll doux (unités monde)
+  var savedView = null;         // { x, y, w, h } — persiste entre visites de l'onglet
+
+  function makeController(svg) {
+    var view = savedView
+      ? { x: savedView.x, y: savedView.y, w: savedView.w, h: savedView.h }
+      : { x: (WORLD.w - MAXW) / 2, y: (WORLD.h - MAXW * AR) / 2, w: MAXW, h: MAXW * AR };
+    var pointers = {};           // pointerId -> { x, y }
+    var panAnchor = null;        // point MONDE sous le doigt au début du pan
+    var pinch = null;            // { dist, baseW } — figés au début du geste à 2 doigts
+
+    function count() { return Object.keys(pointers).length; }
+
+    function clamp() {
+      view.w = Math.max(MINW, Math.min(MAXW, view.w));
+      view.h = view.w * AR;
+      if (view.w >= WORLD.w) view.x = (WORLD.w - view.w) / 2;
+      else view.x = Math.max(-MARGIN, Math.min(WORLD.w - view.w + MARGIN, view.x));
+      if (view.h >= WORLD.h) view.y = (WORLD.h - view.h) / 2;
+      else view.y = Math.max(-MARGIN, Math.min(WORLD.h - view.h + MARGIN, view.y));
+    }
+    function apply() {
+      clamp();
+      svg.setAttribute('viewBox', view.x + ' ' + view.y + ' ' + view.w + ' ' + view.h);
+      savedView = { x: view.x, y: view.y, w: view.w, h: view.h };
+    }
+    // client(px) -> monde, sous le viewBox courant (preserveAspectRatio xMidYMid meet).
+    function toWorld(cx, cy) {
+      var r = svg.getBoundingClientRect();
+      if (!r.width || !r.height) return { x: view.x + view.w / 2, y: view.y + view.h / 2 };
+      var s = Math.min(r.width / view.w, r.height / view.h);
+      var ox = (r.width - view.w * s) / 2, oy = (r.height - view.h * s) / 2;
+      return { x: view.x + (cx - r.left - ox) / s, y: view.y + (cy - r.top - oy) / s };
+    }
+    // Place le monde de sorte que worldPt reste sous le point client (cx,cy) — zoom focal.
+    function anchorAt(worldPt, cx, cy) {
+      var r = svg.getBoundingClientRect();
+      var s = Math.min(r.width / view.w, r.height / view.h);
+      var ox = (r.width - view.w * s) / 2, oy = (r.height - view.h * s) / 2;
+      view.x = worldPt.x - (cx - r.left - ox) / s;
+      view.y = worldPt.y - (cy - r.top - oy) / s;
+    }
+    function midClient() {
+      var ks = Object.keys(pointers), a = pointers[ks[0]], b = pointers[ks[1]];
+      return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    }
+    function dist() {
+      var ks = Object.keys(pointers), a = pointers[ks[0]], b = pointers[ks[1]];
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+    // (Re)fige les repères du geste courant selon le nombre de doigts posés.
+    function rebaseGesture() {
+      var n = count();
+      pinch = null; panAnchor = null;
+      if (n === 1) {
+        var k = Object.keys(pointers)[0];
+        panAnchor = toWorld(pointers[k].x, pointers[k].y);
+      } else if (n >= 2) {
+        pinch = { dist: dist(), baseW: view.w };   // distance + largeur de référence figées
+      }
+    }
+
+    function onDown(e) {
+      pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+      try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+      rebaseGesture();
+    }
+    function onMove(e) {
+      if (!pointers[e.pointerId]) return;
+      pointers[e.pointerId].x = e.clientX; pointers[e.pointerId].y = e.clientY;
+      var n = count();
+      if (n === 1 && panAnchor) {
+        var cur = toWorld(e.clientX, e.clientY);
+        view.x -= (cur.x - panAnchor.x);
+        view.y -= (cur.y - panAnchor.y);
+        apply();                                   // panAnchor reste collé au doigt
+      } else if (n >= 2 && pinch && pinch.dist > 0) {
+        var m = midClient();                       // milieu client courant
+        var midWorld = toWorld(m.x, m.y);          // point monde sous ce milieu (avant zoom)
+        var nd = dist();
+        if (nd > 0) { view.w = Math.max(MINW, Math.min(MAXW, pinch.baseW * (pinch.dist / nd))); view.h = view.w * AR; }
+        anchorAt(midWorld, m.x, m.y);              // garde le milieu collé aux doigts
+        apply();
+      }
+    }
+    function onUp(e) {
+      delete pointers[e.pointerId];
+      try { svg.releasePointerCapture(e.pointerId); } catch (err) {}
+      rebaseGesture();                             // 2→1 : repasse en pan proprement
+    }
+    function onWheel(e) {
+      e.preventDefault();
+      var w = toWorld(e.clientX, e.clientY);
+      var f = e.deltaY > 0 ? 1.12 : 1 / 1.12;
+      view.w = Math.max(MINW, Math.min(MAXW, view.w * f));
+      view.h = view.w * AR;
+      anchorAt(w, e.clientX, e.clientY);
+      apply();
+    }
+
+    svg.addEventListener('pointerdown', onDown);
+    svg.addEventListener('pointermove', onMove);
+    svg.addEventListener('pointerup', onUp);
+    svg.addEventListener('pointercancel', onUp);
+    svg.addEventListener('wheel', onWheel, { passive: false });
+    apply();
+
+    return {
+      reset: function () {
+        view.x = (WORLD.w - MAXW) / 2; view.y = (WORLD.h - MAXW * AR) / 2;
+        view.w = MAXW; view.h = MAXW * AR; apply();
+      },
+      destroy: function () {
+        svg.removeEventListener('pointerdown', onDown);
+        svg.removeEventListener('pointermove', onMove);
+        svg.removeEventListener('pointerup', onUp);
+        svg.removeEventListener('pointercancel', onUp);
+        svg.removeEventListener('wheel', onWheel);
+      }
+    };
+  }
+
+  var controller = null;
+  function initScene(node) {
+    if (node) {
+      if (controller) controller.destroy();
+      controller = makeController(node);
+    } else if (controller) {
+      controller.destroy(); controller = null;
+    }
+  }
+  function recenter() { if (controller) controller.reset(); }
+
+  /* --------------------------------------------------------------- rendu SVG (calques)
+     Placeholders géométriques : chaque parcelle = une FONDATION EN RUINES (socle de
+     pierre + moignons de colonnes brisées + pastille domaine en sommeil). La brume
+     DOUCE voile la périphérie (zones « à débloquer », 2.2) sans rien dévoiler. */
+  function ruin(p, i) {
+    var d = p.domain;
+    return html`
+      <g id=${p.id} class="isl-parcelle" transform=${'translate(' + p.x + ',' + p.y + ')'}
+         data-domain=${d.id}>
+        <ellipse class="isl-plot" cx="0" cy="0" rx="58" ry="27" />
+        <ellipse class="isl-plot-in" cx="0" cy="-2" rx="44" ry="19" />
+        <!-- moignons de colonnes brisées (ruine qui s'éveille) -->
+        <rect class="isl-ruin" x="-34" y="-30" width="11" height="24" rx="3" />
+        <rect class="isl-ruin" x="-6"  y="-38" width="12" height="33" rx="3" />
+        <rect class="isl-ruin" x="22"  y="-26" width="10" height="20" rx="3" />
+        <!-- pastille domaine, en sommeil (basse opacité) -->
+        <circle class="isl-badge" cx="0" cy="-8" r="17" />
+        <text class="isl-emoji" x="0" y="-1" text-anchor="middle">${d.emoji}</text>
+      </g>`;
+  }
+  function decoSlot(p, i) {
+    return html`
+      <g id=${'deco-' + (i + 1)} class="isl-deco" transform=${'translate(' + p.x + ',' + p.y + ')'}>
+        <ellipse class="isl-deco-pad" cx="0" cy="0" rx="30" ry="14" />
+      </g>`;
+  }
+
+  function Scene() {
+    var ps = parcelles();
+    var fit = ((WORLD.w - MAXW) / 2) + ' ' + ((WORLD.h - MAXW * AR) / 2) + ' ' + MAXW + ' ' + (MAXW * AR);
+    var initBox = savedView
+      ? (savedView.x + ' ' + savedView.y + ' ' + savedView.w + ' ' + savedView.h)
+      : fit;
+    return html`
+      <div class="isl-stage">
+        <svg class="isl-svg" viewBox=${initBox} preserveAspectRatio="xMidYMid meet"
+             role="img" aria-label="Scène de ton île — vue décorative ; l’équivalent accessible est la vue Liste."
+             ref=${initScene}>
+          <defs>
+            <linearGradient id="isl-sea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="var(--sea-1)" />
+              <stop offset="1" stop-color="var(--sea-2)" />
+            </linearGradient>
+            <radialGradient id="isl-land" cx="0.5" cy="0.42" r="0.75">
+              <stop offset="0" stop-color="var(--land)" />
+              <stop offset="1" stop-color="var(--land-2)" />
+            </radialGradient>
+            <radialGradient id="isl-fog" cx="0.5" cy="0.5" r="0.62">
+              <stop offset="0" stop-color="var(--fog)" stop-opacity="0" />
+              <stop offset="0.72" stop-color="var(--fog)" stop-opacity="0" />
+              <stop offset="1" stop-color="var(--fog)" stop-opacity="0.9" />
+            </radialGradient>
+          </defs>
+
+          <!-- CALQUE mer (déborde le monde pour couvrir l'overscroll) -->
+          <rect class="isl-mer" x="-80" y="-80" width=${WORLD.w + 160} height=${WORLD.h + 160}
+                fill="url(#isl-sea)" />
+
+          <!-- CALQUE île -->
+          <g class="isl-land">
+            <ellipse class="isl-shore" cx=${ISLE.cx} cy=${ISLE.cy + 10} rx=${ISLE.rx + 14} ry=${ISLE.ry + 12} />
+            <ellipse cx=${ISLE.cx} cy=${ISLE.cy} rx=${ISLE.rx} ry=${ISLE.ry} fill="url(#isl-land)" />
+          </g>
+
+          <!-- CALQUE emplacements + parcelles en ruines -->
+          <g class="isl-slots">${DECO.map(decoSlot)}</g>
+          <g class="isl-parcelles">${ps.map(ruin)}</g>
+
+          <!-- CALQUE brume DOUCE (voile la périphérie « à débloquer ») -->
+          <rect class="isl-brume" x="-80" y="-80" width=${WORLD.w + 160} height=${WORLD.h + 160}
+                fill="url(#isl-fog)" />
+        </svg>
+
+        <div class="isl-hint" aria-hidden="true">Glisse pour explorer · pince ou molette pour zoomer</div>
+        <button class="isl-recenter" type="button" onClick=${recenter}
+                aria-label="Recentrer la vue de l’île">Recentrer</button>
+
+        <div class="isl-wake" role="note">
+          <span class="iw-emoji" aria-hidden="true">🌱</span>
+          <p>Ton île s’éveille. Ces fondations en ruines attendent que ton élan les
+          relève — chaque domaine que tu fais vivre y bâtira son lieu.</p>
+        </div>
+      </div>`;
+  }
+
+  /* ------------------------------------------------------------- vue LISTE (miroir 1:1)
+     Équivalent sémantique exact de la scène : chaque parcelle (par domaine) et chaque
+     emplacement de déco, avec le MÊME statut « fondation dormante » qu'en 2.1.
+     Navigable clavier / lecteur d'écran. */
+  function List() {
+    var ps = parcelles();
+    return html`
+      <div class="isl-list">
+        <p class="isl-list-lead">Vue liste de ton île — équivalent complet de la scène.
+        En ce début, tout dort : les bâtiments s’élèveront avec ton élan.</p>
+        <h3 class="isl-list-h">Parcelles de domaine (5)</h3>
+        <ul class="isl-items">
+          ${ps.map(function (p) {
+            return html`
+              <li class="isl-item" tabindex="0"
+                  aria-label=${'Parcelle ' + p.domain.label + ' — fondation en ruines, en sommeil. Le bâtiment s’élèvera avec ton élan.'}>
+                <span class="ii-emoji" aria-hidden="true">${p.domain.emoji}</span>
+                <span class="ii-main">
+                  <span class="ii-title">${p.domain.label}</span>
+                  <span class="ii-state">Fondation en ruines · en sommeil</span>
+                </span>
+              </li>`;
+          })}
+        </ul>
+        <h3 class="isl-list-h">Emplacements de décoration (${DECO.length})</h3>
+        <ul class="isl-items">
+          ${DECO.map(function (_, i) {
+            return html`
+              <li class="isl-item" tabindex="0"
+                  aria-label=${'Emplacement de décoration ' + (i + 1) + ' — libre.'}>
+                <span class="ii-emoji" aria-hidden="true">✨</span>
+                <span class="ii-main">
+                  <span class="ii-title">Emplacement ${i + 1}</span>
+                  <span class="ii-state">Libre · à décorer plus tard</span>
+                </span>
+              </li>`;
+          })}
+        </ul>
+      </div>`;
+  }
+
+  /* --------------------------------------------------------------------- écran complet */
+  function Screen(ctx) {
+    var view = ctx.view === 'liste' ? 'liste' : 'scene';
+    return html`
+      <main class="island-screen">
+        <header class="island-top">
+          <div class="eyebrow">ASCEND · v${ctx.ver} · Ton île</div>
+          <div class="seg" role="group" aria-label="Affichage de l’île">
+            <button type="button" class="seg-btn" aria-pressed=${view === 'scene' ? 'true' : 'false'}
+                    onClick=${function () { ctx.onView('scene'); }}>Scène</button>
+            <button type="button" class="seg-btn" aria-pressed=${view === 'liste' ? 'true' : 'false'}
+                    onClick=${function () { ctx.onView('liste'); }}>Liste</button>
+          </div>
+        </header>
+        ${view === 'scene' ? Scene() : List()}
+      </main>`;
+  }
+
+  window.AscendIsland = { Screen: Screen };
+})();
+
 /* ASCEND v2 — Racine de l'app.
    Phase 1.1 : PREMIER VRAI ÉCRAN — Habitudes (créer, lister, éditer, supprimer,
    valider le jour). Remplace la page de spécimens 0.3 (les styles restent la banque
@@ -1763,12 +2236,15 @@ body {
   var chestTypes = window.AscendChests;
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
-  var VER = '0.08';
+  var island = window.AscendIsland;
+  var VER = '0.09';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
   /* ------------------------------------------------------------ état d'UI éphémère */
   var ui = {
+    tab: 'habitudes',           // 'habitudes' | 'ile' — onglet courant (jamais persisté)
+    islandView: 'scene',        // 'scene' | 'liste' — bascule de la scène île (Phase 2.1)
     form: { title: '', domain: domains.list[0].id, freq: '' },
     editingId: null,
     edit: { title: '', domain: '', freq: '' },
@@ -2251,10 +2727,10 @@ body {
       </section>`;
   }
 
-  function App() {
+  // Écran M1 (habitudes / quêtes / coffres / collection) — inchangé, désormais un onglet.
+  function HabitScreen() {
     var habits = (store.get().habits || []).filter(function (hb) { return hb && hb.id; });
     return html`
-      <div class="sky" aria-hidden="true"></div>
       <main class="wrap">
         <header class="app-hero">
           <div class="eyebrow">ASCEND · v${VER}</div>
@@ -2275,7 +2751,41 @@ body {
         ${QuestSection()}
         ${ChestPile()}
         ${CollectionSection()}
-      </main>
+      </main>`;
+  }
+
+  // Barre d'onglets (bas) : bascule Île ↔ Habitudes. Fixe, sûre pour l'encoche (safe-area).
+  function TabBar() {
+    var tabs = [
+      { id: 'ile', label: 'Île', emoji: '🏝️' },
+      { id: 'habitudes', label: 'Habitudes', emoji: '🌱' }
+    ];
+    return html`
+      <nav class="tabbar" role="tablist" aria-label="Navigation principale">
+        ${tabs.map(function (t) {
+          var on = ui.tab === t.id;
+          return html`
+            <button type="button" class="tab ${on ? 'on' : ''}" role="tab"
+                    aria-selected=${on ? 'true' : 'false'}
+                    onClick=${function () { if (ui.tab !== t.id) { ui.tab = t.id; paint(); } }}>
+              <span class="tab-emoji" aria-hidden="true">${t.emoji}</span>
+              <span class="tab-label">${t.label}</span>
+            </button>`;
+        })}
+      </nav>`;
+  }
+
+  function App() {
+    var onIsland = ui.tab === 'ile';
+    return html`
+      <div class="sky" aria-hidden="true"></div>
+      ${onIsland
+        ? island.Screen({
+            view: ui.islandView, ver: VER,
+            onView: function (v) { if (ui.islandView !== v) { ui.islandView = v; paint(); } }
+          })
+        : HabitScreen()}
+      ${TabBar()}
       ${Ceremony()}`;
   }
 
