@@ -61,6 +61,11 @@
   --ruin: #CDC3AC; --ruin-2: #A79B80; --plot: #B7CFA0; --plot-2: #A9C692;
   --dock: #B98A55; --dock-2: #7E5A30;
   --fog: #EAF1F3;
+  /* 4.2a — matière de la scène : sable mouillé, écume, murs, toits, feuillage */
+  --shore-2: #D6C089; --foam: #FFFFFF;
+  --wall: #F2E7D2; --wall-2: #D9C6A6;
+  --roof: #C4705A; --roof-2: #9C5140;
+  --leaf: #7FB86A; --leaf-2: #5C9A4C;
 }
 
 [data-ambiance="crepuscule"] {
@@ -85,6 +90,10 @@
   --ruin: #CDB69E; --ruin-2: #A98D75; --plot: #DDBE94; --plot-2: #CFAF83;
   --dock: #C08A5E; --dock-2: #8A5E3A;
   --fog: #FBF0E6;
+  --shore-2: #DFC195; --foam: #FFF6EC;
+  --wall: #F8E8D6; --wall-2: #E0C5A8;
+  --roof: #C77E6C; --roof-2: #9E5A4C;
+  --leaf: #C0A578; --leaf-2: #997F55;
 }
 
 [data-ambiance="nuit"] {
@@ -109,6 +118,10 @@
   --ruin: #566489; --ruin-2: #6E7BA1; --plot: #3B4A69; --plot-2: #45557A;
   --dock: #6A6082; --dock-2: #48415F;
   --fog: #0E1424;
+  --shore-2: #384566; --foam: #7E8EBA;
+  --wall: #5A678E; --wall-2: #465272;
+  --roof: #4B4070; --roof-2: #372E52;
+  --leaf: #3E5C6A; --leaf-2: #2E4753;
 }
 
 /* ============================ BASE ============================ */
@@ -671,7 +684,8 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-pill);
 }
 .seg-btn {
-  min-height: 38px; padding: 0 16px; border: 0; border-radius: var(--r-pill);
+  /* 44 pt exigés (CLAUDE.md) — dette a11y pré-existante depuis la Phase 2.1, corrigée en 4.2a. */
+  min-height: 44px; padding: 0 18px; border: 0; border-radius: var(--r-pill);
   background: transparent; color: var(--ink-2); font: inherit; font-size: 13px; font-weight: 700;
   cursor: pointer; transition: background-color var(--dur-ui) ease, color var(--dur-ui) ease;
 }
@@ -686,16 +700,37 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 }
 .isl-svg:active { cursor: grabbing; }
 
-/* Calques décoratifs */
-.isl-shore { fill: var(--shore); opacity: .9; }
+/* Calques décoratifs — l'île se pose dans la mer par couches (4.2a) :
+   ombre portée → écume → sable mouillé → plage → herbe → relief. */
+.isl-seashade { fill: var(--sea-2); opacity: .28; }
+.isl-foam { fill: none; stroke: var(--foam); stroke-width: 5; opacity: .38; }
+.isl-shore { fill: var(--shore-2); opacity: .85; }
+.isl-beach { fill: var(--shore); opacity: .95; }
+.isl-wave { fill: none; stroke: var(--foam); stroke-width: 2.5; stroke-linecap: round; opacity: .3; }
+
+/* Socle d'une parcelle */
+.isl-plot-sh { fill: var(--land-2); opacity: .3; }
 .isl-plot { fill: var(--plot); }
 .isl-plot-in { fill: var(--plot-2); }
-.isl-ruin { fill: var(--ruin); opacity: .85; }
 .isl-parcelle .isl-badge { fill: var(--surface); opacity: .55; }
 .isl-parcelle .isl-emoji { font-size: 17px; opacity: .7; }
+.isl-badge-sh { fill: var(--land-2); opacity: .22; }
 .isl-parcelle { opacity: .96; }
 .isl-deco-pad { fill: var(--plot-2); opacity: .5; }
 .isl-emoji { dominant-baseline: middle; }
+
+/* Ruine dormante : pierres usées, éboulis, mousse — elle a vécu, elle attend. */
+.isl-ruin { fill: var(--ruin); opacity: .85; }
+.isl-ruin-hi { fill: var(--wall); opacity: .32; }
+.isl-ruin-sh { fill: var(--land-2); opacity: .22; }
+.isl-rubble { fill: var(--ruin-2); opacity: .55; }
+.isl-moss { fill: var(--leaf-2); opacity: .3; }
+
+/* Végétation d'une parcelle : elle s'étoffe avec le niveau. */
+.isl-shrub-sh { fill: var(--land-2); opacity: .28; }
+.isl-trunk { fill: var(--ruin-2); opacity: .8; }
+.isl-leaf-a { fill: var(--leaf-2); }
+.isl-leaf-b { fill: var(--leaf); }
 
 /* ---- Placement des décorations (Phase 2.3) ---- */
 /* Emplacement libre : pastille discrète ; devient une cible qui pulse quand un objet attend. */
@@ -712,6 +747,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 .isl-placed { cursor: grab; }
 .isl-placed:active { cursor: grabbing; }
 .isl-placed .placed-pad { fill: var(--plot-2); opacity: .55; stroke: none; }
+.isl-placed .isl-pshadow { fill: var(--land-2); opacity: .3; }
 .isl-placed .isl-pdot { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
 .isl-placed.special .isl-pdot { stroke: var(--gold); stroke-width: 2; }
 .isl-placed.sel .isl-pdot { stroke: var(--accent); stroke-width: 2.5; }
@@ -728,7 +764,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 .isl-place-bar .ipb-emoji { font-size: 20px; line-height: 1; flex: 0 0 auto; }
 .isl-place-bar .ipb-txt { font-size: 13px; color: var(--ink); min-width: 0; flex: 1 1 140px; }
 .isl-place-bar .ipb-btn {
-  min-height: 40px; padding: 0 14px; border-radius: var(--r-pill); border: 1px solid var(--accent);
+  min-height: 44px; padding: 0 16px; border-radius: var(--r-pill);   /* 44 pt (CLAUDE.md) */ border: 1px solid var(--accent);
   background: var(--accent-soft); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
 }
 .isl-place-bar .ipb-btn.ghost { background: transparent; border-color: var(--line); color: var(--ink-2); }
@@ -766,13 +802,21 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 .isl-item.placed-item { border-color: var(--accent); }
 .isl-item .ii-main { flex: 1 1 auto; }
 
-/* Bâtiment relevé (Phase 2.2) : la ruine qui se relève — tour géométrique + lumière.
-   Placeholder ; les assets Claude Design (2.4) prendront le relais sur la même ancre. */
-.isl-glow  { fill: var(--gold); }
-.isl-tower { fill: var(--ruin-2); stroke: var(--ruin); stroke-width: 1.5; }
-.isl-cap   { fill: var(--shore); }
-.isl-stem  { fill: var(--ruin); }
+/* Bâtiment relevé (Phase 2.2, enrichi en 4.2a) : la ruine qui se relève — corps maçonné,
+   toit en pente, corniche, porte, fenêtres allumées, ombre portée. Toujours un placeholder
+   géométrique ; les assets Claude Design (2.4) prendront le relais sur la même ancre. */
+.isl-glow  { fill: url(#isl-glow-g); }
+.isl-cast  { fill: var(--land-2); opacity: .26; }
+.isl-tower { fill: var(--wall); stroke: var(--wall-2); stroke-width: 1.2; }
+.isl-tower-sh { fill: var(--wall-2); opacity: .38; }
+.isl-band  { stroke: var(--wall-2); stroke-width: 1; opacity: .5; }
+.isl-roof  { fill: var(--roof-2); }
+.isl-roof-hi { fill: var(--roof); }
+.isl-eaves { fill: var(--roof-2); }
+.isl-door  { fill: var(--roof-2); opacity: .7; }
+.isl-stem  { fill: var(--wall-2); }
 .isl-win   { fill: var(--gold); opacity: .92; }
+.isl-sill  { stroke: var(--wall-2); stroke-width: 1.2; opacity: .6; }
 .isl-built .isl-badge { fill: var(--surface); opacity: .95; }
 .isl-built .isl-emoji { opacity: 1; }
 
@@ -788,6 +832,10 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 .isl-dock-plank { stroke: var(--dock-2); stroke-width: 1; opacity: .55; }
 .isl-dock-pile { fill: var(--dock-2); }
 .isl-dock-shadow { fill: var(--sea-2); opacity: .32; }
+.isl-dock-ripple { fill: none; stroke: var(--foam); stroke-width: 2.5; opacity: .3; }
+.isl-dock-edge { fill: var(--shore); opacity: .5; }
+.isl-bollard { fill: var(--dock-2); }
+.isl-rope { fill: none; stroke: var(--dock-2); stroke-width: 1.6; stroke-linecap: round; opacity: .7; }
 .isl-dchest-body { fill: var(--dock-2); }
 .isl-dchest-lid { fill: var(--dock); }
 .isl-dchest-clasp { fill: var(--gold); }
@@ -809,7 +857,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 }
 .isl-recenter {
   position: absolute; top: 10px; right: 12px;
-  min-height: 40px; padding: 0 14px; border-radius: var(--r-pill);
+  min-height: 44px; padding: 0 16px; border-radius: var(--r-pill);   /* 44 pt (CLAUDE.md) */
   background: color-mix(in srgb, var(--surface) 90%, transparent);
   border: 1px solid var(--line); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700;
   cursor: pointer; box-shadow: 0 4px 14px -8px var(--shadow);
@@ -899,7 +947,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 (function () {
   'use strict';
 
-  var SAVE_VERSION = 1;
+  var SAVE_VERSION = 2;
   var SAVE_KEY = 'ascend2.save.v1';
   // Garde-fou de sécurité : borne le nombre de jours civils qu'un rollover prend en
   // compte (horloge sautée de plusieurs années). Le rollover v2 est O(1) — il ne fait
@@ -998,14 +1046,46 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   }
 
   /* --------------------------------------------------------------------- migrateSave */
-  // Migration NON destructive. v1 = forme courante → aucune transformation. Une save d'une
-  // version PLUS RÉCENTE (v>SAVE_VERSION, ex : livrable rétrogradé) n'est pas rétro-migrable
-  // → null = repart du seed (refus PROPRE, jamais de crash, jamais d'écrasement silencieux).
-  // Futures montées : `if (v < 2) { …transform…; v = 2; }` ici, puis bump SAVE_VERSION.
+  // Migration NON destructive. Une save d'une version PLUS RÉCENTE (v>SAVE_VERSION, ex :
+  // livrable rétrogradé) n'est pas rétro-migrable → null = repart du seed (refus PROPRE,
+  // jamais de crash, jamais d'écrasement silencieux).
+  // Futures montées : `if (v < 3) { …transform…; v = 3; }` ici, puis bump SAVE_VERSION.
+
+  // v1 → v2 (Phase 4.2a) : l'île a été RECOMPOSÉE (île agrandie, parcelles aérées), donc les
+  // ancres d'emplacement `deco-1…12` ont de nouvelles coordonnées monde. Un placement ne stocke
+  // que sa POSITION (invariant TDD §4) : on la REMAPPE ancre par ancre, par INDEX — exact et
+  // sans perte. Une position qui ne correspond à aucune ancre connue est laissée telle quelle
+  // (island.js sait déjà l'ignorer sans crasher). Rien n'est jamais supprimé.
+  var DECO_ANCHORS_V1 = [
+    [380, 258], [620, 258], [500, 205], [255, 335], [745, 335], [400, 340],
+    [600, 340], [255, 258], [745, 258], [200, 420], [800, 420], [500, 278]
+  ];
+  var DECO_ANCHORS_V2 = [
+    [395, 262], [605, 262], [500, 208], [285, 318], [715, 318], [395, 372],
+    [605, 372], [296, 226], [704, 226], [162, 292], [838, 292], [500, 168]
+  ];
+  function remapDecoAnchors(data) {
+    var pls = data.placements;
+    if (!Array.isArray(pls)) return;
+    for (var i = 0; i < pls.length; i++) {
+      var p = pls[i];
+      if (!p || typeof p !== 'object' || p.zone !== 'ile') continue;
+      if (typeof p.x !== 'number' || typeof p.y !== 'number') continue;
+      for (var k = 0; k < DECO_ANCHORS_V1.length; k++) {
+        if (Math.abs(p.x - DECO_ANCHORS_V1[k][0]) < 0.5 && Math.abs(p.y - DECO_ANCHORS_V1[k][1]) < 0.5) {
+          p.x = DECO_ANCHORS_V2[k][0]; p.y = DECO_ANCHORS_V2[k][1];
+          break;
+        }
+      }
+    }
+  }
+
   function migrateSave(data) {
     if (!data || typeof data !== 'object') return null;
     var v = (typeof data.v === 'number') ? data.v : 1; // toutes 1res saves sans champ v → v1
     if (v > SAVE_VERSION) return null;
+    if (v < 2) { remapDecoAnchors(data); v = 2; }
+    data.v = v;
     return data;
   }
 
@@ -2308,28 +2388,48 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
      Île = grande ellipse ; les 5 parcelles suivent un ARC EN CROISSANT sur l'avant
      (le centre reste libre pour le futur musée, M3). Ordre = domains.list. */
   var WORLD = { w: 1000, h: 700 };
-  var ISLE = { cx: 500, cy: 388, rx: 352, ry: 214 };
+  // Phase 4.2a — l'île est AGRANDIE (rx 352→400, ry 214→236) : plus de terre pour le même
+  // cadre, donc les parcelles respirent au lieu de se toucher. Le monde ne change PAS (même
+  // rapport 1000×700 → aucun letterbox nouveau sur mobile, bornes de zoom inchangées).
+  var ISLE = { cx: 500, cy: 380, rx: 400, ry: 236 };
 
   // Arc en croissant (5 ancres, avant de l'île). ids : parcelle-<domain>.
+  // Phase 4.2a — écartées ET échelonnées en PROFONDEUR (y différents) : les parcelles ne
+  // s'alignent plus au cordeau, elles montent vers l'arrière-plan comme un vrai village.
+  // Écart mini entre deux socles voisins : 132 pour des socles de 100 → 32 d'air (avant : −9,
+  // ils se CHEVAUCHAIENT). Le centre reste libre pour le musée (M3).
   var ARC = [
-    { x: 286, y: 470 },
-    { x: 390, y: 516 },
-    { x: 500, y: 530 },
-    { x: 610, y: 516 },
-    { x: 714, y: 470 }
+    { x: 208, y: 462 },
+    { x: 340, y: 512 },
+    { x: 500, y: 540 },
+    { x: 660, y: 512 },
+    { x: 792, y: 462 }
   ];
+  var PLOT = { rx: 50, ry: 24 };   // socle d'une parcelle (rayon) — sert au rendu ET à l'écart
+
+  // Vaguelettes du large — positions FIXES, toutes hors de l'anneau d'écume (donc jamais sur
+  // la terre). Purement décoratives et STATIQUES : rien à neutraliser en reduce-motion.
+  var WAVES = [
+    { x: 60, y: 150 }, { x: 44, y: 430 }, { x: 120, y: 640 }, { x: 944, y: 210 },
+    { x: 928, y: 498 }, { x: 868, y: 648 }, { x: 340, y: 70 }, { x: 660, y: 60 }
+  ];
+  // Tri de PROFONDEUR : ce qui est au fond (y petit) se peint d'abord.
+  function byDepth(a, b) { return a.y - b.y; }
 
   // Emplacements de décoration — ancres STABLES, append-only (ids deco-1…deco-12). Réparties
   // sur le « jardin » de l'île (derrière les bâtiments de l'avant, hors du centre réservé au
   // musée). L'ORDRE = ordre de déblocage : les 3 premières sont ouvertes d'emblée, puis une de
   // plus par niveau de bâtiment gagné. Cases LARGES, bien espacées (jamais un Tetris — §6.1).
+  // Phase 4.2a — recalées sur l'île agrandie : le jardin occupe TOUT l'arrière (y 168→372),
+  // dégagé des flèches des bâtiments et du centre réservé au musée. Les saves existantes sont
+  // remappées ancre par ancre par `state.migrateSave` (v1→v2) : aucune déco n'est perdue.
   var SLOTS = [
-    { x: 380, y: 258 }, { x: 620, y: 258 }, { x: 500, y: 205 },   // 1-3 : base
-    { x: 255, y: 335 }, { x: 745, y: 335 },                       // 4-5
-    { x: 400, y: 340 }, { x: 600, y: 340 },                       // 6-7
-    { x: 255, y: 258 }, { x: 745, y: 258 },                       // 8-9
-    { x: 200, y: 420 }, { x: 800, y: 420 },                       // 10-11
-    { x: 500, y: 278 }                                            // 12
+    { x: 395, y: 262 }, { x: 605, y: 262 }, { x: 500, y: 208 },   // 1-3 : base
+    { x: 285, y: 318 }, { x: 715, y: 318 },                       // 4-5
+    { x: 395, y: 372 }, { x: 605, y: 372 },                       // 6-7
+    { x: 296, y: 226 }, { x: 704, y: 226 },                       // 8-9
+    { x: 162, y: 292 }, { x: 838, y: 292 },                       // 10-11
+    { x: 500, y: 168 }                                            // 12
   ];
   var BASE_SLOTS = 3;
 
@@ -2337,7 +2437,10 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   // centre réservé au musée (M3) : un PONTON sur le rivage avant-droit où les coffres accostent.
   // Ancre STABLE `ponton-coffres` (2.4 y posera l'asset réel). Taper le ponton ouvre le hub des
   // coffres → « Ouvrir » → cérémonie 1.3 (RÉUTILISÉE, jamais un nouveau canal).
-  var PONTON = { x: 822, y: 500 };
+  // Phase 4.2a — le ponton descend DANS L'EAU, au large du rivage avant-droit (l'île ayant
+  // grandi, sa place d'avant est devenue de la terre). Une passerelle le raccorde à la plage :
+  // il se lit enfin comme un embarcadère, pas comme une caisse posée sur l'herbe.
+  var PONTON = { x: 786, y: 566 };
 
   /* ------------------------------------------------------------ état d'UI (module) */
   // JAMAIS persisté (le store ne voit que putOnIsland/takeOffIsland). Survit aux re-rendus.
@@ -2519,7 +2622,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     var best = null, bd = 1e9;
     for (var i = 0; i < ARC.length && i < domains.list.length; i++) {
       var dx = pt.x - ARC[i].x, dy = pt.y - ARC[i].y;
-      if (Math.abs(dx) <= 56 && dy <= 44 && dy >= -150) {
+      if (Math.abs(dx) <= 52 && dy <= 40 && dy >= -150) {
         var d = Math.abs(dx);
         if (d < bd) { bd = d; best = domains.list[i].id; }
       }
@@ -2767,8 +2870,50 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   function collTag(got, total) {
     return html`
       <g class="isl-colltag" aria-hidden="true">
-        <rect class="isl-colltag-bg" x="-24" y="30" width="48" height="18" rx="9" />
-        <text class="isl-colltag-tx" x="0" y="39" text-anchor="middle">${got + '/' + total}</text>
+        <rect class="isl-colltag-bg" x="-23" y="27" width="46" height="17" rx="8.5" />
+        <text class="isl-colltag-tx" x="0" y="35.5" text-anchor="middle">${got + '/' + total}</text>
+      </g>`;
+  }
+
+  function waveNode(w, i) {
+    return html`<path key=${'wv' + i} class="isl-wave"
+                      d=${'M ' + (w.x - 16) + ' ' + w.y + ' q 8 -5 16 0 q 8 5 16 0'} />`;
+  }
+
+  // Socle commun d'une parcelle : ombre au sol + herbe + liseré de terre. C'est lui qui pose
+  // le bâtiment DANS l'île au lieu de le faire flotter dessus.
+  function plotNode() {
+    return html`
+      <g class="isl-plotset" aria-hidden="true">
+        <ellipse class="isl-plot-sh" cx="3" cy="5" rx=${PLOT.rx + 3} ry=${PLOT.ry + 2} />
+        <ellipse class="isl-plot" cx="0" cy="0" rx=${PLOT.rx} ry=${PLOT.ry} />
+        <ellipse class="isl-plot-in" cx="0" cy="-2" rx=${PLOT.rx - 13} ry=${PLOT.ry - 8} />
+      </g>`;
+  }
+
+  // Végétation d'une parcelle — elle s'étoffe avec le niveau (la vie revient autour du
+  // bâtiment). Positions FIXES, hors de l'emprise du corps (±23) : jamais de chevauchement.
+  var VEG = [{ x: -43, y: 9, s: 1 }, { x: 45, y: 6, s: .86 }, { x: -50, y: -6, s: .72 }, { x: 52, y: -4, s: .78 }];
+  function shrub(v, i) {
+    return html`
+      <g key=${'v' + i} class="isl-shrub" transform=${'translate(' + v.x + ',' + v.y + ') scale(' + v.s + ')'}>
+        <ellipse class="isl-shrub-sh" cx="1" cy="3" rx="9" ry="3.2" />
+        <rect class="isl-trunk" x="-1.4" y="-7" width="2.8" height="10" rx="1.2" />
+        <circle class="isl-leaf-a" cx="-4" cy="-11" r="6.4" />
+        <circle class="isl-leaf-a" cx="4.6" cy="-9.5" r="5.4" />
+        <circle class="isl-leaf-b" cx="0" cy="-16" r="5.8" />
+      </g>`;
+  }
+
+  // L'enseigne du domaine, hissée au-dessus du toit : mât + plaque ronde. C'est le repère qui
+  // permet d'identifier un domaine d'un coup d'œil, même dézoomé.
+  function signNode(d, y) {
+    return html`
+      <g class="isl-sign" aria-hidden="true">
+        <rect class="isl-stem" x="-1.8" y=${y + 10} width="3.6" height="16" rx="1.6" />
+        <circle class="isl-badge-sh" cx="1.5" cy=${y + 2} r="15" />
+        <circle class="isl-badge" cx="0" cy=${y} r="15" />
+        <text class="isl-emoji" x="0" y=${y + 7} text-anchor="middle">${d.emoji}</text>
       </g>`;
   }
 
@@ -2777,13 +2922,18 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     return html`
       <g id=${p.id} class="isl-parcelle" transform=${'translate(' + p.x + ',' + p.y + ')'}
          data-domain=${d.id} data-level="0">
-        <ellipse class="isl-plot" cx="0" cy="0" rx="58" ry="27" />
-        <ellipse class="isl-plot-in" cx="0" cy="-2" rx="44" ry="19" />
-        <rect class="isl-ruin" x="-34" y="-30" width="11" height="24" rx="3" />
-        <rect class="isl-ruin" x="-6"  y="-38" width="12" height="33" rx="3" />
-        <rect class="isl-ruin" x="22"  y="-26" width="10" height="20" rx="3" />
-        <circle class="isl-badge" cx="0" cy="-8" r="17" />
-        <text class="isl-emoji" x="0" y="-1" text-anchor="middle">${d.emoji}</text>
+        ${plotNode()}
+        <ellipse class="isl-ruin-sh" cx="4" cy="-3" rx="30" ry="10" />
+        <rect class="isl-ruin" x="-31" y="-28" width="11" height="24" rx="3" />
+        <rect class="isl-ruin isl-ruin-hi" x="-31" y="-28" width="4" height="24" rx="2" />
+        <rect class="isl-ruin" x="-6"  y="-36" width="12" height="33" rx="3" />
+        <rect class="isl-ruin isl-ruin-hi" x="-6" y="-36" width="4.5" height="33" rx="2" />
+        <rect class="isl-ruin" x="20"  y="-24" width="10" height="20" rx="3" />
+        <path class="isl-rubble" d="M -18 -5 l 7 0 l 2 5 l -11 0 z" />
+        <path class="isl-rubble" d="M 9 -7 l 9 0 l 3 7 l -14 0 z" />
+        <ellipse class="isl-moss" cx="-25" cy="-6" rx="7" ry="3" />
+        <ellipse class="isl-moss" cx="1" cy="-4" rx="9" ry="3.4" />
+        ${signNode(d, -18)}
         ${collTag(p.collGot, p.collTotal)}
       </g>`;
   }
@@ -2791,30 +2941,43 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   function building(p) {
     var d = p.domain;
     var L = Math.min(p.level, 6);
-    var floorH = 15, bodyW = 46;
+    var floorH = 15, bodyW = 46, halfW = bodyW / 2;
     var bodyH = 18 + (L - 1) * floorH;
     var baseY = 6;
     var topY = baseY - bodyH;
-    var glowOp = Math.min(0.5, 0.12 + L * 0.06);
-    var wins = [];
+    var glowOp = Math.min(0.85, 0.3 + L * 0.09);
+    var wins = [], bands = [];
     for (var f = 0; f < L; f++) {
       var wy = baseY - 12 - f * floorH;
-      wins.push(html`<rect class="isl-win" x="-9" y=${wy} width="6" height="8" rx="1.2" />`);
-      wins.push(html`<rect class="isl-win" x="3"  y=${wy} width="6" height="8" rx="1.2" />`);
+      wins.push(html`
+        <g key=${'w' + f}>
+          <rect class="isl-win" x="-13" y=${wy} width="6" height="8" rx="1.2" />
+          <rect class="isl-win" x="7"   y=${wy} width="6" height="8" rx="1.2" />
+          <line class="isl-sill" x1="-14.5" y1=${wy + 9.4} x2="14.5" y2=${wy + 9.4} />
+        </g>`);
+      if (f) bands.push(html`<line key=${'b' + f} class="isl-band" x1=${-halfW} y1=${wy + 12.5} x2=${halfW} y2=${wy + 12.5} />`);
     }
+    var roofH = 14, eave = 7;
+    var roofY = topY;                       // base du toit = sommet du corps
+    var apexY = roofY - roofH;              // faîtage
+    var signY = apexY - 24;                 // enseigne au-dessus du faîtage
     return html`
       <g id=${p.id} class="isl-parcelle isl-built" transform=${'translate(' + p.x + ',' + p.y + ')'}
          data-domain=${d.id} data-level=${p.level}>
         <ellipse class="isl-glow" cx="0" cy=${topY + bodyH * 0.35} rx=${34 + L * 9} ry=${(34 + L * 9) * 0.7}
                  style=${'opacity:' + glowOp} />
-        <ellipse class="isl-plot" cx="0" cy="0" rx="58" ry="27" />
-        <ellipse class="isl-plot-in" cx="0" cy="-2" rx="44" ry="19" />
-        <rect class="isl-tower" x=${-bodyW / 2} y=${topY} width=${bodyW} height=${bodyH} rx="4" />
+        ${plotNode()}
+        ${VEG.slice(0, Math.min(VEG.length, L)).map(shrub)}
+        <ellipse class="isl-cast" cx=${halfW * 0.55} cy="0" rx=${halfW * 0.95} ry="9" />
+        <rect class="isl-tower" x=${-halfW} y=${topY} width=${bodyW} height=${bodyH} rx="3" />
+        <rect class="isl-tower-sh" x=${halfW - 11} y=${topY} width="11" height=${bodyH} rx="3" />
+        ${bands}
         ${wins}
-        <rect class="isl-cap" x=${-bodyW / 2 - 2} y=${topY - 6} width=${bodyW + 4} height="7" rx="2" />
-        <rect class="isl-stem" x="-2" y=${topY - 20} width="4" height="15" />
-        <circle class="isl-badge" cx="0" cy=${topY - 26} r="15" />
-        <text class="isl-emoji" x="0" y=${topY - 19} text-anchor="middle">${d.emoji}</text>
+        <polygon class="isl-roof" points=${(-halfW - eave) + ',' + roofY + ' 0,' + apexY + ' ' + (halfW + eave) + ',' + roofY} />
+        <polygon class="isl-roof-hi" points=${(-halfW - eave) + ',' + roofY + ' 0,' + apexY + ' 0,' + roofY} />
+        <rect class="isl-eaves" x=${-halfW - eave - 1} y=${roofY} width=${bodyW + eave * 2 + 2} height="3.5" rx="1.7" />
+        <rect class="isl-door" x="-5" y=${baseY - 12} width="10" height="12" rx="2" />
+        ${signNode(d, signY)}
         ${collTag(p.collGot, p.collTotal)}
       </g>`;
   }
@@ -2844,12 +3007,17 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
       <g id="ponton-coffres" class="isl-ponton" transform=${'translate(' + PONTON.x + ',' + PONTON.y + ')'}
          data-count=${n} aria-hidden="true">
         <ellipse class="isl-dock-shadow" cx="2" cy="22" rx="50" ry="14" />
-        <rect class="isl-dock-pile" x="-30" y="14" width="6" height="20" rx="2" />
-        <rect class="isl-dock-pile" x="26" y="14" width="6" height="20" rx="2" />
+        <ellipse class="isl-dock-ripple" cx="2" cy="24" rx="58" ry="17" />
+        <rect class="isl-dock-pile" x="-30" y="14" width="6" height="22" rx="2" />
+        <rect class="isl-dock-pile" x="26" y="14" width="6" height="22" rx="2" />
         <rect class="isl-dock" x="-42" y="-8" width="84" height="26" rx="4" />
         <line class="isl-dock-plank" x1="-21" y1="-8" x2="-21" y2="18" />
         <line class="isl-dock-plank" x1="0" y1="-8" x2="0" y2="18" />
         <line class="isl-dock-plank" x1="21" y1="-8" x2="21" y2="18" />
+        <rect class="isl-dock-edge" x="-42" y="-8" width="84" height="3.5" rx="1.7" />
+        <!-- bitte d'amarrage + cordage : l'embarcadère où les coffres accostent -->
+        <rect class="isl-bollard" x="33" y="-20" width="7" height="16" rx="3" />
+        <path class="isl-rope" d="M 36 -18 q -14 8 -30 4" />
         ${chests}
         ${n > 0
           ? html`
@@ -2892,8 +3060,9 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
          onpointermove=${onDecoMove}
          onpointerup=${function (ev) { onDecoUp(ev, pl.invId, { x: pl.x, y: pl.y }); }}
          onpointercancel=${function (ev) { onDecoUp(ev, pl.invId, { x: pl.x, y: pl.y }); }}>
-        <ellipse class="isl-deco-pad placed-pad" cx="0" cy="6" rx="30" ry="13" />
-        <circle class="isl-pdot" cx="0" cy="-6" r="17" />
+        <ellipse class="isl-deco-pad placed-pad" cx="0" cy="6" rx="28" ry="12" />
+        <ellipse class="isl-pshadow" cx="1" cy="4" rx="14" ry="5" />
+        <circle class="isl-pdot" cx="0" cy="-6" r="14" />
         <text class="isl-pemoji" x="0" y="-2" text-anchor="middle">${glyph(item)}</text>
       </g>`;
   }
@@ -2905,7 +3074,10 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     var free = freeSlots(st);
     var toPlace = unplaced(st);
     var totalLv = derive.totalBuildingLevels(st);
-    var clear = Math.min(0.94, 0.72 + totalLv * 0.02).toFixed(3);
+    // 4.2a — recalibré sur l'île AGRANDIE : avec les anciens seuils la brume ne mordait plus
+    // sur la terre (elle flottait au large) et le signal « elle recule quand tu progresses »
+    // (2.2) était devenu invisible. Elle voile de nouveau la périphérie à débloquer.
+    var clear = Math.min(0.94, 0.5 + totalLv * 0.028).toFixed(3);
     var fogOut = Math.max(0.4, 0.9 - totalLv * 0.03).toFixed(3);
     var fit = ((WORLD.w - MAXW) / 2) + ' ' + ((WORLD.h - MAXW * AR) / 2) + ' ' + MAXW + ' ' + (MAXW * AR);
     var initBox = savedView ? (savedView.x + ' ' + savedView.y + ' ' + savedView.w + ' ' + savedView.h) : fit;
@@ -2927,6 +3099,13 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
               <stop offset="0" stop-color="var(--land)" />
               <stop offset="1" stop-color="var(--land-2)" />
             </radialGradient>
+            <!-- Halo d'un bâtiment : un vrai dégradé de LUMIÈRE qui s'éteint. En aplat doré, il
+                 virait au kaki sur l'herbe et se lisait comme une tache de terre. -->
+            <radialGradient id="isl-glow-g" cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0" stop-color="var(--gold)" stop-opacity=".5" />
+              <stop offset="0.5" stop-color="var(--gold)" stop-opacity=".18" />
+              <stop offset="1" stop-color="var(--gold)" stop-opacity="0" />
+            </radialGradient>
             <radialGradient id="isl-fog" cx="0.5" cy="0.5" r="0.62">
               <stop offset="0" stop-color="var(--fog)" stop-opacity="0" />
               <stop offset=${clear} stop-color="var(--fog)" stop-opacity="0" />
@@ -2935,16 +3114,25 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
           </defs>
 
           <rect class="isl-mer" x="-80" y="-80" width=${WORLD.w + 160} height=${WORLD.h + 160} fill="url(#isl-sea)" />
+          <!-- vaguelettes du large : quelques traits fixes (aucune animation → reduce-motion d'office) -->
+          <g class="isl-waves" aria-hidden="true">${WAVES.map(waveNode)}</g>
 
+          <!-- CALQUE île : ombre portée sur l'eau · écume · sable mouillé · plage · herbe · relief.
+               Ces couches donnent l'épaisseur qui manquait — l'île se pose dans la mer. -->
           <g class="isl-land">
-            <ellipse class="isl-shore" cx=${ISLE.cx} cy=${ISLE.cy + 10} rx=${ISLE.rx + 14} ry=${ISLE.ry + 12} />
+            <ellipse class="isl-seashade" cx=${ISLE.cx + 8} cy=${ISLE.cy + 26} rx=${ISLE.rx + 10} ry=${ISLE.ry + 8} />
+            <ellipse class="isl-foam" cx=${ISLE.cx} cy=${ISLE.cy + 8} rx=${ISLE.rx + 26} ry=${ISLE.ry + 22} />
+            <ellipse class="isl-shore" cx=${ISLE.cx} cy=${ISLE.cy + 10} rx=${ISLE.rx + 16} ry=${ISLE.ry + 14} />
+            <ellipse class="isl-beach" cx=${ISLE.cx} cy=${ISLE.cy + 4} rx=${ISLE.rx + 6} ry=${ISLE.ry + 6} />
             <ellipse cx=${ISLE.cx} cy=${ISLE.cy} rx=${ISLE.rx} ry=${ISLE.ry} fill="url(#isl-land)" />
           </g>
 
           <!-- CALQUE emplacements libres (cibles de pose quand un objet est en attente) -->
           <g class="isl-slots">${free.map(freeSlotNode)}</g>
-          <!-- CALQUE parcelles (ruine dormante OU bâtiment relevé selon le niveau) -->
-          <g class="isl-parcelles">${ps.map(parcelleNode)}</g>
+          <!-- CALQUE parcelles — TRIÉES par profondeur (y croissant) : les parcelles du fond
+               sont peintes en premier, celles de l'avant les recouvrent. C'est ce tri qui fait
+               lire l'écart comme de la PERSPECTIVE et non comme un encombrement. -->
+          <g class="isl-parcelles">${ps.slice().sort(byDepth).map(parcelleNode)}</g>
           <!-- CALQUE ponton des coffres (Phase 3.2 : tap → hub des coffres → cérémonie 1.3) -->
           <g class="isl-pontons">${pontonNode()}</g>
           <!-- CALQUE décorations posées (glissables) -->
@@ -3495,7 +3683,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.15';
+  var VER = '0.16';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
