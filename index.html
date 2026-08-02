@@ -35,7 +35,7 @@
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
                'Helvetica Neue', Arial, sans-serif;
   --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-pill: 999px;
-  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
+  /* (l'échelle --sp-1…--sp-6 a été purgée en 4.2b : déclarée en 0.3, jamais utilisée depuis) */
   --dur-amb: 1200ms;                 /* fondu du ciel entre ambiances */
   --dur-ui: 160ms;
 
@@ -279,14 +279,29 @@ body {
 .habit .h-goal .hg-ico { font-size: 13px; line-height: 1; }
 .habit .h-goal strong { color: var(--ink); font-variant-numeric: tabular-nums; }
 
-/* Bandeau doux après un JALON franchi (Phase 1.5) — même grammaire que « quête accomplie ». */
-.milestone-done {
+/* BANDEAU DOUX — le retour après un accomplissement (jalon 1.5 · montée de niveau 2.2 ·
+   quête accomplie 1.4 · action depuis l'île 3.3). Consolidation 4.2b, axe « cohérence des
+   retours » : les quatre sites partageaient DEUX règles identiques (.milestone-done et
+   .quest-done) plus une classe .level-done sans aucune règle — un seul composant désormais.
+   Toujours dismissible, doré, jamais culpabilisant. */
+.note-soft {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
   background: var(--gold-soft); border: 1px solid var(--gold);
   border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 14px;
   font-size: 14px; color: var(--ink);
 }
-.milestone-done .lnk { margin-left: auto; }
+.note-soft .lnk { margin-left: auto; }
+
+/* ÉTAT VIDE EN LIGNE — consolidation 4.2b, axe « états vides » : la même respiration partout
+   (section sans habitude, ponton sans coffre, liste sans coffre). Le grand état vide d'accueil
+   de M1 (.empty) reste distinct : c'est un écran, pas une note. */
+.empty-soft {
+  font-size: 13px; color: var(--ink-2); line-height: 1.5;
+  background: var(--surface-2); border: 1px dashed var(--line);
+  border-radius: var(--r-md); padding: 12px 14px;
+}
+.empty-soft strong { color: var(--ink); }
+.empty-soft.big { text-align: center; font-size: 14px; padding: 26px 18px; }
 
 .habit-foot {
   display: flex; align-items: center; gap: 10px;
@@ -376,54 +391,140 @@ body {
 .chest-vig--cristal { --chest-body: #7E6FD6; --chest-lid: #9E90EC; --chest-edge: #52439E; } /* violet gemme */
 .chest-vig--aube    { --chest-body: #E58AA6; --chest-lid: #F4B7C8; --chest-edge: #BC5C79; } /* rose d'aube */
 
-/* ==================== MENU DU DOMAINE / COLLECTION (Phase 3.1) ==================== */
-/* Cap « l'île = lobby » : taper un bâtiment ouvre le hub de son domaine. En 3.1 = état du
-   bâtiment + sa collection (obtenues/manquantes X/Y + détail-souvenir). Dialog focus-trappé,
-   au-dessus de la scène et des onglets (la cérémonie 1.3, z-80, reste au-dessus). */
+/* ============ MENU DU DOMAINE / COLLECTION (Phase 3.1, premium en 4.2b) ============ */
+/* Cap « l'île = lobby » : taper un bâtiment ouvre le hub de son domaine — un BANDEAU illustré
+   (le bâtiment réel, à son niveau) + « Agir » + sa collection en cartes. Dialog focus-trappé
+   (vrai piège à tabulation depuis 4.2b) au-dessus de la scène et des onglets ; la cérémonie
+   1.3 (z-80) reste au-dessus. Le hub des coffres du ponton réutilise le même panneau. */
 .dom-menu { position: fixed; inset: 0; z-index: 60; display: flex; }
 .dm-backdrop { position: absolute; inset: 0; background: rgba(10, 14, 22, .5); animation: dm-fade var(--dur-ui) ease; }
+/* Mobile : FEUILLE qui monte du bas (le pouce est en bas ; le panneau ne « saute » plus au
+   milieu de l'écran). Desktop : carte centrée. */
 .dm-panel {
-  position: relative; margin: auto; width: min(560px, 100%); max-height: 100%;
-  display: flex; flex-direction: column; outline: none;
+  position: relative; margin: auto auto 0; width: 100%; max-height: 94%;
+  display: flex; flex-direction: column; outline: none; overflow: hidden;
   background: var(--bg); border: 1px solid var(--line);
-  border-radius: var(--r-lg); box-shadow: 0 24px 64px -20px var(--shadow);
-  animation: dm-pop var(--dur-ui) ease;
+  border-radius: var(--r-lg) var(--r-lg) 0 0; box-shadow: 0 -18px 64px -20px var(--shadow);
+  animation: dm-rise var(--dur-ui) ease;
 }
-@media (min-width: 480px) { .dm-panel { max-height: 88%; } }
+@media (min-width: 480px) {
+  .dm-panel {
+    margin: auto; width: min(560px, 100%); max-height: 88%;
+    border-radius: var(--r-lg); box-shadow: 0 24px 64px -20px var(--shadow);
+    animation: dm-pop var(--dur-ui) ease;
+  }
+}
+
+/* --- Bandeau illustré du domaine (arbitrage Leo, 4.2b) --- */
+.dm-hero { flex: 0 0 auto; border-bottom: 1px solid var(--line); }
+/* Le bandeau est un LIEU, pas un aplat : ciel en haut, HORIZON net à 58 %, terre en bas —
+   le bâtiment s'y pose au lieu d'y flotter. Sans cet horizon, le dessin (calé sur la hauteur
+   par `meet`, donc ~135 px de large) se perdait au milieu d'un dégradé vide de 558 px. */
+.dm-heroband {
+  position: relative; height: 146px; overflow: hidden;
+  display: flex; align-items: flex-end; justify-content: center;
+  background:
+    radial-gradient(120% 88% at 50% 96%, var(--gold-soft) 0%, transparent 62%),
+    linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 34%, var(--sky-bottom) 56%,
+                    var(--land) 58%, var(--land-2) 100%);
+}
+/* Le MÊME dessin que sur la scène, cadré sur la parcelle (voir island.js/heroArt). Le halo a
+   son propre dégradé ici : la scène n'est pas forcément montée (vue Liste). */
+.dm-heroart { display: block; width: 100%; height: 140px; }
+.dm-heroart .isl-glow { fill: url(#dm-glow-g); }
+.dm-hero .dm-close { position: absolute; top: 10px; right: 10px; }
+.dm-heroinfo { padding: 12px 16px 14px; }
+.dm-titleline { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.dm-title { font-size: 22px; font-weight: 800; color: var(--ink); letter-spacing: -.01em; }
+.dm-lv {
+  font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: var(--r-pill);
+  background: var(--gold-soft); color: var(--ink); border: 1px solid var(--gold);
+}
+.dm-lv.dormant { background: transparent; border-color: var(--line); color: var(--ink-2); }
+/* Barre de niveau : la progression se VOIT au lieu de se lire. Le texte dessous reste la
+   source de vérité (jamais la couleur seule). */
+.dm-bar {
+  margin-top: 11px; height: 8px; border-radius: var(--r-pill); overflow: hidden;
+  background: var(--surface-2); border: 1px solid var(--line);
+}
+.dm-bar > i { display: block; height: 100%; background: var(--gold); }
+.dm-state { font-size: 12px; color: var(--ink-2); margin-top: 7px; }
+.dm-state strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.dm-stat2 { margin-top: 3px; }
+
+/* En-tête compact — sert le hub des coffres (le ponton n'est pas un domaine : pas de niveau,
+   pas de bandeau illustré). */
 .dm-head {
   display: flex; align-items: center; gap: 12px; flex: 0 0 auto;
-  padding: 16px 16px 12px; border-bottom: 1px solid var(--line);
+  padding: 16px 16px 14px; border-bottom: 1px solid var(--line);
 }
 .dm-emoji { font-size: 30px; line-height: 1; flex: 0 0 auto; }
 .dm-headmain { flex: 1 1 auto; min-width: 0; }
-.dm-title { font-size: 20px; font-weight: 800; color: var(--ink); }
-.dm-state { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+.dm-head .dm-title { font-size: 20px; }
+.dm-head .dm-state { margin-top: 2px; }
 .dm-close {
   flex: 0 0 auto; width: 44px; height: 44px; border-radius: var(--r-pill);
   background: var(--surface); border: 1px solid var(--line); color: var(--ink);
   font: inherit; font-size: 16px; cursor: pointer;
 }
 .dm-close:hover { border-color: var(--accent); }
+.dm-close:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
 .dm-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; }
 .dm-collhead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .dm-h { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
-.dm-h-extra { margin-top: 22px; }
-.dm-count { font-size: 15px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
-.dm-note { font-size: 12px; color: var(--ink-2); margin: 6px 0 14px; }
-.dm-grid { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.dm-h-extra { margin-top: 24px; }
+.dm-count { font-size: 19px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dm-count .dmc-tot { font-size: 14px; font-weight: 700; color: var(--ink-2); }
+.dm-note { font-size: 12px; color: var(--ink-2); margin: 6px 0 14px; max-width: 46ch; }
+
+/* --- Cartes de collection : de vraies cartes à collectionner (arbitrage Leo, 4.2b) ---
+   Cadre et fond portés par la RARETÉ (mêmes teintes que les chips 1.4/1.5 — aucune palette
+   inventée), glyphe en grand, nom, rareté, et le SOUVENIR daté en pied : c'est ce qui fait
+   « collection » plutôt que « liste d'items ». */
+.dm-grid { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(98px, 1fr)); gap: 10px; }
 .dm-card {
-  display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
-  width: 100%; min-height: 112px; padding: 12px 8px;
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  position: relative; border-radius: var(--r-md); overflow: hidden;
+  background: var(--surface); border: 1px solid var(--cd-edge, var(--line));
+  box-shadow: 0 8px 20px -16px var(--shadow);
 }
-button.dm-card { cursor: pointer; font: inherit; color: var(--ink); }
-button.dm-card:hover { border-color: var(--accent); }
-button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-.dm-card.got { border-color: var(--accent-soft); }
-.dm-card.locked { opacity: .72; border-style: dashed; }
-.dmc-emoji { font-size: 30px; line-height: 1; }
-.dm-card.locked .dmc-emoji { color: var(--ink-2); opacity: .5; }
+.dm-card--commun     { --cd-edge: var(--line);   --cd-tint: var(--surface-2); }
+.dm-card--rare       { --cd-edge: var(--accent); --cd-tint: var(--accent-soft); }
+.dm-card--epique     { --cd-edge: var(--gold);   --cd-tint: var(--gold-soft); }
+/* Les deux teintes gemme restent VOLONTAIREMENT plus discrètes (.10 et non .16 comme les
+   autres) : mesurées sur le fond RENDU, à .16 la date en --ink-2 tombait à 4,31:1 le jour et
+   4,15:1 à l'aube — sous le seuil AA. C'est le CADRE qui porte la rareté, pas le fond. */
+.dm-card--legendaire { --cd-edge: #6D28D9;       --cd-tint: rgba(109, 40, 217, .10); }
+.dm-card--unique     { --cd-edge: #BE185D;       --cd-tint: rgba(190, 24, 93, .10); }
+
+.dmc-btn, .dm-card.locked {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: 100%; padding: 10px 8px 11px; text-align: center;
+}
+.dmc-btn { background: transparent; border: 0; font: inherit; color: var(--ink); cursor: pointer; }
+.dmc-btn:hover { background: var(--cd-tint, var(--surface-2)); }
+.dmc-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+.dmc-art {
+  width: 100%; height: 74px; display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-sm); background: var(--cd-tint, var(--surface-2));
+  border: 1px solid var(--cd-edge, var(--line));
+}
+.dmc-emoji { font-size: 32px; line-height: 1; }
 .dmc-name { font-size: 12px; font-weight: 700; color: var(--ink); line-height: 1.25; word-break: break-word; }
+.dm-card .rc-rarity { padding: 2px 9px; }
+.dmc-day { font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+/* Manquante — « ombre pleine, forme devinée » (arbitrage Leo) : la carte garde son cadre et sa
+   rareté, l'objet n'est qu'une masse dont on devine le contour. Une invitation, pas un « il te
+   manque » : ni compteur rouge, ni cadenas. */
+.dm-card.locked { background: var(--surface-2); border-style: dashed; }
+.dm-card.locked .dmc-art { background: transparent; border-style: dashed; }
+.dmc-sil { width: 58%; height: 58%; }
+/* Assez dense pour être une MASSE qu'on devine (à .30 la forme disparaissait presque),
+   assez pâle pour rester un mystère et non un objet lisible. Décoratif : la carte écrit
+   « À découvrir » et sa rareté en toutes lettres. */
+.dmc-sil path { fill: var(--ink); opacity: .42; }
 .dm-card.locked .dmc-name { color: var(--ink-2); font-weight: 600; }
 .rc-rarity.dim { opacity: .5; }
 
@@ -434,9 +535,12 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
 }
 .dm-back:hover { border-color: var(--accent); }
+/* La carte du détail porte la MÊME teinte de rareté que sa vignette dans la grille (4.2b) :
+   on retrouve l'objet qu'on vient de toucher, au lieu d'un cadre doré générique. */
 .dm-detail-card {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
-  padding: 22px 16px; background: var(--surface); border: 1px solid var(--gold);
+  padding: 26px 16px; background: var(--cd-tint, var(--surface));
+  border: 1px solid var(--cd-edge, var(--gold));
   border-radius: var(--r-lg); box-shadow: 0 12px 32px -16px var(--shadow);
 }
 .dmd-emoji { font-size: 52px; line-height: 1; }
@@ -450,7 +554,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 
 /* « Agir » du domaine (Phase 3.3) — greffé EN HAUT du menu (Agir puis Collection). Réutilise
    les briques M1 (quest-list/quest-row/perso-quest/dur-chip/active-quest/qring, del-confirm,
-   milestone-done) ; seules les rangées d'habitudes compactes et l'ossature sont propres ici. */
+   note-soft) ; seules les rangées d'habitudes compactes et l'ossature sont propres ici. */
 .dm-act { margin-bottom: 22px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
 .dm-subh { font-size: 13px; font-weight: 700; color: var(--ink); margin: 16px 0 8px; }
 .dm-subh:first-of-type { margin-top: 10px; }
@@ -478,6 +582,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 
 @keyframes dm-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dm-pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes dm-rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
 
 /* ==================== CÉRÉMONIE D'OUVERTURE (Phase 1.3) ==================== */
 /* < 6 s, skippable (tap/« Passer »), INSTANTANÉE en reduce-motion. Voile sombre fixe pour
@@ -547,15 +652,6 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 
 /* ==================== QUÊTES MINUTÉES (Phase 1.4) ==================== */
 .quest-section { margin-top: 26px; }
-
-/* Bandeau doux après un accomplissement (guide vers la pile, jamais culpabilisant) */
-.quest-done {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  background: var(--gold-soft); border: 1px solid var(--gold);
-  border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 14px;
-  font-size: 14px; color: var(--ink);
-}
-.quest-done .lnk { margin-left: auto; }
 
 /* --- Lanceur : catalogue + quête perso --- */
 .quest-launcher { display: flex; flex-direction: column; }
@@ -716,7 +812,6 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 .isl-parcelle .isl-emoji { font-size: 17px; opacity: .7; }
 .isl-badge-sh { fill: var(--land-2); opacity: .22; }
 .isl-parcelle { opacity: .96; }
-.isl-deco-pad { fill: var(--plot-2); opacity: .5; }
 .isl-emoji { dominant-baseline: middle; }
 
 /* Ruine dormante : pierres usées, éboulis, mousse — elle a vécu, elle attend. */
@@ -732,74 +827,12 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 .isl-leaf-a { fill: var(--leaf-2); }
 .isl-leaf-b { fill: var(--leaf); }
 
-/* ---- Placement des décorations (Phase 2.3) ---- */
-/* Emplacement libre : pastille discrète ; devient une cible qui pulse quand un objet attend. */
-.isl-slot .isl-deco-pad { stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 5; }
-.isl-slot.pulse { cursor: pointer; }
-.isl-slot.pulse .isl-deco-pad {
-  fill: var(--accent-soft); opacity: .95; stroke: var(--accent); stroke-dasharray: none;
-  animation: isl-pulse 1.4s ease-in-out infinite;
-}
-.isl-slot-plus { fill: var(--accent); font-size: 20px; font-weight: 800; dominant-baseline: middle; }
-@keyframes isl-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
-
-/* Déco posée : pad + pastille de l'objet (placeholder ; les SVG Claude Design suivront en 2.4). */
-.isl-placed { cursor: grab; }
-.isl-placed:active { cursor: grabbing; }
-.isl-placed .placed-pad { fill: var(--plot-2); opacity: .55; stroke: none; }
-.isl-placed .isl-pshadow { fill: var(--land-2); opacity: .3; }
-.isl-placed .isl-pdot { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
-.isl-placed.special .isl-pdot { stroke: var(--gold); stroke-width: 2; }
-.isl-placed.sel .isl-pdot { stroke: var(--accent); stroke-width: 2.5; }
-.isl-placed .isl-pemoji { font-size: 17px; dominant-baseline: middle; }
-
-/* Barre de placement (remplace le hint pendant qu'un objet attend une case). */
-.isl-place-bar {
-  position: absolute; top: 10px; left: 12px; right: 12px; z-index: 3;
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  padding: 8px 12px; border-radius: var(--r-pill);
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  border: 1px solid var(--accent); box-shadow: 0 6px 20px -12px var(--shadow);
-}
-.isl-place-bar .ipb-emoji { font-size: 20px; line-height: 1; flex: 0 0 auto; }
-.isl-place-bar .ipb-txt { font-size: 13px; color: var(--ink); min-width: 0; flex: 1 1 140px; }
-.isl-place-bar .ipb-btn {
-  min-height: 44px; padding: 0 16px; border-radius: var(--r-pill);   /* 44 pt (CLAUDE.md) */ border: 1px solid var(--accent);
-  background: var(--accent-soft); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
-}
-.isl-place-bar .ipb-btn.ghost { background: transparent; border-color: var(--line); color: var(--ink-2); }
-
-/* Pioche « À placer » (bas de la scène) : chips horizontales, au-dessus des onglets. */
-.isl-tray {
-  position: absolute; left: 10px; right: 10px; z-index: 3;
-  bottom: calc(var(--nav-h) + 12px + env(safe-area-inset-bottom));
-  padding: 8px 10px 10px; border-radius: var(--r-lg);
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  border: 1px solid var(--line); box-shadow: 0 10px 28px -16px var(--shadow);
-}
-.isl-tray .itray-head { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); margin: 0 2px 6px; }
-.isl-tray .itray-scroll { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
-.isl-tray .itray-item {
-  flex: 0 0 auto; display: flex; align-items: center; gap: 8px; min-height: 44px;
-  padding: 6px 12px; border-radius: var(--r-pill); border: 1px solid var(--line);
-  background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
-}
-.isl-tray .itray-item.on { border-color: var(--accent); background: var(--accent-soft); }
-.isl-tray .itray-item .iti-emoji { font-size: 18px; }
-.isl-tray .itray-item .iti-name { white-space: nowrap; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
-
-/* Contrôles de placement dans la vue LISTE (sélecteur + bouton). */
+/* Actions d'une rangée de la vue LISTE (« Ouvrir » un coffre du ponton).
+   4.2b — tout le bloc « placement des décorations » (Phase 2.3 : emplacements qui pulsent,
+   décos glissables, barre de placement, pioche « À placer », sélecteur d'emplacement de la
+   vue liste) a été PURGÉ avec la mécanique : les objets se disposeront au MUSÉE (M3.3). */
 .ii-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 8px; }
-.isl-place-ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.isl-place-ctl .ipl-lab { font-size: 12px; color: var(--ink-2); }
-.isl-select {
-  min-height: 44px; padding: 0 12px; border-radius: var(--r-md);
-  border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px;
-}
-.isl-place-ctl .ipl-go { min-height: 44px; padding: 0 16px; }
-.isl-place-ctl .ipl-none { font-size: 12px; color: var(--ink-2); }
-.isl-empty-note { font-size: 13px; color: var(--ink-2); margin: 2px 0 4px; }
-.isl-item.placed-item { border-color: var(--accent); }
+.ii-actions .ii-go { min-height: 44px; padding: 0 18px; font-size: 14px; }
 .isl-item .ii-main { flex: 1 1 auto; }
 
 /* Bâtiment relevé (Phase 2.2, enrichi en 4.2a) : la ruine qui se relève — corps maçonné,
@@ -842,10 +875,10 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
 .isl-ponton-bg { fill: var(--surface); opacity: .92; stroke: var(--line); stroke-width: 1; }
 .isl-ponton-tx { fill: var(--ink); font-size: 12px; font-weight: 800; dominant-baseline: middle; font-variant-numeric: tabular-nums; }
 
-/* Hub des coffres (Phase 3.2) — réutilise le dialog du menu du domaine (.dom-menu / .dm-panel)
-   et les cartes de coffre (.chest / .chest-list, bloc « COFFRES » plus haut) dont il est, depuis
-   la brique lobby (b), le SEUL consommateur. Seule la note d'état vide est propre. */
-.chest-hub .ch-empty { font-size: 14px; color: var(--ink-2); text-align: center; line-height: 1.5; padding: 22px 8px; }
+/* Hub des coffres (Phase 3.2) — réutilise INTÉGRALEMENT le dialog du menu du domaine
+   (.dom-menu / .dm-panel / .dm-head), les cartes de coffre (.chest / .chest-list, bloc
+   « COFFRES » plus haut) dont il est le SEUL consommateur depuis la brique lobby (b), et
+   l'état vide partagé (.empty-soft.big). Zéro règle propre : zéro doublon. */
 
 /* Habillages posés sur la scène */
 .isl-hint {
@@ -996,7 +1029,9 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
       history: [],                  // [{kind,refId,domain,day,elan}]
       chests: [],                   // [{id,type,domain,sourceLabel,day}] non ouverts
       inventory: [],                // [{id,itemId,day,sourceLabel,photoId|null,note|null}]
-      placements: [],               // [{invId,zone,x,y}]
+      placements: [],               // [{invId,zone,x,y}] — RÉSERVÉ au musée (M3.3) depuis la 4.2b :
+                                    // plus aucune surface ne l'écrit, mais on le persiste et on
+                                    // l'hydrate toujours → les positions d'un joueur survivent.
       buildings: {},                // {<domain>:{placed:bool}} — le NIVEAU est DÉRIVÉ, jamais stocké
       pity: { ironSinceRare: 0 },
       settings: { reducedMotion: 'auto', theme: null }
@@ -1051,40 +1086,18 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   // jamais de crash, jamais d'écrasement silencieux).
   // Futures montées : `if (v < 3) { …transform…; v = 3; }` ici, puis bump SAVE_VERSION.
 
-  // v1 → v2 (Phase 4.2a) : l'île a été RECOMPOSÉE (île agrandie, parcelles aérées), donc les
-  // ancres d'emplacement `deco-1…12` ont de nouvelles coordonnées monde. Un placement ne stocke
-  // que sa POSITION (invariant TDD §4) : on la REMAPPE ancre par ancre, par INDEX — exact et
-  // sans perte. Une position qui ne correspond à aucune ancre connue est laissée telle quelle
-  // (island.js sait déjà l'ignorer sans crasher). Rien n'est jamais supprimé.
-  var DECO_ANCHORS_V1 = [
-    [380, 258], [620, 258], [500, 205], [255, 335], [745, 335], [400, 340],
-    [600, 340], [255, 258], [745, 258], [200, 420], [800, 420], [500, 278]
-  ];
-  var DECO_ANCHORS_V2 = [
-    [395, 262], [605, 262], [500, 208], [285, 318], [715, 318], [395, 372],
-    [605, 372], [296, 226], [704, 226], [162, 292], [838, 292], [500, 168]
-  ];
-  function remapDecoAnchors(data) {
-    var pls = data.placements;
-    if (!Array.isArray(pls)) return;
-    for (var i = 0; i < pls.length; i++) {
-      var p = pls[i];
-      if (!p || typeof p !== 'object' || p.zone !== 'ile') continue;
-      if (typeof p.x !== 'number' || typeof p.y !== 'number') continue;
-      for (var k = 0; k < DECO_ANCHORS_V1.length; k++) {
-        if (Math.abs(p.x - DECO_ANCHORS_V1[k][0]) < 0.5 && Math.abs(p.y - DECO_ANCHORS_V1[k][1]) < 0.5) {
-          p.x = DECO_ANCHORS_V2[k][0]; p.y = DECO_ANCHORS_V2[k][1];
-          break;
-        }
-      }
-    }
-  }
-
+  // v1 → v2 : la 4.2a remappait les ancres de décoration `deco-1…12` (l'île avait été
+  // recomposée). La 4.2b a RETIRÉ le placement sur l'île (arbitrage Leo : les objets iront au
+  // MUSÉE, M3.3) — plus personne ne lit ces coordonnées, le remap n'avait donc plus d'objet et
+  // il est parti avec lui. La montée de version reste, elle, en place : elle estampille la save.
+  // NON DESTRUCTIF, invariant absolu : `placements` est toujours persisté et hydraté TEL QUEL
+  // (voir PERSIST_KEYS) — les positions déjà enregistrées par un joueur survivent intactes,
+  // prêtes à être relues par le musée. On ne supprime JAMAIS de données du joueur.
   function migrateSave(data) {
     if (!data || typeof data !== 'object') return null;
     var v = (typeof data.v === 'number') ? data.v : 1; // toutes 1res saves sans champ v → v1
     if (v > SAVE_VERSION) return null;
-    if (v < 2) { remapDecoAnchors(data); v = 2; }
+    if (v < 2) { v = 2; }
     data.v = v;
     return data;
   }
@@ -2171,62 +2184,10 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     return null;
   }
 
-  /* ------------------------------------------------ placement sur l'île (Phase 2.3) */
-  // SEUL état stocké = la POSITION : placements = [{invId, zone:'ile', x, y}] (TDD §4).
-  // L'objet affiché reste DÉRIVÉ de inventory (cards.resolve) — non destructif : poser,
-  // déplacer, ranger ne touchent JAMAIS inventory ni history. Ranger = simplement retirer
-  // la position (l'objet reste dans la collection).
-  function invHas(st, invId) {
-    var inv = st.inventory || [];
-    for (var i = 0; i < inv.length; i++) if (inv[i] && inv[i].id === invId) return true;
-    return false;
-  }
-  function nearCoord(a, b) { return Math.abs((+a) - (+b)) < 0.5; } // ancres = entiers, stockées exactes
-
-  // Pose (ou déplace) `invId` sur l'emplacement de l'île en (x,y). Non destructif, indulgent :
-  // - si l'emplacement est occupé par un AUTRE objet et que `invId` était DÉJÀ posé ailleurs
-  //   (glisser-déposer) → ÉCHANGE POSITIONNEL : l'occupant reprend l'ancienne case ;
-  // - si l'emplacement est occupé et que `invId` venait de l'inventaire (choisir-puis-poser)
-  //   → l'occupant repart dans l'inventaire (sa position est retirée, l'objet est conservé).
-  // On ne touche que les positions de ZONE 'ile' (un futur placement au musée survivrait).
-  function putOnIsland(invId, x, y) {
-    if (typeof invId !== 'string' || !invId) return { ok: false, reason: 'invalide' };
-    if (!(typeof x === 'number' && isFinite(x) && typeof y === 'number' && isFinite(y))) return { ok: false, reason: 'invalide' };
-    var st = store.get();
-    if (!invHas(st, invId)) return { ok: false, reason: 'introuvable' };
-    var pls = (st.placements || []).filter(function (p) { return p && typeof p === 'object' && typeof p.invId === 'string'; });
-    var prev = null;   // position ACTUELLE de invId sur l'île (déplacement) ou null (depuis l'inventaire)
-    var occ = null;    // objet occupant DÉJÀ l'emplacement cible
-    for (var i = 0; i < pls.length; i++) {
-      var p = pls[i];
-      if (p.zone !== 'ile') continue;
-      if (p.invId === invId) { prev = p; continue; }
-      if (occ === null && nearCoord(p.x, x) && nearCoord(p.y, y)) occ = p;
-    }
-    var kept = [];
-    for (var k = 0; k < pls.length; k++) {
-      var q = pls[k];
-      if (q.zone === 'ile' && q.invId === invId) continue;               // on ré-écrit la position de invId
-      if (occ && q.zone === 'ile' && q.invId === occ.invId) continue;    // occupant : géré ci-dessous
-      kept.push(q);
-    }
-    if (occ && prev) kept.push({ invId: occ.invId, zone: 'ile', x: prev.x, y: prev.y }); // échange positionnel
-    // (occ && !prev) → occupant retiré = repart dans l'inventaire (aucun re-push).
-    kept.push({ invId: invId, zone: 'ile', x: x, y: y });
-    store.set({ placements: kept });
-    return { ok: true, reason: 'pose', swapped: !!occ };
-  }
-
-  // Range un objet (retire sa position sur l'île) — l'objet RESTE dans inventory (collection).
-  // Idempotent : rien de posé → no-op propre.
-  function takeOffIsland(invId) {
-    var st = store.get();
-    var pls = (st.placements || []).filter(function (p) { return p && typeof p === 'object'; });
-    var next = pls.filter(function (p) { return !(p.invId === invId && p.zone === 'ile'); });
-    if (next.length === pls.length) return { ok: false, reason: 'aucune' };
-    store.set({ placements: next });
-    return { ok: true, reason: 'range' };
-  }
+  /* Phase 4.2b — le PLACEMENT sur l'île (2.3 : putOnIsland / takeOffIsland) a été RETIRÉ sur
+     arbitrage de Leo : les objets se disposeront dans le MUSÉE (M3.3), pas sur l'île. Aucune
+     mutation ne touche donc plus `placements` ; les positions déjà enregistrées restent dans
+     la save, intactes (non destructif — voir state.js). */
 
   // Ouvre un coffre : c'est ICI que le tirage (dérivé, idempotent tant que non ouvert) est
   // FIGÉ en une entrée d'inventory (GDD §4.3, TDD §4). Le coffre quitte la pile ; l'objet
@@ -2342,33 +2303,32 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     openChest: openChest,
     startQuest: startQuest,
     finishQuest: finishQuest,
-    abandonQuest: abandonQuest,
-    putOnIsland: putOnIsland,
-    takeOffIsland: takeOffIsland
+    abandonQuest: abandonQuest
   };
 })();
 
-/* ASCEND v2 — La scène de l'île (Phases 2.1 → 2.3, jalon M2).
-   PREMIER écran du monde, à côté de M1 (habitudes/quêtes/coffres/collection).
+/* ASCEND v2 — L'île, LOBBY central du jeu (jalon M2, cap tranché le 2026-07-23).
 
    Contenu :
-   - une SCÈNE SVG en calques (mer · île · parcelles/bâtiments · emplacements · brume),
-     pilotée au doigt en PAN + ZOOM via Pointer Events NATIFS (leçon v1 : pas de lib) ;
-   - le PLACEMENT des décorations (2.3) : poser un objet de l'inventaire sur un emplacement
-     libre (« choisir puis poser » — arbitrage Leo), le DÉPLACER au glisser (échange positionnel
-     si occupé), le RANGER (retire la position ; l'objet reste dans la collection) ;
-   - une VUE LISTE MIROIR sémantique (accessibilité NON négociable) : équivalent complet
-     de la scène — placer/déplacer/ranger AUSSI au clavier via un sélecteur d'emplacement.
+   - une SCÈNE SVG en calques (mer · île · parcelles/bâtiments · ponton · brume), pilotée au
+     doigt en PAN + ZOOM via Pointer Events NATIFS (leçon v1 : pas de lib) ;
+   - le MENU DU DOMAINE (3.1/3.3, passé en premium en 4.2b) : taper un bâtiment ouvre le hub
+     de son domaine — bandeau illustré (le bâtiment RÉEL, à son niveau) + agir (valider une
+     habitude, lancer une quête) + sa collection en cartes ;
+   - le HUB DES COFFRES (3.2) : taper le ponton ouvre la pile « À découvrir » → cérémonie 1.3 ;
+   - une VUE LISTE MIROIR sémantique (accessibilité NON négociable) : équivalent complet de la
+     scène — les deux hubs y sont atteignables au clavier (mêmes dialogs).
 
-   Invariant d'intégrité (TDD §4) : le SEUL état stocké est la POSITION
-   (placements = [{invId, zone:'ile', x, y}]) ; l'objet affiché reste DÉRIVÉ de inventory
-   (cards.resolve). Le NOMBRE d'emplacements est DÉRIVÉ de l'élan (jamais stocké) : 3 de base
-   + 1 par niveau de bâtiment gagné (l'île s'étend quand les bâtiments montent — GDD §6.1),
-   plafonné au nombre d'ancres STABLES. Placeholders géométriques ; les SVG Claude Design
-   viendront en 2.4 sur ces ancres.
+   4.2b — le PLACEMENT des décorations sur l'île (Phase 2.3) a été RETIRÉ sur arbitrage de Leo :
+   les objets se disposeront dans le MUSÉE (M3.3), pas sur l'île. Les positions déjà enregistrées
+   restent dans la save (`placements`, jamais détruites, plus jamais lues ici) — voir state.js.
+
+   Invariant d'intégrité (TDD §4) : tout ce qui s'affiche ici est DÉRIVÉ (niveau, élan,
+   collection X/Y, coffres) ; ce module n'écrit RIEN d'autre que via actions.*.
+   Placeholders géométriques ; les SVG Claude Design viendront en 2.4 sur les mêmes ancres.
 
    API : window.AscendIsland = { Screen(ctx) } où
-   ctx = { view:'scene'|'liste', onView, ver, repaint }. */
+   ctx = { view:'scene'|'liste', onView, ver, repaint, onOpenChest }. */
 (function () {
   'use strict';
   var h = window.preact.h;
@@ -2416,23 +2376,6 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   // Tri de PROFONDEUR : ce qui est au fond (y petit) se peint d'abord.
   function byDepth(a, b) { return a.y - b.y; }
 
-  // Emplacements de décoration — ancres STABLES, append-only (ids deco-1…deco-12). Réparties
-  // sur le « jardin » de l'île (derrière les bâtiments de l'avant, hors du centre réservé au
-  // musée). L'ORDRE = ordre de déblocage : les 3 premières sont ouvertes d'emblée, puis une de
-  // plus par niveau de bâtiment gagné. Cases LARGES, bien espacées (jamais un Tetris — §6.1).
-  // Phase 4.2a — recalées sur l'île agrandie : le jardin occupe TOUT l'arrière (y 168→372),
-  // dégagé des flèches des bâtiments et du centre réservé au musée. Les saves existantes sont
-  // remappées ancre par ancre par `state.migrateSave` (v1→v2) : aucune déco n'est perdue.
-  var SLOTS = [
-    { x: 395, y: 262 }, { x: 605, y: 262 }, { x: 500, y: 208 },   // 1-3 : base
-    { x: 285, y: 318 }, { x: 715, y: 318 },                       // 4-5
-    { x: 395, y: 372 }, { x: 605, y: 372 },                       // 6-7
-    { x: 296, y: 226 }, { x: 704, y: 226 },                       // 8-9
-    { x: 162, y: 292 }, { x: 838, y: 292 },                       // 10-11
-    { x: 500, y: 168 }                                            // 12
-  ];
-  var BASE_SLOTS = 3;
-
   // HUB DES COFFRES (Phase 3.2) — structure DÉDIÉE, HORS des 5 parcelles de domaine et du
   // centre réservé au musée (M3) : un PONTON sur le rivage avant-droit où les coffres accostent.
   // Ancre STABLE `ponton-coffres` (2.4 y posera l'asset réel). Taper le ponton ouvre le hub des
@@ -2443,10 +2386,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   var PONTON = { x: 786, y: 566 };
 
   /* ------------------------------------------------------------ état d'UI (module) */
-  // JAMAIS persisté (le store ne voit que putOnIsland/takeOffIsland). Survit aux re-rendus.
-  var pending = null;       // { invId, from:'tray'|'placed' } — objet en attente d'un emplacement
-  var drag = null;          // { invId, id, node, sx, sy, base:{x,y}, cur:{x,y}, moved } — glisser en cours
-  var listSel = {};         // invId -> index de slot choisi dans la vue liste (sélecteur)
+  // JAMAIS persisté. Survit aux re-rendus.
   var openDomainId = null;  // domaine dont le « menu du domaine » est ouvert (éphémère, jamais persisté)
   var detailInvId = null;   // objet (invId) dont le détail-souvenir est affiché dans le menu, ou null
   var chestHubOpen = false; // hub des coffres (ponton) ouvert (éphémère, jamais persisté)
@@ -2456,54 +2396,16 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   var menuPerso = { title: '', minutes: 20 }; // quête perso du menu (domaine = celui du menu, verrouillé)
   var repaint = function () {}; // fourni par ctx.repaint (app.js) pour les changements d'UI éphémère
   var onOpenChest = function () {}; // fourni par ctx.onOpenChest (app.js) → lance la cérémonie 1.3
+  var lastFocus = null;     // élément à qui rendre le focus quand un dialog se ferme (a11y, 4.2b)
 
   /* ---------------------------------------------------------------- dérivés de lecture */
-  function unlockedCount(st) {
-    return Math.max(BASE_SLOTS, Math.min(SLOTS.length, BASE_SLOTS + derive.totalBuildingLevels(st)));
-  }
   function invEntry(st, invId) {
     var inv = st.inventory || [];
     for (var i = 0; i < inv.length; i++) if (inv[i] && inv[i].id === invId) return inv[i];
     return null;
   }
-  // Placements valides de l'île : zone 'ile', invId encore présent dans inventory, x/y finis.
-  function islePlacements(st) {
-    var pls = st.placements || [], out = [];
-    for (var i = 0; i < pls.length; i++) {
-      var p = pls[i];
-      if (!p || p.zone !== 'ile' || typeof p.invId !== 'string') continue;
-      if (!(typeof p.x === 'number' && isFinite(p.x) && typeof p.y === 'number' && isFinite(p.y))) continue;
-      if (!invEntry(st, p.invId)) continue;   // save bricolée : position orpheline ignorée (jamais de crash)
-      out.push(p);
-    }
-    return out;
-  }
-  function isPlaced(st, invId) {
-    var pls = islePlacements(st);
-    for (var i = 0; i < pls.length; i++) if (pls[i].invId === invId) return true;
-    return false;
-  }
-  // Inventaire « à placer » : tout objet obtenu dont la position n'est pas (encore) sur l'île.
-  function unplaced(st) {
-    var inv = (st.inventory || []).filter(function (e) { return e && e.id; });
-    return inv.filter(function (e) { return !isPlaced(st, e.id); });
-  }
-  // Emplacements débloqués + occupation. free = débloqué & sans objet posé dessus.
-  function slotState(st) {
-    var count = unlockedCount(st), pls = islePlacements(st);
-    var unlocked = [];
-    for (var i = 0; i < count; i++) {
-      var s = SLOTS[i], occ = null;
-      for (var j = 0; j < pls.length; j++) {
-        if (Math.abs(pls[j].x - s.x) < 0.5 && Math.abs(pls[j].y - s.y) < 0.5) { occ = pls[j].invId; break; }
-      }
-      unlocked.push({ index: i, id: 'deco-' + (i + 1), x: s.x, y: s.y, occupant: occ });
-    }
-    return unlocked;
-  }
-  function freeSlots(st) { return slotState(st).filter(function (s) { return !s.occupant; }); }
 
-  // Glyphe placeholder d'un objet posé (les vrais SVG Claude Design suivront en 2.4).
+  // Glyphe placeholder d'un objet (les vrais SVG Claude Design suivront en 2.4).
   function glyph(item) {
     if (!item) return '✨';
     if (item.milestone) return '🏆';
@@ -2557,14 +2459,25 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     return (st.chests || []).filter(function (c) { return c && c.id; });
   }
 
-  /* ------------------------------------------ ouverture / navigation du menu (éphémère) */
+  /* ------------------------------------------ ouverture / navigation du menu (éphémère)
+     4.2b (consolidation, axe « focus/clavier des dialogs ») : on MÉMORISE l'élément actif
+     avant d'ouvrir un dialog et on lui REND le focus à la fermeture — sinon, en vue Liste,
+     le focus retombait en haut de page et le lecteur d'écran perdait le fil. */
+  function rememberFocus() {
+    try { lastFocus = (document.activeElement && document.activeElement !== document.body) ? document.activeElement : null; }
+    catch (e) { lastFocus = null; }
+  }
+  function restoreFocus() {
+    var el = lastFocus; lastFocus = null;
+    if (el && el.focus && document.contains(el)) { try { el.focus(); } catch (e) {} }
+  }
   function resetMenuAct() { actNote = null; menuConfirmAbandon = false; menuPerso = { title: '', minutes: 20 }; }
-  function openDomain(dom) { openDomainId = dom; detailInvId = null; chestHubOpen = false; resetMenuAct(); repaint(); }
-  function closeDomain() { openDomainId = null; detailInvId = null; resetMenuAct(); repaint(); }
+  function openDomain(dom) { rememberFocus(); openDomainId = dom; detailInvId = null; chestHubOpen = false; resetMenuAct(); repaint(); }
+  function closeDomain() { openDomainId = null; detailInvId = null; resetMenuAct(); repaint(); restoreFocus(); }
   function showDetail(invId) { detailInvId = invId; repaint(); }
   function backToGrid() { detailInvId = null; repaint(); }
-  function openChestHub() { chestHubOpen = true; openDomainId = null; detailInvId = null; repaint(); }
-  function closeChestHub() { chestHubOpen = false; repaint(); }
+  function openChestHub() { rememberFocus(); chestHubOpen = true; openDomainId = null; detailInvId = null; repaint(); }
+  function closeChestHub() { chestHubOpen = false; repaint(); restoreFocus(); }
 
   /* ---------------------------------- actions depuis l'île (Phase 3.3) : habitudes & quêtes
      Le menu du domaine ne montre plus seulement la collection : on y AGIT sans quitter l'île.
@@ -2633,19 +2546,39 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   function pontonAt(pt) {
     return Math.abs(pt.x - PONTON.x) <= 54 && Math.abs(pt.y - PONTON.y) <= 42;
   }
-  // Tap (sans pan, sans placement en cours) : ponton → hub des coffres ; bâtiment → menu de domaine.
+  // Tap (sans pan) : ponton → hub des coffres ; bâtiment → menu de domaine.
   function handleTap(pt) {
-    if (pending) return;              // en cours de placement : le tap est géré par cases/décos
     if (pontonAt(pt)) { openChestHub(); return; }
     var dom = parcelleDomainAt(pt);
     if (dom) openDomain(dom);
   }
   function focusPanel(node) { if (node && node.focus) { try { node.focus(); } catch (e) {} } }
 
+  /* PIÈGE À FOCUS (4.2b) — jusqu'ici le panneau ne faisait que PRENDRE le focus : la tabulation
+     s'en échappait vers la scène et les onglets, derrière le voile. On boucle la tabulation à
+     l'intérieur du dialog ; Échap reste géré par l'appelant. */
+  var FOCUSABLE = 'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  function trapTab(e) {
+    if (e.key !== 'Tab') return;
+    // La CÉRÉMONIE (z-80, montée à la racine de l'App) se joue PAR-DESSUS ce dialog : tant
+    // qu'elle est là, le piège cède, sinon la tabulation boucle dans le hub et n'atteint
+    // jamais « Rejoindre ma collection » (hub vidé de son dernier coffre = un seul focusable).
+    if (document.querySelector('.ceremony')) return;
+    var panel = e.currentTarget.querySelector('.dm-panel');
+    if (!panel) return;
+    var items = [];
+    var all = panel.querySelectorAll(FOCUSABLE);
+    for (var i = 0; i < all.length; i++) if (all[i].offsetParent !== null || all[i] === document.activeElement) items.push(all[i]);
+    if (!items.length) { e.preventDefault(); panel.focus(); return; }
+    var first = items[0], last = items[items.length - 1], act = document.activeElement;
+    if (e.shiftKey && (act === first || act === panel)) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && act === last) { e.preventDefault(); first.focus(); }
+  }
+
   /* --------------------------------------------------- contrôleur PAN + ZOOM (natif)
      Manipule le viewBox du <svg> (coordonnées MONDE naturelles, focal-point exact).
      Un seul pointeur = pan ; deux = pinch ; molette = zoom au curseur (desktop).
-     Bornes DOUCES. Expose clientToWorld pour le glisser-déposer d'une déco. */
+     Bornes DOUCES ; détection tap-vs-pan (un tap ouvre un hub, un glisser ne fait que paner). */
   var AR = WORLD.h / WORLD.w;
   var MINW = WORLD.w / 3.2;     // zoom max (~3,2×)
   var MAXW = WORLD.w;           // dézoom max = île entière (fit)
@@ -2762,7 +2695,6 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     apply();
 
     return {
-      clientToWorld: toWorld,
       reset: function () {
         view.x = (WORLD.w - MAXW) / 2; view.y = (WORLD.h - MAXW * AR) / 2;
         view.w = MAXW; view.h = MAXW * AR; apply();
@@ -2788,69 +2720,6 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   }
   function recenter() { if (controller) controller.reset(); }
 
-  /* --------------------------------------------------- interactions de placement */
-  function selectFromTray(invId) {
-    pending = (pending && pending.from === 'tray' && pending.invId === invId) ? null : { invId: invId, from: 'tray' };
-    repaint();
-  }
-  function placeOnSlot(slot) {
-    if (!pending) return;
-    var invId = pending.invId;
-    pending = null;                              // AVANT la mutation : le re-rendu qu'elle déclenche voit l'état à jour
-    actions.putOnIsland(invId, slot.x, slot.y);  // mutation → re-render via subscribe
-  }
-  function rangePending() {
-    if (!pending) return;
-    var invId = pending.invId;
-    pending = null;
-    actions.takeOffIsland(invId);
-  }
-  function cancelPending() { pending = null; repaint(); }
-
-  // Emplacement débloqué le PLUS PROCHE d'un point monde (pour le lâcher d'un glisser).
-  function nearestSlot(st, pt) {
-    var us = slotState(st), best = null, bd = 1e9;
-    for (var i = 0; i < us.length; i++) {
-      var d = Math.hypot(us[i].x - pt.x, us[i].y - pt.y);
-      if (d < bd) { bd = d; best = us[i]; }
-    }
-    return (best && bd < 80) ? best : null;   // tolérance de lâcher (unités monde)
-  }
-
-  // Glisser-déposer d'une déco POSÉE : tap (sans mouvement) = sélection ; glisser = déplacement
-  // (échange positionnel si l'on lâche sur une case occupée — via actions.putOnIsland).
-  function onDecoDown(e, invId, base) {
-    if (!controller) return;
-    e.stopPropagation();                       // empêche le pan de démarrer sous le doigt
-    var node = e.currentTarget;
-    try { node.setPointerCapture(e.pointerId); } catch (err) {}
-    drag = { invId: invId, id: e.pointerId, node: node, sx: e.clientX, sy: e.clientY, base: base, cur: { x: base.x, y: base.y }, moved: false };
-  }
-  function onDecoMove(e) {
-    if (!drag || e.pointerId !== drag.id || !controller) return;
-    var w0 = controller.clientToWorld(drag.sx, drag.sy);
-    var w1 = controller.clientToWorld(e.clientX, e.clientY);
-    drag.cur = { x: drag.base.x + (w1.x - w0.x), y: drag.base.y + (w1.y - w0.y) };
-    if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 6) drag.moved = true;
-    if (drag.node) drag.node.setAttribute('transform', 'translate(' + drag.cur.x + ',' + drag.cur.y + ')');
-  }
-  function onDecoUp(e, invId, pos) {
-    if (!drag || e.pointerId !== drag.id) return;
-    try { drag.node.releasePointerCapture(e.pointerId); } catch (err) {}
-    var moved = drag.moved, cur = drag.cur;
-    drag = null;
-    if (moved) {                                // glisser → déplacer (échange si occupé)
-      var slot = nearestSlot(store.get(), cur);
-      if (slot) { actions.putOnIsland(invId, slot.x, slot.y); }
-      else { repaint(); }                       // hors cible → re-render remet la déco à sa place
-      return;
-    }
-    // tap sans mouvement → poser l'objet en attente ICI, sinon (dé)sélectionner cette déco
-    if (pending && pending.invId !== invId) { var pv = pending.invId; pending = null; actions.putOnIsland(pv, pos.x, pos.y); }
-    else if (pending && pending.invId === invId) { pending = null; repaint(); }
-    else { pending = { invId: invId, from: 'placed' }; repaint(); }
-  }
-
   /* --------------------------------------------------------------- rendu SVG (calques) */
   function parcelles() {
     var list = domains.list, st = store.get(), out = [];
@@ -2864,6 +2733,32 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     return out;
   }
   function parcelleNode(p) { return (p.level >= 1) ? building(p) : ruin(p); }
+
+  /* Le MÊME dessin, réemployé en vignette dans le bandeau du menu du domaine (4.2b) : on ne
+     redessine rien, le bandeau montre le bâtiment RÉEL à son niveau réel. En mode `hero` on
+     retire l'`id` (il vivrait alors en double dans le DOM avec la scène) et la pastille X/Y
+     (le bandeau l'écrit déjà en toutes lettres). */
+  function heroArt(p) {
+    var L = Math.min(p.level, 6);
+    // Cadre ajusté à la hauteur réelle du bâtiment, avec un PLANCHER de 118 : sans lui, un cadre
+    // collé au contenu grossissait les petits sujets et une ruine dormante se retrouvait dessinée
+    // PLUS GRANDE qu'une tour de niveau 3 — l'échelle disait l'inverse de la progression.
+    var top = (p.level >= 1) ? (-51 - (18 + (L - 1) * 15)) : -44;
+    var vh = Math.max(118, 34 - top);
+    var box = '-64 ' + (34 - vh) + ' 128 ' + vh;
+    var hp = { domain: p.domain, x: 0, y: 0, level: p.level };
+    return html`
+      <svg class="dm-heroart" viewBox=${box} preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+        <defs>
+          <radialGradient id="dm-glow-g" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stop-color="var(--gold)" stop-opacity=".5" />
+            <stop offset="0.5" stop-color="var(--gold)" stop-opacity=".18" />
+            <stop offset="1" stop-color="var(--gold)" stop-opacity="0" />
+          </radialGradient>
+        </defs>
+        ${(p.level >= 1) ? building(hp, true) : ruin(hp, true)}
+      </svg>`;
+  }
 
   // Petite pastille « X/Y » sous la parcelle : signale que le bâtiment est TAPPABLE (ouvre son
   // menu de domaine) et montre la progression de collection à même la scène (cap « île = lobby »).
@@ -2917,10 +2812,10 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
       </g>`;
   }
 
-  function ruin(p) {
+  function ruin(p, hero) {
     var d = p.domain;
     return html`
-      <g id=${p.id} class="isl-parcelle" transform=${'translate(' + p.x + ',' + p.y + ')'}
+      <g id=${hero ? null : p.id} class="isl-parcelle" transform=${'translate(' + p.x + ',' + p.y + ')'}
          data-domain=${d.id} data-level="0">
         ${plotNode()}
         <ellipse class="isl-ruin-sh" cx="4" cy="-3" rx="30" ry="10" />
@@ -2934,11 +2829,11 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
         <ellipse class="isl-moss" cx="-25" cy="-6" rx="7" ry="3" />
         <ellipse class="isl-moss" cx="1" cy="-4" rx="9" ry="3.4" />
         ${signNode(d, -18)}
-        ${collTag(p.collGot, p.collTotal)}
+        ${hero ? null : collTag(p.collGot, p.collTotal)}
       </g>`;
   }
 
-  function building(p) {
+  function building(p, hero) {
     var d = p.domain;
     var L = Math.min(p.level, 6);
     var floorH = 15, bodyW = 46, halfW = bodyW / 2;
@@ -2962,7 +2857,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     var apexY = roofY - roofH;              // faîtage
     var signY = apexY - 24;                 // enseigne au-dessus du faîtage
     return html`
-      <g id=${p.id} class="isl-parcelle isl-built" transform=${'translate(' + p.x + ',' + p.y + ')'}
+      <g id=${hero ? null : p.id} class="isl-parcelle isl-built" transform=${'translate(' + p.x + ',' + p.y + ')'}
          data-domain=${d.id} data-level=${p.level}>
         <ellipse class="isl-glow" cx="0" cy=${topY + bodyH * 0.35} rx=${34 + L * 9} ry=${(34 + L * 9) * 0.7}
                  style=${'opacity:' + glowOp} />
@@ -2978,7 +2873,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
         <rect class="isl-eaves" x=${-halfW - eave - 1} y=${roofY} width=${bodyW + eave * 2 + 2} height="3.5" rx="1.7" />
         <rect class="isl-door" x="-5" y=${baseY - 12} width="10" height="12" rx="2" />
         ${signNode(d, signY)}
-        ${collTag(p.collGot, p.collTotal)}
+        ${hero ? null : collTag(p.collGot, p.collTotal)}
       </g>`;
   }
 
@@ -3029,50 +2924,9 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
       </g>`;
   }
 
-  // Emplacement LIBRE : pastille discrète en pointillés. Interactive (cible de pose) uniquement
-  // quand un objet est en attente (`pending`) → elle pulse et accepte le tap.
-  function freeSlotNode(slot) {
-    var active = !!pending;
-    return html`
-      <g class="isl-slot ${active ? 'pulse' : ''}" transform=${'translate(' + slot.x + ',' + slot.y + ')'}
-         data-slot=${slot.id}
-         onpointerdown=${active ? function (e) { e.stopPropagation(); } : null}
-         onclick=${active ? function () { placeOnSlot(slot); } : null}>
-        <ellipse class="isl-deco-pad" cx="0" cy="0" rx="30" ry="14" />
-        ${active ? html`<text class="isl-slot-plus" x="0" y="1" text-anchor="middle">+</text>` : null}
-      </g>`;
-  }
-
-  // Déco POSÉE : pad + glyphe placeholder. Glissable (déplacer) et tappable (sélectionner).
-  function placedNode(pl) {
-    var st = store.get();
-    var e = invEntry(st, pl.invId);
-    var item = e ? cards.resolve(e.itemId) : null;
-    var pos = (drag && drag.invId === pl.invId) ? drag.cur : { x: pl.x, y: pl.y };
-    var special = item && cards.rarityRank(item.rarity) >= 2;
-    var sel = pending && pending.invId === pl.invId;
-    var name = item ? item.name : 'Objet';
-    return html`
-      <g key=${pl.invId} class="isl-placed ${special ? 'special' : ''} ${sel ? 'sel' : ''}"
-         transform=${'translate(' + pos.x + ',' + pos.y + ')'} data-inv=${pl.invId} role="img"
-         aria-label=${'Décoration posée : ' + name}
-         onpointerdown=${function (ev) { onDecoDown(ev, pl.invId, { x: pl.x, y: pl.y }); }}
-         onpointermove=${onDecoMove}
-         onpointerup=${function (ev) { onDecoUp(ev, pl.invId, { x: pl.x, y: pl.y }); }}
-         onpointercancel=${function (ev) { onDecoUp(ev, pl.invId, { x: pl.x, y: pl.y }); }}>
-        <ellipse class="isl-deco-pad placed-pad" cx="0" cy="6" rx="28" ry="12" />
-        <ellipse class="isl-pshadow" cx="1" cy="4" rx="14" ry="5" />
-        <circle class="isl-pdot" cx="0" cy="-6" r="14" />
-        <text class="isl-pemoji" x="0" y="-2" text-anchor="middle">${glyph(item)}</text>
-      </g>`;
-  }
-
   function Scene() {
     var st = store.get();
     var ps = parcelles();
-    var placed = islePlacements(st);
-    var free = freeSlots(st);
-    var toPlace = unplaced(st);
     var totalLv = derive.totalBuildingLevels(st);
     // 4.2a — recalibré sur l'île AGRANDIE : avec les anciens seuils la brume ne mordait plus
     // sur la terre (elle flottait au large) et le signal « elle recule quand tu progresses »
@@ -3081,9 +2935,6 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     var fogOut = Math.max(0.4, 0.9 - totalLv * 0.03).toFixed(3);
     var fit = ((WORLD.w - MAXW) / 2) + ' ' + ((WORLD.h - MAXW * AR) / 2) + ' ' + MAXW + ' ' + (MAXW * AR);
     var initBox = savedView ? (savedView.x + ' ' + savedView.y + ' ' + savedView.w + ' ' + savedView.h) : fit;
-
-    var pendingItem = null;
-    if (pending) { var pe = invEntry(st, pending.invId); pendingItem = pe ? cards.resolve(pe.itemId) : null; }
 
     return html`
       <div class="isl-stage">
@@ -3127,101 +2978,43 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
             <ellipse cx=${ISLE.cx} cy=${ISLE.cy} rx=${ISLE.rx} ry=${ISLE.ry} fill="url(#isl-land)" />
           </g>
 
-          <!-- CALQUE emplacements libres (cibles de pose quand un objet est en attente) -->
-          <g class="isl-slots">${free.map(freeSlotNode)}</g>
           <!-- CALQUE parcelles — TRIÉES par profondeur (y croissant) : les parcelles du fond
                sont peintes en premier, celles de l'avant les recouvrent. C'est ce tri qui fait
                lire l'écart comme de la PERSPECTIVE et non comme un encombrement. -->
           <g class="isl-parcelles">${ps.slice().sort(byDepth).map(parcelleNode)}</g>
           <!-- CALQUE ponton des coffres (Phase 3.2 : tap → hub des coffres → cérémonie 1.3) -->
           <g class="isl-pontons">${pontonNode()}</g>
-          <!-- CALQUE décorations posées (glissables) -->
-          <g class="isl-placeds">${placed.map(placedNode)}</g>
 
           <rect class="isl-brume" x="-80" y="-80" width=${WORLD.w + 160} height=${WORLD.h + 160} fill="url(#isl-fog)" />
         </svg>
 
-        ${pending
-          ? html`
-            <div class="isl-place-bar" role="status">
-              <span class="ipb-emoji" aria-hidden="true">${glyph(pendingItem)}</span>
-              <span class="ipb-txt">Choisis un emplacement libre pour <strong>${pendingItem ? pendingItem.name : 'cet objet'}</strong>.</span>
-              ${pending.from === 'placed'
-                ? html`<button class="ipb-btn" type="button" onClick=${rangePending}
-                          aria-label=${'Ranger ' + (pendingItem ? pendingItem.name : 'cet objet') + ' dans ta collection'}>Ranger</button>`
-                : null}
-              <button class="ipb-btn ghost" type="button" onClick=${cancelPending} aria-label="Annuler le placement">Annuler</button>
-            </div>`
-          : html`<div class="isl-hint" aria-hidden="true">Touche un bâtiment ou le ponton des coffres · glisse pour explorer</div>`}
+        <div class="isl-hint" aria-hidden="true">Touche un bâtiment ou le ponton des coffres · glisse pour explorer</div>
 
         <button class="isl-recenter" type="button" onClick=${recenter} aria-label="Recentrer la vue de l’île">Recentrer</button>
 
-        ${toPlace.length
+        ${totalLv === 0
           ? html`
-            <div class="isl-tray" role="group" aria-label=${'Objets à placer (' + toPlace.length + ')'}>
-              <div class="itray-head">À placer · ${toPlace.length}</div>
-              <div class="itray-scroll">
-                ${toPlace.map(function (e) {
-                  var it = cards.resolve(e.itemId);
-                  var on = pending && pending.from === 'tray' && pending.invId === e.id;
-                  return html`
-                    <button type="button" class="itray-item ${on ? 'on' : ''}"
-                            aria-pressed=${on ? 'true' : 'false'}
-                            aria-label=${'Placer « ' + it.name + ' » sur l’île'}
-                            onClick=${function () { selectFromTray(e.id); }}>
-                      <span class="iti-emoji" aria-hidden="true">${glyph(it)}</span>
-                      <span class="iti-name">${it.name}</span>
-                    </button>`;
-                })}
-              </div>
+            <div class="isl-wake" role="note">
+              <span class="iw-emoji" aria-hidden="true">🌱</span>
+              <p>Ton île s’éveille. Ces fondations en ruines attendent que ton élan les relève —
+              touche l’une d’elles pour agir dans son domaine.</p>
             </div>`
-          : (totalLv === 0
-            ? html`
-              <div class="isl-wake" role="note">
-                <span class="iw-emoji" aria-hidden="true">🌱</span>
-                <p>Ton île s’éveille. Ces fondations en ruines attendent que ton élan les relève —
-                et bientôt, les objets de tes coffres viendront la décorer.</p>
-              </div>`
-            : null)}
+          : null}
       </div>`;
   }
 
   /* ------------------------------------------------------------- vue LISTE (miroir 1:1)
-     Équivalent sémantique complet de la scène — le placement y est possible SANS le doigt :
-     sélecteur d'emplacement + boutons Placer / Déplacer / Ranger. */
-  function slotLabel(i) { return 'Emplacement ' + (i + 1); }
-
-  function ListPlaceControl(st, invId, isMove) {
-    var free = freeSlots(st);
-    if (!free.length) return html`<span class="ipl-none">Aucun emplacement libre — fais grandir tes bâtiments pour en débloquer.</span>`;
-    var cur = (typeof listSel[invId] === 'number' && free.some(function (s) { return s.index === listSel[invId]; }))
-      ? listSel[invId] : free[0].index;
-    return html`
-      <div class="isl-place-ctl">
-        <label class="ipl-lab" for=${'sel-' + invId}>Emplacement</label>
-        <select id=${'sel-' + invId} class="isl-select" onChange=${function (ev) { listSel[invId] = +ev.target.value; repaint(); }}>
-          ${free.map(function (s) {
-            return html`<option value=${s.index} selected=${s.index === cur ? true : null}>${slotLabel(s.index)}</option>`;
-          })}
-        </select>
-        <button class="btn ipl-go" type="button"
-                aria-label=${(isMove ? 'Déplacer vers ' : 'Placer sur ') + slotLabel(cur)}
-                onClick=${function () { var s = SLOTS[cur]; actions.putOnIsland(invId, s.x, s.y); }}>${isMove ? 'Déplacer' : 'Placer'}</button>
-      </div>`;
-  }
-
+     Équivalent sémantique complet de la scène (a11y NON négociable) : les deux lieux tappables
+     — les 5 parcelles et le ponton — y sont atteignables au clavier, et ouvrent les MÊMES
+     dialogs. Depuis 4.2b la scène n'a plus d'emplacements de déco : le miroir non plus. */
   function List() {
     var st = store.get();
     var ps = parcelles();
-    var placed = islePlacements(st);
-    var toPlace = unplaced(st);
-    var slots = slotState(st);
-    var freeCount = slots.filter(function (s) { return !s.occupant; }).length;
-    var chests = chestList(st).slice().reverse();   // plus récents en haut (miroir de la pile M1)
+    var chests = chestList(st).slice().reverse();   // plus récents en haut (miroir du ponton)
     return html`
       <div class="isl-list">
-        <p class="isl-list-lead">Vue liste de ton île — équivalent complet de la scène. Tu peux y
-        placer, déplacer et ranger tes décorations sans passer par le doigt.</p>
+        <p class="isl-list-lead">Vue liste de ton île — équivalent complet de la scène. Chaque
+        domaine s’ouvre ici comme en le touchant sur la carte.</p>
 
         <h3 class="isl-list-h">Parcelles de domaine (5)</h3>
         <ul class="isl-items">
@@ -3263,63 +3056,14 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
                       <span class="ii-title">${typeLabel}</span>
                       <span class="ii-state">${c.sourceLabel}</span>
                       <div class="ii-actions">
-                        <button class="btn ipl-go" type="button" aria-label=${'Ouvrir : ' + typeLabel}
+                        <button class="btn ii-go" type="button" aria-label=${'Ouvrir : ' + typeLabel}
                                 onClick=${function () { onOpenChest(c.id); }}>Ouvrir</button>
                       </div>
                     </span>
                   </li>`;
               })}
             </ul>`
-          : html`<p class="isl-empty-note">Aucun coffre en attente — tes prochaines actions en feront accoster au ponton.</p>`}
-
-        <h3 class="isl-list-h">Décorations sur ton île (${placed.length})</h3>
-        ${placed.length
-          ? html`<ul class="isl-items">
-              ${placed.map(function (pl) {
-                var e = invEntry(st, pl.invId);
-                var it = e ? cards.resolve(e.itemId) : null;
-                var name = it ? it.name : 'Objet';
-                var idx = -1;
-                for (var i = 0; i < slots.length; i++) if (Math.abs(slots[i].x - pl.x) < 0.5 && Math.abs(slots[i].y - pl.y) < 0.5) { idx = slots[i].index; break; }
-                var where = idx >= 0 ? slotLabel(idx) : 'Sur l’île';
-                return html`
-                  <li class="isl-item placed-item" aria-label=${'Décoration « ' + name + ' » sur ' + where + '.'}>
-                    <span class="ii-emoji" aria-hidden="true">${glyph(it)}</span>
-                    <span class="ii-main">
-                      <span class="ii-title">${name}</span>
-                      <span class="ii-state">${where}</span>
-                      <div class="ii-actions">
-                        ${ListPlaceControl(st, pl.invId, true)}
-                        <button class="lnk" type="button" aria-label=${'Ranger « ' + name + ' » dans ta collection'}
-                                onClick=${function () { actions.takeOffIsland(pl.invId); }}>Ranger</button>
-                      </div>
-                    </span>
-                  </li>`;
-              })}
-            </ul>`
-          : html`<p class="isl-empty-note">Rien de posé pour l’instant — place un objet ci-dessous.</p>`}
-
-        <h3 class="isl-list-h">Objets à placer (${toPlace.length})</h3>
-        ${toPlace.length
-          ? html`<ul class="isl-items">
-              ${toPlace.map(function (e) {
-                var it = cards.resolve(e.itemId);
-                return html`
-                  <li class="isl-item" aria-label=${'Objet à placer : « ' + it.name + ' ».'}>
-                    <span class="ii-emoji" aria-hidden="true">${glyph(it)}</span>
-                    <span class="ii-main">
-                      <span class="ii-title">${it.name}</span>
-                      <span class="ii-state">${e.sourceLabel || 'Dans ta collection'}</span>
-                      <div class="ii-actions">${ListPlaceControl(st, e.id, false)}</div>
-                    </span>
-                  </li>`;
-              })}
-            </ul>`
-          : html`<p class="isl-empty-note">Tous tes objets sont posés — ouvre de nouveaux coffres pour en obtenir d’autres.</p>`}
-
-        <h3 class="isl-list-h">Emplacements (${slots.length})</h3>
-        <p class="isl-empty-note">${freeCount} libre${freeCount > 1 ? 's' : ''} sur ${slots.length}. Chaque niveau de
-        bâtiment gagné débloque un nouvel emplacement (jusqu’à ${SLOTS.length}).</p>
+          : html`<p class="empty-soft">Aucun coffre en attente — tes prochaines actions en feront accoster au ponton.</p>`}
       </div>`;
   }
 
@@ -3329,37 +3073,63 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
      (obtenues avec souvenir · manquantes en silhouettes · X/Y · détail). Habitudes & quêtes
      du domaine viendront s'y greffer dans les phases suivantes. Dialog focus-trappé, Échap
      ferme (ou revient au grille depuis le détail). */
+  // Jour civil « YYYY-MM-DD » → date française courte (le souvenir se lit en pied de carte).
+  var MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+  function fmtDay(day) {
+    if (typeof day !== 'string') return '';
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+    if (!m) return day;
+    return (+m[3]) + ' ' + (MOIS[(+m[2]) - 1] || '') + ' ' + m[1];
+  }
+
+  /* SILHOUETTES des objets manquants (arbitrage Leo, 4.2b) — « ombre pleine, forme devinée » :
+     la carte garde son cadre et sa rareté, mais l'objet n'est qu'une masse sombre dont on
+     devine le contour. Quatre formes, choisies de façon DÉTERMINISTE par l'id de l'objet :
+     deux manquants voisins ne se ressemblent pas, et la même case garde toujours sa forme
+     (sinon chaque re-rendu rebattrait les cartes sous les yeux). Aucune pression : c'est une
+     invitation, jamais un « il te manque ». */
+  var SILHOUETTES = [
+    'M20 3c-3.6 0-5.8 2.6-5.8 5.6 0 2.6 1.7 3.6 1.7 5.2C10.6 16 7.4 20.8 7.4 26c0 6 4.9 11 12.6 11s12.6-5 12.6-11c0-5.2-3.2-10-8.5-12.2 0-1.6 1.7-2.6 1.7-5.2C25.8 5.6 23.6 3 20 3z',
+    'M20 2 34 13 28.6 35 11.4 35 6 13z',
+    'M20 38C7.6 31.4 5.2 14.6 20 2c14.8 12.6 12.4 29.4 0 36z',
+    'M9 5h19a4 4 0 0 1 4 4v22a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V9a4 4 0 0 1 4-4z'
+  ];
+  function silhouette(id) {
+    return html`
+      <svg class="dmc-sil" viewBox="0 0 40 40" aria-hidden="true">
+        <path d=${SILHOUETTES[cards.hash(id) % SILHOUETTES.length]} />
+      </svg>`;
+  }
+
+  /* Carte de COLLECTION (4.2b) — vraie carte à collectionner (arbitrage Leo) : format portrait,
+     cadre et fond teintés par la RARETÉ, glyphe en grand, nom, et le souvenir daté en pied.
+     Obtenue = bouton (ouvre le détail) ; manquante = <li> inerte avec sa silhouette. */
+  function cardShell(rarity, obtained) {
+    return 'dm-card dm-card--' + rarity + (obtained ? ' got' : ' locked');
+  }
   function CollCard(c) {
     if (!c.obtained) {
       return html`
-        <li class="dm-card locked" aria-label=${'À découvrir — un objet ' + cards.rarityLabel(c.rarity) + ' de ce domaine, pas encore obtenu.'}>
-          <span class="dmc-emoji" aria-hidden="true">◈</span>
+        <li class=${cardShell(c.rarity, false)}
+            aria-label=${'À découvrir — un objet ' + cards.rarityLabel(c.rarity) + ' de ce domaine, pas encore obtenu.'}>
+          <span class="dmc-art">${silhouette(c.id)}</span>
           <span class="dmc-name">À découvrir</span>
           <span class="rc-rarity rc-rarity--${c.rarity} dim">${cards.rarityLabel(c.rarity)}</span>
         </li>`;
     }
-    var item = cards.resolve(c.id);
-    return html`
-      <li>
-        <button class="dm-card got" type="button"
-                aria-label=${'Obtenu : ' + c.name + ' (' + cards.rarityLabel(c.rarity) + '). Voir le souvenir.'}
-                onClick=${function () { showDetail(c.entry.id); }}>
-          <span class="dmc-emoji" aria-hidden="true">${glyph(item)}</span>
-          <span class="dmc-name">${c.name}</span>
-          <span class="rc-rarity rc-rarity--${c.rarity}">${cards.rarityLabel(c.rarity)}</span>
-        </button>
-      </li>`;
+    return CardButton(cards.resolve(c.id), c.entry, c.name, c.rarity);
   }
-  function ExtraCard(x) {
-    var item = x.item;
+  function ExtraCard(x) { return CardButton(x.item, x.entry, x.item.name, x.item.rarity); }
+  function CardButton(item, entry, name, rarity) {
     return html`
-      <li>
-        <button class="dm-card got" type="button"
-                aria-label=${'Obtenu : ' + item.name + '. Voir le souvenir.'}
-                onClick=${function () { showDetail(x.entry.id); }}>
-          <span class="dmc-emoji" aria-hidden="true">${glyph(item)}</span>
-          <span class="dmc-name">${item.name}</span>
-          <span class="rc-rarity rc-rarity--${item.rarity}">${cards.rarityLabel(item.rarity)}</span>
+      <li class=${cardShell(rarity, true)}>
+        <button class="dmc-btn" type="button"
+                aria-label=${'Obtenu : ' + name + ' (' + cards.rarityLabel(rarity) + '), le ' + fmtDay(entry.day) + '. Voir le souvenir.'}
+                onClick=${function () { showDetail(entry.id); }}>
+          <span class="dmc-art"><span class="dmc-emoji" aria-hidden="true">${glyph(item)}</span></span>
+          <span class="dmc-name">${name}</span>
+          <span class="rc-rarity rc-rarity--${rarity}">${cards.rarityLabel(rarity)}</span>
+          <span class="dmc-day" aria-hidden="true">${fmtDay(entry.day)}</span>
         </button>
       </li>`;
   }
@@ -3368,9 +3138,9 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
       <section class="dm-coll">
         <div class="dm-collhead">
           <h3 class="dm-h">Collection</h3>
-          <span class="dm-count" aria-label=${coll.got + ' objets du catalogue obtenus sur ' + coll.total}>${coll.got}/${coll.total}</span>
+          <span class="dm-count" aria-label=${coll.got + ' objets du catalogue obtenus sur ' + coll.total}>${coll.got}<span class="dmc-tot">/${coll.total}</span></span>
         </div>
-        <p class="dm-note">Chaque objet obtenu garde le souvenir de l’action réelle qui l’a mérité.
+        <p class="dm-note">Chaque objet garde le souvenir de l’action réelle qui l’a mérité.
         Les silhouettes restent à découvrir — rien ne presse.</p>
         <ul class="dm-grid">${coll.catalogue.map(CollCard)}</ul>
         ${coll.extra.length
@@ -3504,7 +3274,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
         <h3 class="dm-h">Agir</h3>
         ${actNote
           ? html`
-            <div class="milestone-done dm-actnote" role="status">
+            <div class="note-soft dm-actnote" role="status">
               <span>${actNote}</span>
               <button class="lnk" type="button" onClick=${clearNote}>OK</button>
             </div>`
@@ -3513,7 +3283,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
         <h4 class="dm-subh">Habitudes</h4>
         ${habits.length
           ? html`<ul class="dm-hlist">${habits.map(function (hb) { return MenuHabit(st, hb); })}</ul>`
-          : html`<p class="dm-note">Aucune habitude dans ce domaine pour l’instant. Crée-en une depuis
+          : html`<p class="empty-soft">Aucune habitude dans ce domaine pour l’instant. Crée-en une depuis
              l’onglet <strong>Habitudes</strong> — elle apparaîtra ici, prête à valider.</p>`}
 
         <h4 class="dm-subh">Quête</h4>
@@ -3526,11 +3296,11 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
       </section>`;
   }
   // Corps « grille » du menu (Agir en haut, Collection en bas) — un seul conteneur défilant.
-  function GridBody(st, dom) {
+  function GridBody(st, dom, coll) {
     return html`
       <div class="dm-body">
         ${DomainActions(st, dom)}
-        ${CollectionSection(st, domainCollection(st, dom.id))}
+        ${CollectionSection(st, coll || domainCollection(st, dom.id))}
       </div>`;
   }
   function DetailView(st) {
@@ -3538,11 +3308,11 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     if (!e) { detailInvId = null; return GridBody(st, domains.get(openDomainId)); }
     var item = cards.resolve(e.itemId);
     var d = domains.get(item.domain);
-    var meta = (d ? d.label : (item.domain || '—')) + ' · ' + cards.rarityLabel(item.rarity) + ' · obtenu le ' + e.day;
+    var meta = (d ? d.label : (item.domain || '—')) + ' · ' + cards.rarityLabel(item.rarity) + ' · obtenu le ' + fmtDay(e.day);
     return html`
       <div class="dm-body dm-detail">
         <button class="dm-back" type="button" onClick=${backToGrid} aria-label="Retour à la collection">← Retour</button>
-        <div class="dm-detail-card">
+        <div class=${'dm-detail-card dm-card--' + item.rarity}>
           <span class="dmd-emoji" aria-hidden="true">${glyph(item)}</span>
           <div class="dmd-name">${item.name}</div>
           <span class="rc-rarity rc-rarity--${item.rarity}">${cards.rarityLabel(item.rarity)}</span>
@@ -3556,28 +3326,61 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
         </div>
       </div>`;
   }
+
+  /* BANDEAU DU DOMAINE (4.2b, arbitrage Leo : « bandeau illustré + barre de niveau »).
+     C'est lui qui fait qu'on est ENTRÉ dans un lieu : le bâtiment RÉEL du domaine (même
+     dessin que sur la scène, à son niveau réel) posé dans un bandeau ciel→terre, son niveau,
+     et la barre de progression vers le palier suivant. Tout est DÉRIVÉ (buildingInfo /
+     domainCollection) — le bandeau ne stocke ni ne calcule rien de neuf. */
+  function DomainHero(dom, info, coll) {
+    var built = info.level >= 1;
+    var base = derive.levelThreshold(info.level);
+    var span = info.nextAt - base;
+    var pct = (built && span > 0) ? Math.max(0, Math.min(100, Math.round(((info.elan - base) / span) * 100))) : 0;
+    var barAria = built
+      ? ('Progression vers le niveau ' + (info.level + 1) + ' : ' + pct + ' pour cent — plus que ' + info.remaining + ' d’élan.')
+      : 'Fondation en sommeil — aucune progression pour l’instant.';
+    return html`
+      <header class="dm-hero">
+        <div class="dm-heroband">
+          ${heroArt({ domain: dom, level: info.level })}
+          <button class="dm-close" type="button" aria-label="Fermer" onClick=${closeDomain}>✕</button>
+        </div>
+        <div class="dm-heroinfo">
+          <div class="dm-titleline">
+            <h2 class="dm-title">${dom.label}</h2>
+            ${built
+              ? html`<span class="dm-lv">Niveau ${info.level}</span>`
+              : html`<span class="dm-lv dormant">En sommeil</span>`}
+          </div>
+          <div class="dm-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+               aria-valuenow=${pct} aria-label=${barAria}>
+            <i style=${'width:' + pct + '%'}></i>
+          </div>
+          <p class="dm-state">${built
+            ? html`<strong>${info.elan}</strong> d’élan · plus que <strong>${info.remaining}</strong> avant le niveau ${info.level + 1}`
+            : 'Fondation en ruines — ta première action de ce domaine la relèvera.'}</p>
+          <p class="dm-state dm-stat2"><strong>${coll.got}/${coll.total}</strong> objets de collection réunis</p>
+        </div>
+      </header>`;
+  }
+
   function DomainMenu() {
     var st = store.get();
     var dom = domains.get(openDomainId);
     if (!dom) return null;
     var info = derive.buildingInfo(st, openDomainId);
-    var stateLine = info.level >= 1
-      ? ('Niveau ' + info.level + ' · élan ' + info.elan + ' · plus que ' + info.remaining + ' avant le niveau ' + (info.level + 1))
-      : 'Fondation en sommeil — relève-la par tes actions de ce domaine';
+    var coll = domainCollection(st, dom.id);
     return html`
       <div class="dom-menu" role="dialog" aria-modal="true" aria-label=${'Domaine ' + dom.label}
-           onKeyDown=${function (e) { if (e.key === 'Escape') { if (detailInvId) backToGrid(); else closeDomain(); } }}>
+           onKeyDown=${function (e) {
+             if (e.key === 'Escape') { if (detailInvId) backToGrid(); else closeDomain(); return; }
+             trapTab(e);
+           }}>
         <div class="dm-backdrop" onClick=${closeDomain} aria-hidden="true"></div>
         <div class="dm-panel" tabindex="-1" ref=${focusPanel}>
-          <header class="dm-head">
-            <span class="dm-emoji" aria-hidden="true">${dom.emoji}</span>
-            <div class="dm-headmain">
-              <h2 class="dm-title">${dom.label}</h2>
-              <p class="dm-state">${stateLine}</p>
-            </div>
-            <button class="dm-close" type="button" aria-label="Fermer" onClick=${closeDomain}>✕</button>
-          </header>
-          ${detailInvId ? DetailView(st) : GridBody(st, dom)}
+          ${DomainHero(dom, info, coll)}
+          ${detailInvId ? DetailView(st) : GridBody(st, dom, coll)}
         </div>
       </div>`;
   }
@@ -3613,7 +3416,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
       : 'Le ponton est calme pour l’instant';
     return html`
       <div class="dom-menu chest-hub" role="dialog" aria-modal="true" aria-label="Ponton des coffres — À découvrir"
-           onKeyDown=${function (e) { if (e.key === 'Escape') closeChestHub(); }}>
+           onKeyDown=${function (e) { if (e.key === 'Escape') { closeChestHub(); return; } trapTab(e); }}>
         <div class="dm-backdrop" onClick=${closeChestHub} aria-hidden="true"></div>
         <div class="dm-panel" tabindex="-1" ref=${focusPanel}>
           <header class="dm-head">
@@ -3630,7 +3433,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
                 <p class="dm-note">Tes coffres accostent ici — chacun garde le souvenir de ce que tu as
                 accompli. Ouvre-les à ton rythme ; l’objet rejoindra la collection de son domaine.</p>
                 <ul class="chest-list">${list.map(HubChestCard)}</ul>`
-              : html`<p class="ch-empty">Aucun coffre en attente. Accomplis une action — habitude, quête,
+              : html`<p class="empty-soft big">Aucun coffre en attente. Accomplis une action — habitude, quête,
                 jalon — et un coffre viendra accoster au ponton.</p>`}
           </div>
         </div>
@@ -3683,7 +3486,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.16';
+  var VER = '0.17';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
@@ -3944,7 +3747,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     var m = ui.milestoneDone;
     if (!m) return null;
     return html`
-      <div class="milestone-done" role="status">
+      <div class="note-soft" role="status">
         <span>✨ Jalon des <strong>${m.threshold}</strong> franchi — ton <strong>${m.chestLabel}</strong>${' '}
         vient d’accoster au ponton de ton île.</span>
         <button class="lnk" type="button"
@@ -3960,7 +3763,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
     if (!m) return null;
     var plural = m.count > 1;
     return html`
-      <div class="milestone-done level-done" role="status">
+      <div class="note-soft" role="status">
         <span>🏛️ Ton <strong>${m.domainLabel}</strong> atteint le <strong>niveau ${m.level}</strong> —
         ${plural ? 'des Coffres de cristal ont accosté' : 'un Coffre de cristal a accosté'} au ponton de ton île.</span>
         <button class="lnk" type="button"
@@ -4129,7 +3932,7 @@ button.dm-card:focus-visible { outline: none; border-color: var(--accent); box-s
         et tu reçois un coffre à la hauteur de l’effort.</p>
         ${ui.quest.done
           ? html`
-            <div class="quest-done" role="status">
+            <div class="note-soft" role="status">
               <span>Quête accomplie 🎉 — ton <strong>${ui.quest.done.label}</strong> vient d’accoster au ponton de ton île.</span>
               <button class="lnk" type="button" onClick=${function () { ui.quest.done = null; paint(); }}>OK</button>
             </div>`
