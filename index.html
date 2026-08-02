@@ -66,6 +66,10 @@
   --wall: #F2E7D2; --wall-2: #D9C6A6;
   --roof: #C4705A; --roof-2: #9C5140;
   --leaf: #7FB86A; --leaf-2: #5C9A4C;
+  /* 4.2c — ciel de la scène (astre, nuages, îlots au loin) et place centrale dallée.
+     Le ciel réutilise --sky-top/--sky-mid et --star, déjà posés plus haut. */
+  --astre: #FFF6D0; --cloud: #FFFFFF; --far-isle: #A7C9D2;
+  --plaza: #DED6C2; --plaza-2: #BDB29A; --path: #D3C7A8;
 }
 
 [data-ambiance="crepuscule"] {
@@ -94,6 +98,8 @@
   --wall: #F8E8D6; --wall-2: #E0C5A8;
   --roof: #C77E6C; --roof-2: #9E5A4C;
   --leaf: #C0A578; --leaf-2: #997F55;
+  --astre: #FFE9C4; --cloud: #FCDCC9; --far-isle: #C4988F;
+  --plaza: #E8D6B8; --plaza-2: #C5AA88; --path: #DCC29E;
 }
 
 [data-ambiance="nuit"] {
@@ -122,6 +128,10 @@
   --wall: #5A678E; --wall-2: #465272;
   --roof: #4B4070; --roof-2: #372E52;
   --leaf: #3E5C6A; --leaf-2: #2E4753;
+  /* La nuit, l'astre est la LUNE et les nuages sont des masses sombres : ce sont les mêmes
+     tokens, seules les valeurs changent — aucune branche JS sur l'ambiance. */
+  --astre: #E6EBFF; --cloud: #232D4C; --far-isle: #18203C;
+  --plaza: #48577E; --plaza-2: #5C6B94; --path: #3E4D71;
 }
 
 /* ============================ BASE ============================ */
@@ -796,6 +806,30 @@ body {
 }
 .isl-svg:active { cursor: grabbing; }
 
+/* Ciel de la scène (4.2c) — il n'y en avait AUCUN : le rect de mer couvrait tout le monde et
+   l'île flottait dans du vide coloré. Tout y est STATIQUE (arbitrage Leo) : aucune règle à
+   neutraliser en reduce-motion, comme les vaguelettes de la 4.2a. Le champ d'étoiles réutilise
+   `--star` (transparent hors nuit, posé en 0.3) : pas une seule règle conditionnelle, pas une
+   seule branche JS sur l'ambiance. Décoratif — la vue Liste reste le miroir a11y de la scène. */
+.isl-star { fill: var(--star); }
+.isl-astre { fill: var(--astre); }
+.isl-astre-glow { fill: url(#isl-astre-g); }
+/* opacité portée par le GROUPE : les ellipses d'un nuage se chevauchent, une opacité par
+   ellipse ferait apparaître leurs coutures. */
+.isl-cloud { opacity: .55; }
+.isl-cloud ellipse { fill: var(--cloud); }
+.isl-farisle { fill: var(--far-isle); opacity: .55; }
+.isl-horizon { fill: var(--foam); opacity: .22; }
+
+/* Place centrale & sentiers (4.2c) — le centre était un aplat d'herbe nu au milieu de la
+   composition : l'œil y tombait. Décor PUR : rien de tappable, rien de stocké, rien de dérivé.
+   Le musée (M3) n'est pas anticipé d'un pixel : la place est vide, elle sera son parvis. */
+.isl-walk { fill: var(--path); opacity: .55; }
+.isl-plaza-sh { fill: var(--land-2); opacity: .22; }
+.isl-plaza-fl { fill: var(--plaza); }
+.isl-plaza-ring { fill: none; stroke: var(--plaza-2); stroke-width: 1.6; opacity: .55; }
+.isl-pave { stroke: var(--plaza-2); stroke-width: 1.2; opacity: .38; }
+
 /* Calques décoratifs — l'île se pose dans la mer par couches (4.2a) :
    ombre portée → écume → sable mouillé → plage → herbe → relief. */
 .isl-seashade { fill: var(--sea-2); opacity: .28; }
@@ -835,9 +869,12 @@ body {
 .ii-actions .ii-go { min-height: 44px; padding: 0 18px; font-size: 14px; }
 .isl-item .ii-main { flex: 1 1 auto; }
 
-/* Bâtiment relevé (Phase 2.2, enrichi en 4.2a) : la ruine qui se relève — corps maçonné,
-   toit en pente, corniche, porte, fenêtres allumées, ombre portée. Toujours un placeholder
-   géométrique ; les assets Claude Design (2.4) prendront le relais sur la même ancre. */
+/* Bâtiment relevé (Phase 2.2, enrichi en 4.2a, DIFFÉRENCIÉ en 4.2c) : la ruine qui se relève.
+   Depuis la 4.2c chaque domaine a SA silhouette (palestre · observatoire · bibliothèque ·
+   atelier · pavillon) — mais toutes se peignent avec CES classes-là, donc avec les mêmes
+   tokens de matière : c'est ce vocabulaire commun qui garde le village d'une seule pièce.
+   Toujours des placeholders ; les assets Claude Design (2.4) prendront le relais sur la
+   même ancre `parcelle-<domain>`. */
 .isl-glow  { fill: url(#isl-glow-g); }
 .isl-cast  { fill: var(--land-2); opacity: .26; }
 .isl-tower { fill: var(--wall); stroke: var(--wall-2); stroke-width: 1.2; }
@@ -847,8 +884,12 @@ body {
 .isl-roof-hi { fill: var(--roof); }
 .isl-eaves { fill: var(--roof-2); }
 .isl-door  { fill: var(--roof-2); opacity: .7; }
-.isl-stem  { fill: var(--wall-2); }
+/* mât de l'enseigne · fleuron de la coupole et du pavillon (4.2c) — même matière taillée */
+.isl-stem, .isl-finial { fill: var(--wall-2); }
 .isl-win   { fill: var(--gold); opacity: .92; }
+/* verrière en dents de scie de l'atelier + sa grande baie (4.2c) : la même lumière que les
+   fenêtres, en surface vitrée plutôt qu'en percement. */
+.isl-glass { fill: var(--gold); opacity: .5; }
 .isl-sill  { stroke: var(--wall-2); stroke-width: 1.2; opacity: .6; }
 .isl-built .isl-badge { fill: var(--surface); opacity: .95; }
 .isl-built .isl-emoji { opacity: 1; }
@@ -2369,12 +2410,53 @@ body {
 
   // Vaguelettes du large — positions FIXES, toutes hors de l'anneau d'écume (donc jamais sur
   // la terre). Purement décoratives et STATIQUES : rien à neutraliser en reduce-motion.
+  // 4.2c — les deux dernières (y 70 et 60) sont redescendues : elles seraient désormais DANS
+  // LE CIEL, au-dessus de l'horizon. Toutes sont vérifiées hors de l'ellipse d'écume.
   var WAVES = [
     { x: 60, y: 150 }, { x: 44, y: 430 }, { x: 120, y: 640 }, { x: 944, y: 210 },
-    { x: 928, y: 498 }, { x: 868, y: 648 }, { x: 340, y: 70 }, { x: 660, y: 60 }
+    { x: 928, y: 498 }, { x: 868, y: 648 }, { x: 196, y: 180 }, { x: 792, y: 168 }
   ];
   // Tri de PROFONDEUR : ce qui est au fond (y petit) se peint d'abord.
   function byDepth(a, b) { return a.y - b.y; }
+
+  /* ------------------------------------------------------------------- CIEL (4.2c)
+     Il n'y en avait AUCUN : le rect de mer couvrait tout le monde et l'île flottait dans
+     du vide coloré (ce que Leo prenait pour un ciel n'était que le letterbox CSS autour du
+     SVG). Le ciel occupe maintenant la bande AU-DESSUS de l'horizon : astre de l'heure,
+     nuages, îlots au loin. TOUT EST STATIQUE (arbitrage Leo) — comme les vaguelettes,
+     reduce-motion est respecté d'office, sans une seule règle à neutraliser.
+     Le champ d'étoiles réutilise le token `--star` (transparent hors nuit, déjà défini pour
+     le ciel CSS de la 0.3) : aucune branche JS sur l'ambiance, c'est le CSS qui décide.
+     L'astre et les îlots sont posés là où la BRUME (2.2) est douce : elle les voile
+     légèrement — perspective aérienne — et se lève à mesure que les bâtiments montent. */
+  var HORIZON = 104;
+  var ASTRE = { x: 690, y: 48, r: 27 };
+  var CLOUDS = [
+    { x: 210, y: 22, s: 1 }, { x: 470, y: 58, s: .72 },
+    { x: 846, y: 34, s: .86 }, { x: 96, y: 74, s: .6 }
+  ];
+  // Îlots lointains, posés SUR la ligne d'horizon (jamais sur l'écume de l'île).
+  var FAR_ISLES = [{ x: 150, w: 150, h: 34 }, { x: 880, w: 104, h: 24 }, { x: 352, w: 70, h: 16 }];
+  var STARS = [
+    { x: 120, y: -40, r: 1.6 }, { x: 300, y: -60, r: 1.2 }, { x: 470, y: -30, r: 1.8 },
+    { x: 640, y: -58, r: 1.3 }, { x: 820, y: -24, r: 1.5 }, { x: 70, y: 18, r: 1.4 },
+    { x: 250, y: 6, r: 1.1 }, { x: 400, y: 34, r: 1.7 }, { x: 560, y: 14, r: 1.2 },
+    { x: 760, y: 44, r: 1.4 }, { x: 900, y: 22, r: 1.6 }, { x: 950, y: 66, r: 1.2 },
+    { x: 180, y: 62, r: 1.3 }, { x: 520, y: 74, r: 1.1 }, { x: 340, y: -10, r: 1.4 },
+    { x: 870, y: -52, r: 1.2 }
+  ];
+
+  /* ------------------------------------------------------- PLACE CENTRALE (4.2c)
+     Le centre de l'île était un aplat d'herbe nu au milieu de la composition : l'œil y
+     tombait. On y pose une PLACE DALLÉE vers laquelle CONVERGENT des sentiers venus des
+     5 parcelles et du ponton (arbitrage Leo) — l'œil est mené au lieu de tomber, et les
+     bâtiments cessent d'être 5 objets posés côte à côte pour devenir un village.
+     Elle ne contient RIEN : le musée (M3) n'est pas anticipé d'un pixel — le jour venu il
+     s'y posera comme sur un parvis déjà tracé. Aucune collision : la place s'arrête à
+     y 364, le plus haut bâtiment de l'arc (niveau 6) culmine à y 391. */
+  var PLAZA = { x: 500, y: 316, rx: 104, ry: 48 };
+  var PLAZA_SPOKES = 8;                      // dalles radiales
+  var WALK_TO_PONTON = { x: 756, y: 528 };   // le sentier qui descend vers l'embarcadère
 
   // HUB DES COFFRES (Phase 3.2) — structure DÉDIÉE, HORS des 5 parcelles de domaine et du
   // centre réservé au musée (M3) : un PONTON sur le rivage avant-droit où les coffres accostent.
@@ -2739,11 +2821,12 @@ body {
      retire l'`id` (il vivrait alors en double dans le DOM avec la scène) et la pastille X/Y
      (le bandeau l'écrit déjà en toutes lettres). */
   function heroArt(p) {
-    var L = Math.min(p.level, 6);
     // Cadre ajusté à la hauteur réelle du bâtiment, avec un PLANCHER de 118 : sans lui, un cadre
     // collé au contenu grossissait les petits sujets et une ruine dormante se retrouvait dessinée
     // PLUS GRANDE qu'une tour de niveau 3 — l'échelle disait l'inverse de la progression.
-    var top = (p.level >= 1) ? (-51 - (18 + (L - 1) * 15)) : -44;
+    // 4.2c — la hauteur ne peut plus être devinée ici (chaque domaine a son archétype) : elle
+    // vient de `buildingMetrics`, la source unique partagée avec la scène.
+    var top = (p.level >= 1) ? buildingMetrics(p.domain.id, p.level).artTop : -44;
     var vh = Math.max(118, 34 - top);
     var box = '-64 ' + (34 - vh) + ' 128 ' + vh;
     var hp = { domain: p.domain, x: 0, y: 0, level: p.level };
@@ -2787,8 +2870,10 @@ body {
   }
 
   // Végétation d'une parcelle — elle s'étoffe avec le niveau (la vie revient autour du
-  // bâtiment). Positions FIXES, hors de l'emprise du corps (±23) : jamais de chevauchement.
-  var VEG = [{ x: -43, y: 9, s: 1 }, { x: 45, y: 6, s: .86 }, { x: -50, y: -6, s: .72 }, { x: 52, y: -4, s: .78 }];
+  // bâtiment). Positions FIXES, écartées en 4.2c pour dégager l'emprise du PLUS LARGE des
+  // archétypes (l'annexe de la bibliothèque, à −40) : jamais de chevauchement, et pas
+  // davantage avec la végétation de la parcelle voisine (10 d'air au plus serré).
+  var VEG = [{ x: -49, y: 10, s: 1 }, { x: 50, y: 7, s: .86 }, { x: -55, y: -5, s: .72 }, { x: 55, y: -3, s: .78 }];
   function shrub(v, i) {
     return html`
       <g key=${'v' + i} class="isl-shrub" transform=${'translate(' + v.x + ',' + v.y + ') scale(' + v.s + ')'}>
@@ -2833,46 +2918,197 @@ body {
       </g>`;
   }
 
+  /* ------------------------------------------------- ARCHÉTYPES DE BÂTIMENT (4.2c)
+     Grief nommé par Leo : « les 5 bâtiments sont identiques ». C'était exact au pixel près —
+     même corps de 46, même toit à deux pans, mêmes fenêtres : seuls l'emoji de l'enseigne et
+     la teinte changeaient. Chaque domaine reçoit donc SA silhouette (arbitrage Leo, « un
+     archétype par domaine ») :
+       physique      — palestre trapue, toit-terrasse à parapet, portique à deux colonnes
+       mental        — tour d'observatoire élancée, coupole et fleuron
+       connaissances — bibliothèque à pignon, oculus, annexe basse (asymétrie assumée)
+       creativite    — atelier à verrière en dents de scie, grande baie vitrée
+       bienetre      — pavillon arrondi, toit courbe débordant, véranda
+     Ce qui NE bouge PAS : l'ancre `parcelle-<domain>`, un étage par niveau (1→6), le mode
+     `hero` du bandeau (4.2b), la boîte de tap (±52 en x, −150 en y : le plus haut des cinq
+     culmine à −147), et le VOCABULAIRE COMMUN (mêmes murs, mêmes toits, mêmes fenêtres
+     dorées, mêmes tokens) — c'est lui qui garde le village lisible comme UN village.
+     Placeholders géométriques : les assets 2.4 se substitueront sur les mêmes ancres.
+       w/floorH/base — largeur du corps, hauteur d'un étage, hauteur du rez
+       roof/roofH    — famille de toit et sa hauteur ; signGap — air sous l'enseigne
+       winX/winW     — percements d'un étage ; entryW — demi-largeur de l'entrée au sol */
+  var ARCH = {
+    physique:      { w: 60, floorH: 13, base: 24, roof: 'plat',    roofH: 9,  signGap: 22, winX: [-27, -3.75, 19.5], winW: 7.5, entry: 'portique', entryW: 19 },
+    mental:        { w: 32, floorH: 16, base: 16, roof: 'coupole', roofH: 18, signGap: 24, winX: [-3], winW: 6, entry: 'porte', entryW: 6 },
+    connaissances: { w: 54, floorH: 14, base: 18, roof: 'pignon',  roofH: 20, signGap: 22, winX: [-19, 10], winW: 9, entry: 'perron', entryW: 7, annex: true },
+    creativite:    { w: 52, floorH: 14, base: 18, roof: 'shed',    roofH: 13, signGap: 18, winX: [-16, 9], winW: 7, entry: 'baie', entryW: 16 },
+    bienetre:      { w: 46, floorH: 14, base: 18, roof: 'courbe',  roofH: 12, signGap: 22, winX: [-13, 7], winW: 6, winRx: 3, bodyRx: 10, entry: 'veranda', entryW: 6 }
+  };
+  // Les 5 autres domaines de lancement (post-validation) n'ont pas encore d'archétype :
+  // ils retombent sur celui d'origine plutôt que de faire disparaître un bâtiment.
+  var ARCH_DEFAULT = { w: 46, floorH: 15, base: 18, roof: 'pignon', roofH: 14, signGap: 24, winX: [-13, 7], winW: 6, entry: 'porte', entryW: 6 };
+  function archOf(id) { return Object.prototype.hasOwnProperty.call(ARCH, id) ? ARCH[id] : ARCH_DEFAULT; }
+
+  /* Mesures d'un bâtiment — SEULE source de sa géométrie, partagée par la scène ET par le
+     cadrage du bandeau du menu (`heroArt`) : les deux ne peuvent plus diverger. */
+  function buildingMetrics(id, level) {
+    var A = archOf(id);
+    var L = Math.max(1, Math.min(level, 6));
+    var bodyH = A.base + (L - 1) * A.floorH;
+    var topY = 6 - bodyH;                                 // 6 = ligne de sol du corps
+    var signY = topY - A.roofH - A.signGap;               // enseigne au-dessus du toit
+    return { A: A, L: L, half: A.w / 2, bodyH: bodyH, topY: topY, signY: signY, artTop: signY - 19 };
+  }
+
+  // Les toits. Ils partagent les mêmes classes (donc les mêmes tokens de matière) : c'est ce
+  // qui empêche les 5 silhouettes de se disloquer en 5 styles étrangers l'un à l'autre.
+  function roofNode(A, half, y) {
+    if (A.roof === 'plat') {
+      return html`
+        <g>
+          <rect class="isl-roof" x=${-half - 6} y=${y - A.roofH} width=${A.w + 12} height=${A.roofH} rx="1.5" />
+          <rect class="isl-roof-hi" x=${-half - 6} y=${y - A.roofH} width=${(A.w + 12) * .42} height=${A.roofH} rx="1.5" />
+          <rect class="isl-roof" x=${-half - 1} y=${y - A.roofH - 4} width="6" height="4" rx="1" />
+          <rect class="isl-roof" x=${half - 5} y=${y - A.roofH - 4} width="6" height="4" rx="1" />
+          <rect class="isl-eaves" x=${-half - 9} y=${y - 3.5} width=${A.w + 18} height="4.5" rx="2.2" />
+        </g>`;
+    }
+    if (A.roof === 'coupole') {
+      var rr = half + 3;
+      return html`
+        <g>
+          <path class="isl-roof" d=${'M ' + (-rr) + ' ' + y + ' a ' + rr + ' ' + A.roofH + ' 0 0 1 ' + (rr * 2) + ' 0 Z'} />
+          <path class="isl-roof-hi" d=${'M ' + (-rr) + ' ' + y + ' a ' + rr + ' ' + A.roofH + ' 0 0 1 ' + rr + ' ' + (-A.roofH) + ' L 0 ' + y + ' Z'} />
+          <rect class="isl-eaves" x=${-rr - 3} y=${y - 2} width=${rr * 2 + 6} height="4" rx="2" />
+          <circle class="isl-finial" cx="0" cy=${y - A.roofH - 3.5} r="3.2" />
+        </g>`;
+    }
+    if (A.roof === 'shed') {
+      var teeth = [], tw = (A.w + 8) / 3, x0 = -half - 4, k;
+      for (k = 0; k < 3; k++) {
+        var a = x0 + k * tw, b = a + tw;
+        teeth.push(html`<polygon key=${'sh' + k} class="isl-roof"
+                                 points=${a + ',' + y + ' ' + b + ',' + (y - A.roofH) + ' ' + b + ',' + y} />`);
+        teeth.push(html`<rect key=${'sg' + k} class="isl-glass" x=${b - 3} y=${y - A.roofH} width="3" height=${A.roofH} />`);
+      }
+      return html`
+        <g>
+          ${teeth}
+          <rect class="isl-eaves" x=${-half - 5} y=${y} width=${A.w + 10} height="3.5" rx="1.7" />
+        </g>`;
+    }
+    if (A.roof === 'courbe') {
+      var ov = half + 14;
+      return html`
+        <g>
+          <path class="isl-roof" d=${'M ' + (-ov) + ' ' + y + ' Q 0 ' + (y - A.roofH - 9) + ' ' + ov + ' ' + y + ' Z'} />
+          <path class="isl-roof-hi" d=${'M ' + (-ov) + ' ' + y + ' Q ' + (-ov * .5) + ' ' + (y - A.roofH - 7) + ' 0 ' + (y - A.roofH * .62) + ' Z'} />
+          <rect class="isl-eaves" x=${-ov - 2} y=${y - 1} width=${ov * 2 + 4} height="4" rx="2" />
+          <circle class="isl-finial" cx="0" cy=${y - (A.roofH + 9) / 2 - 2} r="2.8" />
+        </g>`;
+    }
+    var eave = 8;                                          // 'pignon'
+    return html`
+      <g>
+        <polygon class="isl-roof" points=${(-half - eave) + ',' + y + ' 0,' + (y - A.roofH) + ' ' + (half + eave) + ',' + y} />
+        <polygon class="isl-roof-hi" points=${(-half - eave) + ',' + y + ' 0,' + (y - A.roofH) + ' 0,' + y} />
+        <circle class="isl-win" cx="0" cy=${y - A.roofH * .42} r="3.4" />
+        <rect class="isl-eaves" x=${-half - eave - 1} y=${y} width=${A.w + eave * 2 + 2} height="3.5" rx="1.7" />
+      </g>`;
+  }
+
+  // L'entrée — le détail au sol qui achève de caractériser le lieu.
+  function entranceNode(A) {
+    if (A.entry === 'portique') {
+      return html`
+        <g>
+          <rect class="isl-door" x="-5" y="-6" width="10" height="12" rx="2" />
+          <!-- colonnes en matière de TOIT et non de mur : en isl-tower (mur sur mur) le
+               portique était rigoureusement invisible au rendu. -->
+          <rect class="isl-eaves" x="-19" y="-8" width="4.5" height="14" rx="1.6" />
+          <rect class="isl-eaves" x="14.5" y="-8" width="4.5" height="14" rx="1.6" />
+          <rect class="isl-eaves" x="-21" y="-11.5" width="42" height="3.5" rx="1.7" />
+        </g>`;
+    }
+    if (A.entry === 'perron') {
+      return html`
+        <g>
+          <rect class="isl-door" x="-6" y="-7" width="12" height="13" rx="2" />
+          <rect class="isl-eaves" x="-12" y="3.5" width="24" height="3.5" rx="1.7" />
+        </g>`;
+    }
+    if (A.entry === 'baie') {
+      return html`
+        <g>
+          <rect class="isl-glass" x="-15" y="-10" width="30" height="16" rx="2" />
+          <line class="isl-sill" x1="-5" y1="-10" x2="-5" y2="6" />
+          <line class="isl-sill" x1="5" y1="-10" x2="5" y2="6" />
+          <rect class="isl-door" x="-3" y="-4" width="6" height="10" rx="1.4" />
+        </g>`;
+    }
+    if (A.entry === 'veranda') {
+      return html`
+        <g>
+          <path class="isl-door" d="M -5 6 v -7 a 5 5.5 0 0 1 10 0 v 7 z" />
+          <rect class="isl-eaves" x=${-A.w / 2 - 9} y="4" width=${A.w + 18} height="3.5" rx="1.7" />
+        </g>`;
+    }
+    return html`<rect class="isl-door" x="-4" y="-6" width="8" height="12" rx="1.8" />`;
+  }
+
+  // Annexe basse de la bibliothèque : c'est elle qui casse la symétrie et fait lire un
+  // bâtiment qui a grandi par ajouts plutôt qu'une boîte posée là.
+  function annexNode(half) {
+    return html`
+      <g>
+        <ellipse class="isl-cast" cx=${-half - 5} cy="4" rx="15" ry="6" />
+        <rect class="isl-tower" x=${-half - 13} y="-11" width="17" height="17" rx="2" />
+        <polygon class="isl-roof" points=${(-half - 15) + ',-11 ' + (-half + 3) + ',-21 ' + (-half + 3) + ',-11'} />
+        <rect class="isl-eaves" x=${-half - 16} y="-11.5" width="20" height="3" rx="1.5" />
+        <rect class="isl-win" x=${-half - 9} y="-6" width="6.5" height="8" rx="1.2" />
+      </g>`;
+  }
+
   function building(p, hero) {
     var d = p.domain;
-    var L = Math.min(p.level, 6);
-    var floorH = 15, bodyW = 46, halfW = bodyW / 2;
-    var bodyH = 18 + (L - 1) * floorH;
-    var baseY = 6;
-    var topY = baseY - bodyH;
+    var m = buildingMetrics(d.id, p.level);
+    var A = m.A, L = m.L, half = m.half, topY = m.topY;
     var glowOp = Math.min(0.85, 0.3 + L * 0.09);
-    var wins = [], bands = [];
-    for (var f = 0; f < L; f++) {
-      var wy = baseY - 12 - f * floorH;
+    var brx = Math.min(A.bodyRx || 3, m.bodyH / 3);
+    var shW = Math.min(11, A.w * 0.24);
+    var wins = [], bands = [], f, k;
+    for (f = 0; f < L; f++) {
+      var wy = -6 - f * A.floorH;
+      var row = [];
+      for (k = 0; k < A.winX.length; k++) {
+        // Au rez-de-chaussée on ne perce pas une fenêtre DERRIÈRE l'entrée (le portique de la
+        // palestre, la baie de l'atelier) : elle y serait invisible ou en collision.
+        if (f === 0 && Math.abs(A.winX[k] + A.winW / 2) < A.entryW + A.winW / 2) continue;
+        row.push(html`<rect key=${'x' + k} class="isl-win" x=${A.winX[k]} y=${wy}
+                            width=${A.winW} height="8" rx=${A.winRx || 1.2} />`);
+      }
       wins.push(html`
         <g key=${'w' + f}>
-          <rect class="isl-win" x="-13" y=${wy} width="6" height="8" rx="1.2" />
-          <rect class="isl-win" x="7"   y=${wy} width="6" height="8" rx="1.2" />
-          <line class="isl-sill" x1="-14.5" y1=${wy + 9.4} x2="14.5" y2=${wy + 9.4} />
+          ${row}
+          <line class="isl-sill" x1=${-half + 1.5} y1=${wy + 9.4} x2=${half - 1.5} y2=${wy + 9.4} />
         </g>`);
-      if (f) bands.push(html`<line key=${'b' + f} class="isl-band" x1=${-halfW} y1=${wy + 12.5} x2=${halfW} y2=${wy + 12.5} />`);
+      if (f) bands.push(html`<line key=${'b' + f} class="isl-band" x1=${-half} y1=${wy + 12.5} x2=${half} y2=${wy + 12.5} />`);
     }
-    var roofH = 14, eave = 7;
-    var roofY = topY;                       // base du toit = sommet du corps
-    var apexY = roofY - roofH;              // faîtage
-    var signY = apexY - 24;                 // enseigne au-dessus du faîtage
     return html`
       <g id=${hero ? null : p.id} class="isl-parcelle isl-built" transform=${'translate(' + p.x + ',' + p.y + ')'}
-         data-domain=${d.id} data-level=${p.level}>
-        <ellipse class="isl-glow" cx="0" cy=${topY + bodyH * 0.35} rx=${34 + L * 9} ry=${(34 + L * 9) * 0.7}
+         data-domain=${d.id} data-level=${p.level} data-arch=${A.roof}>
+        <ellipse class="isl-glow" cx="0" cy=${topY + m.bodyH * 0.35} rx=${34 + L * 9} ry=${(34 + L * 9) * 0.7}
                  style=${'opacity:' + glowOp} />
         ${plotNode()}
         ${VEG.slice(0, Math.min(VEG.length, L)).map(shrub)}
-        <ellipse class="isl-cast" cx=${halfW * 0.55} cy="0" rx=${halfW * 0.95} ry="9" />
-        <rect class="isl-tower" x=${-halfW} y=${topY} width=${bodyW} height=${bodyH} rx="3" />
-        <rect class="isl-tower-sh" x=${halfW - 11} y=${topY} width="11" height=${bodyH} rx="3" />
+        <ellipse class="isl-cast" cx=${half * 0.55} cy="0" rx=${half * 0.95} ry="9" />
+        ${A.annex ? annexNode(half) : null}
+        <rect class="isl-tower" x=${-half} y=${topY} width=${A.w} height=${m.bodyH} rx=${brx} />
+        <rect class="isl-tower-sh" x=${half - shW} y=${topY} width=${shW} height=${m.bodyH} rx=${brx} />
         ${bands}
         ${wins}
-        <polygon class="isl-roof" points=${(-halfW - eave) + ',' + roofY + ' 0,' + apexY + ' ' + (halfW + eave) + ',' + roofY} />
-        <polygon class="isl-roof-hi" points=${(-halfW - eave) + ',' + roofY + ' 0,' + apexY + ' 0,' + roofY} />
-        <rect class="isl-eaves" x=${-halfW - eave - 1} y=${roofY} width=${bodyW + eave * 2 + 2} height="3.5" rx="1.7" />
-        <rect class="isl-door" x="-5" y=${baseY - 12} width="10" height="12" rx="2" />
-        ${signNode(d, signY)}
+        ${roofNode(A, half, topY)}
+        ${entranceNode(A)}
+        ${signNode(d, m.signY)}
         ${hero ? null : collTag(p.collGot, p.collTotal)}
       </g>`;
   }
@@ -2924,6 +3160,82 @@ body {
       </g>`;
   }
 
+  /* ------------------------------------------------------------------- CIEL (4.2c)
+     Tout est STATIQUE (arbitrage Leo) : aucune animation à neutraliser en reduce-motion.
+     Les étoiles se peignent avec `--star`, transparent hors nuit — c'est le CSS qui décide
+     de l'ambiance, jamais une branche JS. Le ciel n'est pas tappable et ne porte aucun
+     état : le miroir Liste n'a rien de neuf à refléter. */
+  function cloudNode(c, i) {
+    return html`
+      <g key=${'cl' + i} class="isl-cloud" transform=${'translate(' + c.x + ',' + c.y + ') scale(' + c.s + ')'}>
+        <ellipse cx="-20" cy="4" rx="24" ry="9" />
+        <ellipse cx="8" cy="6" rx="30" ry="11" />
+        <ellipse cx="-4" cy="-6" rx="20" ry="13" />
+        <ellipse cx="18" cy="-2" rx="16" ry="10" />
+      </g>`;
+  }
+  function farIsleNode(f, i) {
+    var x = f.x, w = f.w, h = f.h, H = HORIZON;
+    return html`<path key=${'fi' + i} class="isl-farisle" d=${
+      'M ' + (x - w / 2) + ' ' + H +
+      ' C ' + (x - w / 4) + ' ' + (H - h) + ' ' + (x - w / 8) + ' ' + (H - h) + ' ' + x + ' ' + (H - h * .55) +
+      ' C ' + (x + w / 5) + ' ' + (H - h * 1.15) + ' ' + (x + w / 3) + ' ' + (H - h * .9) +
+      ' ' + (x + w / 2) + ' ' + H + ' Z'} />`;
+  }
+  function starNode(s, i) { return html`<circle key=${'st' + i} class="isl-star" cx=${s.x} cy=${s.y} r=${s.r} />`; }
+
+  function skyNode() {
+    return html`
+      <g class="isl-skylayer" aria-hidden="true">
+        <rect x="-80" y="-80" width=${WORLD.w + 160} height=${HORIZON + 80} fill="url(#isl-sky-g)" />
+        ${STARS.map(starNode)}
+        <circle class="isl-astre-glow" cx=${ASTRE.x} cy=${ASTRE.y} r=${ASTRE.r * 2.6} />
+        <circle class="isl-astre" cx=${ASTRE.x} cy=${ASTRE.y} r=${ASTRE.r} />
+        ${CLOUDS.map(cloudNode)}
+        ${FAR_ISLES.map(farIsleNode)}
+        <rect class="isl-horizon" x="-80" y=${HORIZON - 2} width=${WORLD.w + 160} height="4" />
+      </g>`;
+  }
+
+  /* ------------------------------------------------- PLACE CENTRALE & SENTIERS (4.2c)
+     Décor pur : rien de tappable, rien de stocké, rien de dérivé — la place ne dépend
+     d'aucun état, elle est là dès le premier boot comme le rivage. */
+  function walkNode(a, i) {
+    var ang = Math.atan2((a.y - PLAZA.y) / PLAZA.ry, (a.x - PLAZA.x) / PLAZA.rx);
+    var px = PLAZA.x + PLAZA.rx * Math.cos(ang), py = PLAZA.y + PLAZA.ry * Math.sin(ang);
+    var vx = a.x - px, vy = a.y - py, len = Math.sqrt(vx * vx + vy * vy) || 1;
+    var nx = -vy / len, ny = vx / len;
+    var ex = a.x - vx * .12, ey = a.y - vy * .12;   // le sentier s'arrête sur le socle
+    // Largeurs volontairement SERRÉES : au premier jet (6 → 15) les six sentiers s'évasaient
+    // en éventail et se lisaient comme des faisceaux de projecteur braqués depuis la place —
+    // vu à la rastérisation, invisible au DOM. Un chemin ne s'évase presque pas.
+    var w0 = 3.5, w1 = 7;
+    return html`<path key=${'wk' + i} class="isl-walk" d=${
+      'M ' + (px + nx * w0) + ' ' + (py + ny * w0) +
+      ' L ' + (ex + nx * w1) + ' ' + (ey + ny * w1) +
+      ' L ' + (ex - nx * w1) + ' ' + (ey - ny * w1) +
+      ' L ' + (px - nx * w0) + ' ' + (py - ny * w0) + ' Z'} />`;
+  }
+  function walksNode() { return ARC.concat([WALK_TO_PONTON]).map(walkNode); }
+
+  function plazaNode() {
+    var spokes = [], i, a, c, s;
+    for (i = 0; i < PLAZA_SPOKES; i++) {
+      a = (i / PLAZA_SPOKES) * Math.PI * 2; c = Math.cos(a); s = Math.sin(a);
+      spokes.push(html`<line key=${'sp' + i} class="isl-pave"
+        x1=${PLAZA.x + PLAZA.rx * .42 * c} y1=${PLAZA.y + PLAZA.ry * .42 * s}
+        x2=${PLAZA.x + PLAZA.rx * .94 * c} y2=${PLAZA.y + PLAZA.ry * .94 * s} />`);
+    }
+    return html`
+      <g class="isl-plaza" aria-hidden="true">
+        <ellipse class="isl-plaza-sh" cx=${PLAZA.x + 3} cy=${PLAZA.y + 5} rx=${PLAZA.rx + 3} ry=${PLAZA.ry + 3} />
+        <ellipse class="isl-plaza-fl" cx=${PLAZA.x} cy=${PLAZA.y} rx=${PLAZA.rx} ry=${PLAZA.ry} />
+        <ellipse class="isl-plaza-ring" cx=${PLAZA.x} cy=${PLAZA.y} rx=${PLAZA.rx * .94} ry=${PLAZA.ry * .94} />
+        ${spokes}
+        <ellipse class="isl-plaza-ring" cx=${PLAZA.x} cy=${PLAZA.y} rx=${PLAZA.rx * .42} ry=${PLAZA.ry * .42} />
+      </g>`;
+  }
+
   function Scene() {
     var st = store.get();
     var ps = parcelles();
@@ -2942,6 +3254,17 @@ body {
              role="img" aria-label="Scène de ton île — vue décorative ; l’équivalent accessible est la vue Liste."
              ref=${initScene}>
           <defs>
+            <!-- Ciel (4.2c) : mêmes tokens que le ciel CSS de la 0.3 (--sky-top/--sky-mid),
+                 donc le letterbox autour du SVG et le ciel dessiné restent d'une seule pièce. -->
+            <linearGradient id="isl-sky-g" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="var(--sky-top)" />
+              <stop offset="1" stop-color="var(--sky-mid)" />
+            </linearGradient>
+            <radialGradient id="isl-astre-g" cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0" stop-color="var(--astre)" stop-opacity=".55" />
+              <stop offset="0.45" stop-color="var(--astre)" stop-opacity=".16" />
+              <stop offset="1" stop-color="var(--astre)" stop-opacity="0" />
+            </radialGradient>
             <linearGradient id="isl-sea" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stop-color="var(--sea-1)" />
               <stop offset="1" stop-color="var(--sea-2)" />
@@ -2964,7 +3287,12 @@ body {
             </radialGradient>
           </defs>
 
-          <rect class="isl-mer" x="-80" y="-80" width=${WORLD.w + 160} height=${WORLD.h + 160} fill="url(#isl-sea)" />
+          <!-- CALQUE ciel (4.2c) : la mer ne couvre plus tout le monde — au-dessus de l'horizon
+               il y a enfin un ciel, son astre, ses nuages et deux îlots au loin. La brume (2.2)
+               les voile légèrement et se lève avec la progression : perspective aérienne offerte. -->
+          ${skyNode()}
+
+          <rect class="isl-mer" x="-80" y=${HORIZON} width=${WORLD.w + 160} height=${WORLD.h + 80 - HORIZON} fill="url(#isl-sea)" />
           <!-- vaguelettes du large : quelques traits fixes (aucune animation → reduce-motion d'office) -->
           <g class="isl-waves" aria-hidden="true">${WAVES.map(waveNode)}</g>
 
@@ -2977,6 +3305,12 @@ body {
             <ellipse class="isl-beach" cx=${ISLE.cx} cy=${ISLE.cy + 4} rx=${ISLE.rx + 6} ry=${ISLE.ry + 6} />
             <ellipse cx=${ISLE.cx} cy=${ISLE.cy} rx=${ISLE.rx} ry=${ISLE.ry} fill="url(#isl-land)" />
           </g>
+
+          <!-- CALQUE place & sentiers (4.2c) : le centre n'est plus un trou d'herbe où l'œil
+               tombe — les 6 sentiers (5 parcelles + le ponton) l'y conduisent. Le musée (M3)
+               n'est PAS anticipé : la place est vide, elle sera son parvis le jour venu. -->
+          <g class="isl-walks" aria-hidden="true">${walksNode()}</g>
+          ${plazaNode()}
 
           <!-- CALQUE parcelles — TRIÉES par profondeur (y croissant) : les parcelles du fond
                sont peintes en premier, celles de l'avant les recouvrent. C'est ce tri qui fait
@@ -3486,7 +3820,7 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.17';
+  var VER = '0.18';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
