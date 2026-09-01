@@ -244,6 +244,28 @@ body {
 .creator .in + .in { margin-top: 12px; }
 .creator .btn { margin-top: 18px; }
 
+/* BLOC DÉPLIABLE (4.2e) — grief de Leo : « le design de la page habitude n'est pas assez
+   simple à comprendre ». L'écran s'ouvrait sur le formulaire de création, AVANT la liste,
+   et empilait dessous le lanceur de quêtes (8 quêtes + un second formulaire complet avec
+   ses propres chips de domaine et de durée) : trois formulaires sur un même écran.
+   L'écran s'ouvre désormais sur TA LISTE ; les deux blocs d'action se déplient au besoin.
+   Rien n'a été retiré, tout est rangé. */
+.disclose { margin-top: 16px; }
+.disclose-btn {
+  width: 100%; min-height: 52px; padding: 0 16px;
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); color: var(--ink);
+  border: 1px dashed var(--line); border-radius: var(--r-lg);
+  font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: border-color var(--dur-ui) ease, background-color var(--dur-ui) ease;
+}
+.disclose-btn:hover { border-color: var(--accent); }
+.disclose-btn[aria-expanded="true"] { border-style: solid; border-color: var(--accent); }
+.disclose-btn .dc-gly { width: 22px; height: 22px; color: var(--accent); }
+.disclose-btn .dc-chev { margin-left: auto; color: var(--ink-2); font-size: 13px; }
+.disclose-body:not(:empty) { margin-top: 12px; }
+.empty .btn { margin-top: 18px; }
+
 /* Sélecteur de domaine (chips, single-select) */
 .dom-select { display: flex; flex-wrap: wrap; gap: 8px; }
 .dom-chip {
@@ -258,7 +280,7 @@ body {
 .dom-chip:hover { border-color: var(--accent); }
 .dom-chip:active { transform: scale(.97); }
 .dom-chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
-.dom-chip .d-emoji { font-size: 15px; }
+.dom-chip .d-gly { width: 18px; height: 18px; }
 
 /* Liste des habitudes */
 .section { margin-top: 26px; }
@@ -269,7 +291,7 @@ body {
   box-shadow: 0 6px 20px -12px var(--shadow);
 }
 .habit-head { display: flex; align-items: flex-start; gap: 12px; }
-.habit .h-emoji { font-size: 22px; line-height: 1.25; flex: 0 0 auto; }
+.habit .h-gly { width: 26px; height: 26px; flex: 0 0 auto; color: var(--ink-2); }
 .habit .h-main { flex: 1; min-width: 0; }
 .habit .h-title { font-weight: 700; font-size: 16px; word-break: break-word; }
 .habit .h-sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
@@ -286,7 +308,7 @@ body {
   display: flex; align-items: center; gap: 7px;
   margin-top: 10px; font-size: 12px; color: var(--ink-2);
 }
-.habit .h-goal .hg-ico { font-size: 13px; line-height: 1; }
+.habit .h-goal .hg-gly { width: 15px; height: 15px; flex: 0 0 auto; }
 .habit .h-goal strong { color: var(--ink); font-variant-numeric: tabular-nums; }
 
 /* BANDEAU DOUX — le retour après un accomplissement (jalon 1.5 · montée de niveau 2.2 ·
@@ -294,6 +316,19 @@ body {
    retours » : les quatre sites partageaient DEUX règles identiques (.milestone-done et
    .quest-done) plus une classe .level-done sans aucune règle — un seul composant désormais.
    Toujours dismissible, doré, jamais culpabilisant. */
+/* GLYPHES DESSINÉS (4.2e) — remplacent TOUS les emojis (arbitrage Leo : « ça ne fait
+   vraiment absolument pas premium »). Un emoji est un caractère de police : son dessin
+   change d'un appareil à l'autre, il porte sa propre couleur, il ignore les tokens
+   d'ambiance. Ceux-ci sont des chemins (glyphs.js) peints en `currentColor` : ils prennent
+   l'encre du texte qui les porte, donc ils suivent l'ambiance et restent AA d'office.
+   Le trait, jamais le remplissage : c'est ce qui les tient dans la même famille que les
+   silhouettes de la scène. Chaque site ne règle que sa TAILLE (et parfois sa couleur). */
+.gly {
+  width: 1.15em; height: 1.15em; flex: 0 0 auto; display: block;
+  fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
 .note-soft {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
   background: var(--gold-soft); border: 1px solid var(--gold);
@@ -301,6 +336,7 @@ body {
   font-size: 14px; color: var(--ink);
 }
 .note-soft .lnk { margin-left: auto; }
+.note-soft .ns-gly { width: 22px; height: 22px; flex: 0 0 auto; color: var(--ink); }
 
 /* ÉTAT VIDE EN LIGNE — consolidation 4.2b, axe « états vides » : la même respiration partout
    (section sans habitude, ponton sans coffre, liste sans coffre). Le grand état vide d'accueil
@@ -349,7 +385,7 @@ body {
   text-align: center; padding: 40px 24px; color: var(--ink-2);
   border: 1px dashed var(--line); border-radius: var(--r-lg);
 }
-.empty .e-emoji { font-size: 34px; }
+.empty .e-gly { width: 40px; height: 40px; margin: 0 auto; color: var(--accent); }
 .empty .e-title { color: var(--ink); font-weight: 700; font-size: 17px; margin: 10px 0 6px; }
 .empty p { font-size: 14px; max-width: 36ch; margin: 0 auto; }
 
@@ -469,7 +505,7 @@ body {
   display: flex; align-items: center; gap: 12px; flex: 0 0 auto;
   padding: 16px 16px 14px; border-bottom: 1px solid var(--line);
 }
-.dm-emoji { font-size: 30px; line-height: 1; flex: 0 0 auto; }
+.dm-gly { width: 34px; height: 34px; flex: 0 0 auto; color: var(--accent); }
 .dm-headmain { flex: 1 1 auto; min-width: 0; }
 .dm-head .dm-title { font-size: 20px; }
 .dm-head .dm-state { margin-top: 2px; }
@@ -520,7 +556,7 @@ body {
   border-radius: var(--r-sm); background: var(--cd-tint, var(--surface-2));
   border: 1px solid var(--cd-edge, var(--line));
 }
-.dmc-emoji { font-size: 32px; line-height: 1; }
+.dmc-gly { width: 36px; height: 36px; }
 .dmc-name { font-size: 12px; font-weight: 700; color: var(--ink); line-height: 1.25; word-break: break-word; }
 .dm-card .rc-rarity { padding: 2px 9px; }
 .dmc-day { font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
@@ -553,7 +589,7 @@ body {
   border: 1px solid var(--cd-edge, var(--gold));
   border-radius: var(--r-lg); box-shadow: 0 12px 32px -16px var(--shadow);
 }
-.dmd-emoji { font-size: 52px; line-height: 1; }
+.dmd-gly { width: 56px; height: 56px; }
 .dmd-name { font-size: 18px; font-weight: 800; color: var(--ink); text-align: center; word-break: break-word; }
 .dm-detail-info { margin-top: 16px; }
 .dmd-h { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); margin-top: 14px; }
@@ -581,6 +617,7 @@ body {
 .dmh-sub { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
 .dmh-goal { font-size: 12px; color: var(--ink-2); margin-top: 6px; display: flex; align-items: center; gap: 6px; }
 .dmh-goal strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.dmh-goal .hg-gly { width: 15px; height: 15px; }
 .dmh-val { flex: 0 0 auto; min-width: 130px; min-height: 44px; padding: 0 18px; font-size: 14px; }
 .dmh-done {
   flex: 0 0 auto; min-height: 44px; display: inline-flex; align-items: center; gap: 6px;
@@ -636,7 +673,7 @@ body {
   background: var(--surface); border: 1px solid var(--gold);
   border-radius: var(--r-lg); box-shadow: 0 16px 48px -14px rgba(0, 0, 0, .5);
 }
-.rc-emoji { font-size: 48px; line-height: 1; }
+.rc-gly { width: 52px; height: 52px; color: var(--gold); }
 .rc-name { font-weight: 700; font-size: 18px; color: var(--ink); text-align: center; word-break: break-word; }
 .rc-rarity {
   font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
@@ -732,7 +769,7 @@ body {
 
 .aq-main { flex: 1; min-width: 0; }
 .aq-title { font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; word-break: break-word; }
-.aq-title .h-emoji { font-size: 20px; }
+.aq-title .h-gly { width: 22px; height: 22px; }
 .aq-sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; font-variant-numeric: tabular-nums; }
 .aq-note { color: var(--ink-2); font-size: 12px; margin-top: 8px; max-width: 40ch; }
 
@@ -765,7 +802,7 @@ body {
   transition: color var(--dur-ui) ease, background-color var(--dur-ui) ease;
 }
 .tab:hover { background: var(--surface-2); }
-.tab .tab-emoji { font-size: 21px; line-height: 1; }
+.tab .tab-gly { width: 24px; height: 24px; }
 .tab .tab-label { font-size: 11px; font-weight: 700; letter-spacing: .02em; }
 .tab.on { color: var(--ink); }
 .tab.on { background: var(--accent-soft); }
@@ -864,14 +901,14 @@ body {
 .isl-plot-in { fill: var(--plot-2); }
 /* L'enseigne porte le liseré du domaine (4.2d) — avec le toit, c'est le seul endroit teinté. */
 .isl-parcelle .isl-badge { fill: var(--surface); opacity: .55; stroke: var(--roof-2); stroke-width: 2; }
-.isl-parcelle .isl-emoji { font-size: 17px; opacity: .7; }
+.isl-parcelle .isl-sign-gly { opacity: .7; }
 .isl-badge-sh { fill: var(--land-2); opacity: .22; }
 .isl-parcelle { opacity: .96; }
-.isl-emoji { dominant-baseline: middle; }
+.isl-sign-gly { fill: none; stroke: var(--ink-2); stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
 
 /* TEINTE PAR DOMAINE (4.2d, arbitrage Leo « teinte discrète : toit + enseigne »).
    Les 5 toits étaient EXACTEMENT la même terracotta : ce que les vieux handoffs appelaient
-   « la teinte du domaine » n'avait jamais existé, seul l'emoji distinguait les parcelles.
+   « la teinte du domaine » n'avait jamais existé, seul le glyphe distinguait les parcelles.
    Les MURS restent identiques pour les cinq — c'est eux qui gardent le village d'une seule
    pièce ; seuls le toit (isl-roof / -hi / eaves / door) et le liseré de l'enseigne prennent
    la couleur, en surchargeant --roof/--roof-2 SUR la parcelle. Rien d'écrit ne passe sur ces
@@ -948,12 +985,12 @@ body {
 .isl-glass { fill: var(--gold); opacity: .5; }
 .isl-sill  { stroke: var(--wall-2); stroke-width: 1.2; opacity: .6; }
 .isl-built .isl-badge { fill: var(--surface); opacity: .95; }
-.isl-built .isl-emoji { opacity: 1; }
+.isl-built .isl-sign-gly { opacity: 1; stroke: var(--roof-2); }
 
 /* Pastille « X/Y » sous la parcelle (Phase 3.1) : affordance « tappable » + progression de
    collection à même la scène (cap « île = lobby »). Décorative (la vue Liste est le miroir a11y). */
-.isl-colltag-bg { fill: var(--surface); opacity: .9; stroke: var(--line); stroke-width: 1; }
-.isl-colltag-tx { fill: var(--ink-2); font-size: 11px; font-weight: 700; dominant-baseline: middle; font-variant-numeric: tabular-nums; }
+.isl-colltag-bg { fill: var(--surface); opacity: .97; stroke: var(--line); stroke-width: 1; }
+.isl-colltag-tx { fill: var(--ink); font-size: 11px; font-weight: 700; dominant-baseline: middle; font-variant-numeric: tabular-nums; }
 
 /* Ponton des coffres (Phase 3.2) — structure DÉDIÉE sur le rivage avant-droit, tap → hub des
    coffres. Placeholder géométrique ; l'asset Claude Design (2.4) prendra le relais (ancre
@@ -966,6 +1003,25 @@ body {
 .isl-dock-edge { fill: var(--shore); opacity: .5; }
 .isl-bollard { fill: var(--dock-2); }
 .isl-rope { fill: none; stroke: var(--dock-2); stroke-width: 1.6; stroke-linecap: round; opacity: .7; }
+/* 4.2e — le port grandit et gagne ses annexes (cabane, fanal, caisses, tonneau, barque).
+   Même matière de quai que le reste : c'est ce qui l'empêche de se lire comme une pièce
+   rapportée. Les lumières réutilisent .isl-win (donc dorées la nuit, comme les fenêtres
+   des bâtiments) et les ombres portées .isl-cast (donc la lumière unique de la 4.2d). */
+.isl-hut { fill: var(--dock); stroke: var(--dock-2); stroke-width: 1.2; }
+.isl-hut-roof { fill: var(--dock-2); }
+.isl-hut-door { fill: var(--dock-2); opacity: .75; }
+.isl-crate { fill: var(--dock); stroke: var(--dock-2); stroke-width: 1; }
+.isl-crate-x { fill: none; stroke: var(--dock-2); stroke-width: 1; opacity: .55; }
+.isl-barrel { fill: var(--dock-2); }
+.isl-boat { fill: var(--dock-2); stroke: var(--dock); stroke-width: 1.2; }
+.isl-boat-in { fill: var(--dock); opacity: .45; }
+.isl-boat-seat { fill: var(--dock-2); }
+.isl-barrel-top { fill: var(--dock); opacity: .8; }
+.isl-lamp-post { fill: var(--dock-2); }
+.isl-oar { fill: none; stroke: var(--dock-2); stroke-width: 2; stroke-linecap: round; }
+/* Tranche du tablier : ce qui donne au quai son VOLUME. Sans elle il se lisait comme un
+   rectangle plat, seul objet de la scene sans epaisseur depuis la 4.2d. */
+.isl-dock-side { fill: var(--dock-2); }
 .isl-dchest-body { fill: var(--dock-2); }
 .isl-dchest-lid { fill: var(--dock); }
 .isl-dchest-clasp { fill: var(--gold); }
@@ -1001,7 +1057,7 @@ body {
   background: color-mix(in srgb, var(--surface) 90%, transparent);
   border: 1px solid var(--line); box-shadow: 0 10px 28px -16px var(--shadow);
 }
-.isl-wake .iw-emoji { font-size: 22px; line-height: 1.2; flex: 0 0 auto; }
+.isl-wake .iw-gly { width: 26px; height: 26px; flex: 0 0 auto; color: var(--accent); }
 .isl-wake p { font-size: 13px; color: var(--ink-2); margin: 0; }
 
 /* Vue LISTE — miroir sémantique de la scène (accessibilité non négociable) */
@@ -1020,7 +1076,7 @@ body {
   border-radius: var(--r-md);
 }
 .isl-item:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-.isl-item .ii-emoji { font-size: 24px; flex: 0 0 auto; opacity: .85; }
+.isl-item .ii-gly { width: 26px; height: 26px; flex: 0 0 auto; color: var(--ink-2); }
 .isl-item .ii-main { display: flex; flex-direction: column; min-width: 0; }
 .isl-item .ii-title { font-weight: 700; font-size: 15px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
 .isl-item .ii-state { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
@@ -1445,18 +1501,20 @@ body {
 })();
 
 /* ASCEND v2 — Domaines de vie (données pures).
-   MVP = 5 domaines actifs (PRD §3) ; libellés / emojis canoniques (GDD §6.2).
+   MVP = 5 domaines actifs (PRD §3) ; libellés canoniques (GDD §6.2).
    Les 5 autres domaines de lancement arrivent avec le contenu (post-validation).
-   Aucune logique ici : juste la liste + deux accès. */
+   4.2e : le champ `emoji` a disparu. L'identité visuelle d'un domaine est un GLYPHE
+   DESSINÉ (glyphs.js), nommé par l'id du domaine : rien à stocker ici en double.
+   Aucune logique : juste la liste + deux accès. */
 (function () {
   'use strict';
 
   var DOMAINS = [
-    { id: 'physique',      label: 'Physique',      emoji: '🏋️' }, // 🏋️
-    { id: 'mental',        label: 'Mental',        emoji: '🧠' },        // 🧠
-    { id: 'connaissances', label: 'Connaissances', emoji: '📖' },        // 📖
-    { id: 'creativite',    label: 'Créativité',    emoji: '🎨' },        // 🎨
-    { id: 'bienetre',      label: 'Bien-être',     emoji: '🧘' }         // 🧘
+    { id: 'physique',      label: 'Physique' },
+    { id: 'mental',        label: 'Mental' },
+    { id: 'connaissances', label: 'Connaissances' },
+    { id: 'creativite',    label: 'Créativité' },
+    { id: 'bienetre',      label: 'Bien-être' }
   ];
 
   var byId = {};
@@ -1466,6 +1524,129 @@ body {
     list: DOMAINS,
     get: function (id) { return byId[id] || null; },
     has: function (id) { return Object.prototype.hasOwnProperty.call(byId, id); }
+  };
+})();
+
+/* ASCEND v2 — Glyphes dessinés (Phase 4.2e).
+
+   Grief nommé par Leo sur la v0.19 : « les emojis pour les bâtiments ça ne fait
+   vraiment absolument pas premium ». Arbitrage : TOUS les emojis de l'app, sans
+   exception (identité des domaines, onglets, bandeaux, jalon, coffres, port).
+
+   Un emoji est un caractère de police : il change de dessin d'un appareil à
+   l'autre, il porte sa propre couleur, il ne suit ni les tokens d'ambiance ni le
+   trait du reste de la scène. Ces glyphes sont des CHEMINS SVG : dessinés au même
+   trait partout, teintés par `currentColor` (donc AA d'office, puisqu'ils prennent
+   l'encre du texte qui les porte), et substituables par un asset 2.4 sur la même
+   ancre.
+
+   Données PURES : chaque entrée est une liste de `d` de <path>, sur une grille de
+   24×24, pensés pour `fill:none; stroke:currentColor` (aucun remplissage, aucun
+   trait codé en dur). Les consommateurs (app.js, island.js) construisent le nœud :
+   en HTML un <svg class="gly">, dans la scène un <g> mis à l'échelle. */
+(function () {
+  'use strict';
+
+  var GLYPHS = {
+    /* --- identité des 5 domaines (remplace 🏋️ 🧠 📖 🎨 🧘) --- */
+    // Haltère : la barre et ses disques.
+    physique: [
+      'M4.5 12h15',
+      'M7 8.5v7', 'M17 8.5v7',
+      'M3.5 10.2v3.6', 'M20.5 10.2v3.6'
+    ],
+    // Coupole d'observatoire surmontée de son étoile : l'archétype du domaine.
+    mental: [
+      'M3.5 20.5h17',
+      'M6 20.5a6 6 0 0 1 12 0',
+      'M12 2.5q.7 3.2 3.4 3.9Q12.7 7.1 12 10.3q-.7-3.2-3.4-3.9Q11.3 5.7 12 2.5z',
+      'M8.6 20.5v-3.2', 'M15.4 20.5v-3.2'
+    ],
+    // Livre ouvert sur son dos.
+    connaissances: [
+      'M12 7.2C10 5.6 7 5.1 4 5.5v12.8c3-.4 6 .1 8 1.7 2-1.6 5-2.1 8-1.7V5.5c-3-.4-6 .1-8 1.7z',
+      'M12 7.2v12.8'
+    ],
+    // Palette de peintre et ses godets.
+    creativite: [
+      'M12 3.4a8.6 8.6 0 1 0 0 17.2c1.4 0 2.1-.9 2.1-1.8 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8h1.7a3.9 3.9 0 0 0 3.9-3.9c0-3.9-3.8-7.1-8.5-7.1z',
+      'M8 8.6h.01', 'M6.4 12.6h.01', 'M9.4 16.2h.01', 'M13.6 7.6h.01'
+    ],
+    // Feuille et sa nervure.
+    bienetre: [
+      'M4.6 19.4C4.6 11 10.2 5.4 19.4 5.4c0 9.2-5.6 14.8-14.8 14',
+      'M4.6 19.4C8 16 11.6 12.6 16.4 9.8'
+    ],
+
+    /* --- navigation & repères (remplace 🏝️ 🌱 🏛️ 🏆 🧰 🛶 ✨ 🎉) --- */
+    // Île posée sur ses vagues : l'onglet du monde.
+    ile: [
+      'M6.4 14.4c1.6-4.4 3.4-6.6 5.6-6.6s4 2.2 5.6 6.6z',
+      'M12 7.8V5.4',
+      'M3 18.2c1.8-1.1 3.6-1.1 5.4 0s3.6 1.1 5.4 0 3.6-1.1 5.4 0'
+    ],
+    // Jeune pousse : l'onglet des habitudes, et l'île qui s'éveille.
+    pousse: [
+      'M12 20.6v-7.2',
+      'M12 13.4c0-3 2.1-5.1 5.1-5.1 0 3-2.1 5.1-5.1 5.1z',
+      'M12 16c0-2.4-1.7-4.1-4.1-4.1 0 2.4 1.7 4.1 4.1 4.1z'
+    ],
+    // Édifice à fronton : une montée de niveau de bâtiment.
+    batiment: [
+      'M3.6 20.4h16.8',
+      'M6 20.4V10.2l6-3.8 6 3.8v10.2',
+      'M10 20.4v-4.8h4v4.8'
+    ],
+    // Coupe : un jalon franchi.
+    jalon: [
+      'M8.4 3.8h7.2v4.1a3.6 3.6 0 0 1-7.2 0z',
+      'M8.4 5.2H5.9a3 3 0 0 0 3 3', 'M15.6 5.2h2.5a3 3 0 0 1-3 3',
+      'M12 11.5v3.4', 'M9.2 20.2h5.6', 'M10.2 14.9h3.6v5.3h-3.6z'
+    ],
+    // Coffre cerclé : les récompenses en attente.
+    coffre: [
+      'M3.8 10.4h16.4v9.2H3.8z',
+      'M3.8 10.4 6 6.2h12l2.2 4.2',
+      'M12 10.4v9.2',
+      'M10.2 13.4h3.6v3.2h-3.6z'
+    ],
+    // Ancre : le port où les coffres accostent.
+    port: [
+      'M12 7.6v12.8',
+      'M12 6.8a2.1 2.1 0 1 0 0-4.2 2.1 2.1 0 0 0 0 4.2z',
+      'M8.8 10.2h6.4',
+      'M4.6 12.6H6.9a7.4 7.4 0 0 0 10.2 0h2.3'
+    ],
+    // Étincelle : ce qui vient d'arriver de bon.
+    etincelle: [
+      'M12 2.8q.9 4.2 4.4 5.1Q12.9 8.8 12 13q-.9-4.2-4.4-5.1Q11.1 7 12 2.8z',
+      'M17.8 14.4q.5 2.4 2.5 2.9-2 .5-2.5 2.9-.5-2.4-2.5-2.9 2-.5 2.5-2.9z'
+    ],
+    // Coche cerclée : un accomplissement validé.
+    succes: [
+      'M12 3.4a8.6 8.6 0 1 0 0 17.2 8.6 8.6 0 0 0 0-17.2z',
+      'M8.2 12.2l2.7 2.7 5.1-5.4'
+    ],
+    // Croix d'addition : ouvrir le formulaire de création (4.2e).
+    plus: [
+      'M12 5.2v13.6', 'M5.2 12h13.6'
+    ],
+    // Chronomètre : lancer une quête minutée (4.2e).
+    chrono: [
+      'M12 20.8a7.9 7.9 0 1 0 0-15.8 7.9 7.9 0 0 0 0 15.8z',
+      'M12 9.2v3.7l2.6 1.6',
+      'M9.4 3.2h5.2'
+    ]
+  };
+
+  window.AscendGlyphs = {
+    // Liste de `d` pour un nom ; nom inconnu → l'étincelle (jamais un trou).
+    paths: function (name) {
+      return Object.prototype.hasOwnProperty.call(GLYPHS, name) ? GLYPHS[name] : GLYPHS.etincelle;
+    },
+    has: function (name) {
+      return Object.prototype.hasOwnProperty.call(GLYPHS, name);
+    }
   };
 })();
 
@@ -2431,6 +2612,7 @@ body {
   var h = window.preact.h;
   var html = window.htm.bind(h);
   var domains = window.AscendDomains;
+  var glyphs = window.AscendGlyphs;
   var derive = window.AscendDerive;
   var store = window.AscendStore;
   var actions = window.AscendActions;
@@ -2681,7 +2863,7 @@ body {
     function free(x, y) {
       if (!insideCoast(x, y, 26)) return false;
       if (Math.abs(x - PLAZA.x) < PLAZA.rx + 14 && Math.abs(y - PLAZA.y) < PLAZA.ry + 12) return false;
-      if (Math.abs(x - PONTON.x) < 58 && Math.abs(y - PONTON.y) < 48) return false;
+      if (x - PONTON.x > -82 && x - PONTON.x < 70 && y - PONTON.y > -72 && y - PONTON.y < 70) return false;
       for (i = 0; i < ARC.length; i++) {
         if (Math.abs(x - ARC[i].x) < 74 * ARC[i].s && Math.abs(y - ARC[i].y) < 40 * ARC[i].s) return false;
       }
@@ -2708,7 +2890,7 @@ body {
     function free(x, y) {
       if (!insideCoast(x, y, 34)) return false;      // pas dans l'eau ni sur la plage
       if (insideCoast(x, y, 168)) return false;      // ni dans le cœur (place, sentiers)
-      if (Math.abs(x - PONTON.x) < 74 && Math.abs(y - PONTON.y) < 62) return false;
+      if (x - PONTON.x > -98 && x - PONTON.x < 86 && y - PONTON.y > -88 && y - PONTON.y < 86) return false;
       for (i = 0; i < ARC.length; i++) {
         if (Math.abs(x - ARC[i].x) < 92 * ARC[i].s && Math.abs(y - ARC[i].y) < 56 * ARC[i].s) return false;
       }
@@ -2801,13 +2983,35 @@ body {
     return null;
   }
 
-  // Glyphe placeholder d'un objet (les vrais SVG Claude Design suivront en 2.4).
-  function glyph(item) {
-    if (!item) return '✨';
-    if (item.milestone) return '🏆';
-    if (item.generative) return '🌿';
-    var d = domains.get(item.domain);
-    return d ? d.emoji : '✨';
+  /* Glyphe dessiné (4.2e) : remplace les emojis, sans exception (arbitrage Leo).
+     Deux formes du MÊME jeu de chemins (glyphs.js), donc un seul dessin à maintenir :
+     - Glyph() pour le HTML (menus, listes) : peint en `currentColor`, il prend l'encre
+       du texte qui le porte et reste AA d'office ;
+     - signGlyph() pour la SCÈNE, où il faut un <g> mis à l'échelle plutôt qu'un <svg>
+       imbriqué : la grille 24×24 est recentrée sur (0,0) puis réduite au disque de
+       l'enseigne. Son trait suit le zoom de la scène (pas de non-scaling-stroke, qui
+       figerait l'épaisseur et ferait maigrir le dessin en zoomant). */
+  function Glyph(name, cls) {
+    return html`
+      <svg class=${'gly' + (cls ? ' ' + cls : '')} viewBox="0 0 24 24"
+           aria-hidden="true" focusable="false">
+        ${glyphs.paths(name).map(function (d) { return html`<path d=${d} />`; })}
+      </svg>`;
+  }
+  function signGlyph(name, cy, s) {
+    var t = 'translate(0,' + cy + ') scale(' + s + ') translate(-12,-12)';
+    return html`
+      <g class="isl-sign-gly" transform=${t}>
+        ${glyphs.paths(name).map(function (d) { return html`<path d=${d} />`; })}
+      </g>`;
+  }
+
+  // Nom du glyphe dessiné d'un objet (4.2e ; les vrais SVG Claude Design suivront en 2.4).
+  function glyphName(item) {
+    if (!item) return 'etincelle';
+    if (item.milestone) return 'jalon';
+    if (item.generative) return 'etincelle';
+    return item.domain;
   }
 
   /* ------------------------------------------ collection d'un domaine (Phase 3.1)
@@ -2846,7 +3050,7 @@ body {
   // Histoire d'un objet — placeholder v0 honnête (les histoires complètes = Phase 6.1).
   function storyFor(item) {
     if (item.milestone) return 'Une carte-jalon : elle marque un cap que tu as vraiment franchi, à force de constance. Le hasard n’y est pour rien.';
-    if (item.generative) return 'Un petit trésor trouvé en chemin — l’île en garde la trace.';
+    if (item.generative) return 'Un petit trésor trouvé en chemin. L’île en garde la trace.';
     return 'Son histoire complète s’écrira bientôt. Pour l’instant, l’essentiel tient en une phrase : tu l’as mérité pour de vrai.';
   }
 
@@ -2891,12 +3095,14 @@ body {
     if (res && res.ok) {
       if (res.milestone) {
         var mt = chestTypes.get(res.milestone.tier);
-        actNote = '✨ Jalon des ' + res.milestone.threshold + ' franchi — ton ' + (mt ? mt.label : 'coffre') + ' t’attend au ponton.';
+        actNote = { gly: 'jalon',
+          text: 'Jalon des ' + res.milestone.threshold + ' franchi. Ton ' + (mt ? mt.label : 'coffre') + ' t’attend au port.' };
       } else if (res.levelUps && res.levelUps.length) {
         var top = res.levelUps[res.levelUps.length - 1];
-        actNote = '🏛️ Ton ' + labelOf(top.domain) + ' atteint le niveau ' + top.level + ' — un Coffre de cristal t’attend au ponton.';
+        actNote = { gly: 'batiment',
+          text: 'Ton ' + labelOf(top.domain) + ' atteint le niveau ' + top.level + '. Un Coffre de cristal t’attend au port.' };
       } else {
-        actNote = 'Fait ✓ — un Coffre de bois t’attend au ponton, sur le rivage.';
+        actNote = { gly: 'succes', text: 'C’est fait. Un Coffre de bois t’attend au port.' };
       }
     }
     repaint();
@@ -2915,10 +3121,10 @@ body {
     var res = actions.finishQuest();
     if (res && res.ok) {
       var t = chestTypes.get(res.tier);
-      actNote = 'Quête accomplie 🎉 — ton ' + (t ? t.label : 'coffre') + ' t’attend au ponton.';
+      actNote = { gly: 'succes', text: 'Quête accomplie. Ton ' + (t ? t.label : 'coffre') + ' t’attend au port.' };
       if (res.levelUps && res.levelUps.length) {
         var top = res.levelUps[res.levelUps.length - 1];
-        actNote += ' Ton ' + labelOf(top.domain) + ' atteint le niveau ' + top.level + '.';
+        actNote.text += ' Ton ' + labelOf(top.domain) + ' atteint le niveau ' + top.level + '.';
       }
     }
     menuConfirmAbandon = false; repaint();
@@ -2953,9 +3159,18 @@ body {
     }
     return best;
   }
-  // Le point est-il sur le ponton des coffres ? (zone large ; ne chevauche pas les parcelles.)
+  /* Le point est-il sur le PORT ? 4.2e — le port n'est plus centré sur son ancre : il
+     s'étend vers la terre (la cabane, au nord-ouest) et vers l'eau (l'appontement, au sud).
+     La boîte suit donc l'emprise DESSINÉE, en bornes explicites plutôt qu'en rayon. Elle est
+     testée AVANT les parcelles, et vérifiée sans conflit avec aucune d'elles. */
   function pontonAt(pt) {
-    return Math.abs(pt.x - PONTON.x) <= 54 && Math.abs(pt.y - PONTON.y) <= 42;
+    var dx = pt.x - PONTON.x, dy = pt.y - PONTON.y;
+    // Deux rectangles, parce que le port n'est pas rectangulaire : ce qui monte (la cabane,
+    // les caisses) est groupé à l'est, le quai s'étale à l'ouest au ras de l'eau. Une boîte
+    // unique engloberait le coin nord-ouest, vide, et y mordrait sur la parcelle Créativité.
+    if (dy >= -14 && dy <= 74) return dx >= -76 && dx <= 66;
+    if (dy >= -66 && dy < -14) return dx >= -18 && dx <= 62;
+    return false;
   }
   // Tap (sans pan) : ponton → hub des coffres ; bâtiment → menu de domaine.
   function handleTap(pt) {
@@ -3268,7 +3483,7 @@ body {
         <rect class="isl-stem" x="-1.8" y=${y + 10} width="3.6" height="16" rx="1.6" />
         <circle class="isl-badge-sh" cx="1.5" cy=${y + 2} r="15" />
         <circle class="isl-badge" cx="0" cy=${y} r="15" />
-        <text class="isl-emoji" x="0" y=${y + 7} text-anchor="middle">${d.emoji}</text>
+        ${signGlyph(d.id, y, .95)}
       </g>`;
   }
 
@@ -3508,48 +3723,109 @@ body {
       </g>`;
   }
 
-  // Un petit coffre posé sur le ponton (placeholder géométrique ; l'asset réel viendra en 2.4).
+  // Un coffre posé sur le quai (placeholder géométrique ; l'asset réel viendra en 2.4).
+  // 4.2e : agrandi avec le port (18×12 → 24×16), il se voit maintenant sans zoomer.
   function miniChest(dx, dy) {
     return html`
       <g transform=${'translate(' + dx + ',' + dy + ')'}>
-        <rect class="isl-dchest-body" x="-9" y="-5" width="18" height="12" rx="2" />
-        <rect class="isl-dchest-lid"  x="-10" y="-9" width="20" height="6" rx="2.5" />
-        <rect class="isl-dchest-clasp" x="-2" y="-6" width="4" height="6" rx="1" />
+        <ellipse class="isl-cast" cx=${2.5} cy="8" rx="14" ry="3.5" />
+        <rect class="isl-dchest-body" x="-12" y="-6" width="24" height="14" rx="2.5" />
+        <rect class="isl-dchest-lid"  x="-13" y="-11" width="26" height="7" rx="3" />
+        <rect class="isl-dchest-clasp" x="-2.5" y="-8" width="5" height="7" rx="1.2" />
       </g>`;
   }
 
-  // Le PONTON des coffres (Phase 3.2) — ancre STABLE `ponton-coffres`, tap → hub des coffres.
-  // Structure permanente (elle fait partie de l'île) ; les coffres et la pastille de compte
-  // n'apparaissent que s'il y en a (état vide serein). Placeholder ; SVG Claude Design en 2.4.
+  /* Le PORT des coffres (Phase 3.2, agrandi en 4.2e) — ancre STABLE `ponton-coffres`,
+     tap → hub des coffres. Structure permanente (elle fait partie de l'île) ; les coffres
+     et la pastille de compte n'apparaissent que s'il y en a (état vide serein).
+
+     Grief nommé par Leo sur la v0.19 : « le port est trop petit ». C'était exact et mesuré :
+     84 × 26 dans un monde de 1000 × 700, quand un bâtiment de domaine fait ~65 de large sur
+     ~120 de haut. Une planche posée sur l'eau, plate là où le reste de la scène avait gagné
+     du volume en 4.2d — alors que c'est l'un des SIX lieux de l'île (cap « l'île = lobby »).
+
+     Il devient un vrai petit port (arbitrage Leo) : un quai en L qui part de la TERRE (le CAP
+     de la 4.2d l'a rejoint : le point d'ancrage est sur la terre, la mer commence au sud-est,
+     mesuré sur `insideCoast`) et s'avance dans l'eau par un appontement, une cabane de port,
+     un fanal en bout de jetée, une barque amarrée, des caisses et un tonneau. Emprise portée
+     à 140 × 118 : il pèse enfin autant qu'un bâtiment, sans en être un.
+
+     Vocabulaire COMMUN, comme pour les 5 archétypes : tout est en matière de quai
+     (`--dock`/`--dock-2`), les lumières sont les mêmes `.isl-win` que les fenêtres des
+     bâtiments (donc dorées la nuit, d'office), les ombres portées la même `.isl-cast`, et
+     l'ombre suit SHADOW — la source de lumière unique de la 4.2d, au nord-ouest.
+     Tout est STATIQUE (décision du 2026-08-02) : aucune animation ajoutée. */
   function pontonNode() {
     var st = store.get();
     var n = chestList(st).length;
     var shown = Math.min(3, n);
     var chests = [];
-    if (shown >= 1) chests.push(miniChest(-14, -3));
-    if (shown >= 2) chests.push(miniChest(9, -3));
-    if (shown >= 3) chests.push(miniChest(-3, -13));
+    if (shown >= 1) chests.push(miniChest(-50, 2));
+    if (shown >= 2) chests.push(miniChest(-24, 2));
+    if (shown >= 3) chests.push(miniChest(-37, -13));
     return html`
       <g id="ponton-coffres" class="isl-ponton" transform=${'translate(' + PONTON.x + ',' + PONTON.y + ')'}
          data-count=${n} aria-hidden="true">
-        <ellipse class="isl-dock-shadow" cx="2" cy="22" rx="50" ry="14" />
-        <ellipse class="isl-dock-ripple" cx="2" cy="24" rx="58" ry="17" />
-        <rect class="isl-dock-pile" x="-30" y="14" width="6" height="22" rx="2" />
-        <rect class="isl-dock-pile" x="26" y="14" width="6" height="22" rx="2" />
-        <rect class="isl-dock" x="-42" y="-8" width="84" height="26" rx="4" />
-        <line class="isl-dock-plank" x1="-21" y1="-8" x2="-21" y2="18" />
-        <line class="isl-dock-plank" x1="0" y1="-8" x2="0" y2="18" />
-        <line class="isl-dock-plank" x1="21" y1="-8" x2="21" y2="18" />
-        <rect class="isl-dock-edge" x="-42" y="-8" width="84" height="3.5" rx="1.7" />
-        <!-- bitte d'amarrage + cordage : l'embarcadère où les coffres accostent -->
-        <rect class="isl-bollard" x="33" y="-20" width="7" height="16" rx="3" />
-        <path class="isl-rope" d="M 36 -18 q -14 8 -30 4" />
+        <ellipse class="isl-cast" cx="-2" cy="20" rx="74" ry="13" />
+        <ellipse class="isl-dock-shadow" cx="40" cy="64" rx="36" ry="15" />
+        <ellipse class="isl-dock-ripple" cx="40" cy="66" rx="47" ry="19" />
+
+        <rect class="isl-dock-pile" x="28" y="61" width="7" height="15" rx="2.5" />
+        <rect class="isl-dock-pile" x="45" y="61" width="7" height="15" rx="2.5" />
+
+        <rect class="isl-dock-side" x="24" y="56" width="32" height="7" rx="2" />
+        <rect class="isl-dock" x="24" y="12" width="32" height="44" rx="2" />
+        <line class="isl-dock-plank" x1="24" y1="26" x2="56" y2="26" />
+        <line class="isl-dock-plank" x1="24" y1="40" x2="56" y2="40" />
+
+        <rect class="isl-dock-side" x="-70" y="12" width="126" height="8" rx="2.5" />
+        <rect class="isl-dock" x="-70" y="-14" width="126" height="26" rx="2.5" />
+        <line class="isl-dock-plank" x1="-46" y1="-14" x2="-46" y2="12" />
+        <line class="isl-dock-plank" x1="-22" y1="-14" x2="-22" y2="12" />
+        <line class="isl-dock-plank" x1="2" y1="-14" x2="2" y2="12" />
+        <line class="isl-dock-plank" x1="26" y1="-14" x2="26" y2="12" />
+        <rect class="isl-dock-edge" x="-70" y="-14" width="126" height="4.5" rx="2" />
+
+        <g class="isl-hut-g">
+          <ellipse class="isl-cast" cx="39" cy="-13" rx="22" ry="4.5" />
+          <rect class="isl-hut" x="18" y="-46" width="34" height="33" rx="2" />
+          <path class="isl-hut-roof" d="M 12 -44 L 35 -63 L 58 -44 Z" />
+          <rect class="isl-hut-door" x="30" y="-29" width="11" height="16" rx="1.5" />
+          <rect class="isl-win" x="21" y="-39" width="8" height="8" rx="1.5" />
+        </g>
+
+        <g class="isl-cargo">
+          <ellipse class="isl-cast" cx="1" cy="-13" rx="18" ry="4.5" />
+          <rect class="isl-crate" x="-13" y="-30" width="16" height="17" rx="1.5" />
+          <path class="isl-crate-x" d="M -13 -30 L 3 -13 M 3 -30 L -13 -13" />
+          <rect class="isl-barrel" x="5" y="-27" width="13" height="14" rx="3" />
+          <ellipse class="isl-barrel-top" cx="11.5" cy="-26.5" rx="6.5" ry="2.4" />
+          <path class="isl-crate-x" d="M 5 -22.5 h 13 M 5 -17.5 h 13" />
+        </g>
+
+        <g class="isl-lamp-g">
+          <rect class="isl-lamp-post" x="45.5" y="42" width="4" height="14" rx="2" />
+          <rect class="isl-win" x="41.5" y="30" width="12" height="13" rx="1.5" />
+          <path class="isl-hut-roof" d="M 39.5 31 L 47.5 22 L 55.5 31 Z" />
+        </g>
+
+        <g class="isl-boat-g">
+          <ellipse class="isl-dock-shadow" cx="82" cy="46" rx="26" ry="8" />
+          <path class="isl-boat" d="M 58 34 q 26 -8 44 1 q -10 15 -44 10 q -7 -6 0 -11 Z" />
+          <path class="isl-boat-in" d="M 64 35 q 20 -5 31 1 q -8 9 -31 6 Z" />
+          <rect class="isl-boat-seat" x="73" y="33" width="12" height="3" rx="1.5" />
+          <path class="isl-oar" d="M 68 32 L 88 24" />
+        </g>
+
+        <rect class="isl-bollard" x="28" y="26" width="8" height="15" rx="3.5" />
+        <path class="isl-rope" d="M 32 28 q 14 2 26 6" />
+
         ${chests}
         ${n > 0
           ? html`
             <g class="isl-ponton-tag">
-              <rect class="isl-ponton-bg" x="-16" y="26" width="32" height="18" rx="9" />
-              <text class="isl-ponton-tx" x="0" y="35" text-anchor="middle">${n}</text>
+              <rect class="isl-ponton-bg" x="-56" y="24" width="32" height="18" rx="9" />
+              <text class="isl-ponton-tx" x="-40" y="33" text-anchor="middle">${n}</text>
             </g>`
           : null}
       </g>`;
@@ -3688,7 +3964,7 @@ body {
     return html`
       <div class="isl-stage">
         <svg class="isl-svg" viewBox=${initBox} preserveAspectRatio="xMidYMid meet"
-             role="img" aria-label="Scène de ton île — vue décorative ; l’équivalent accessible est la vue Liste."
+             role="img" aria-label="Scène de ton île, décorative. Son équivalent accessible est la vue Liste."
              ref=${initScene}>
           <defs>
             <!-- Ciel (4.2c) : mêmes tokens que le ciel CSS de la 0.3 (--sky-top/--sky-mid),
@@ -3780,16 +4056,15 @@ body {
           <rect class="isl-brume" x="-80" y="-80" width=${WORLD.w + 160} height=${WORLD.h + 160} fill="url(#isl-fog)" />
         </svg>
 
-        <div class="isl-hint" aria-hidden="true">Touche un bâtiment ou le ponton des coffres · glisse pour explorer</div>
+        <div class="isl-hint" aria-hidden="true">Touche un bâtiment ou le port · glisse pour explorer</div>
 
         <button class="isl-recenter" type="button" onClick=${recenter} aria-label="Recentrer la vue de l’île">Recentrer</button>
 
         ${totalLv === 0
           ? html`
             <div class="isl-wake" role="note">
-              <span class="iw-emoji" aria-hidden="true">🌱</span>
-              <p>Ton île s’éveille. Ces fondations en ruines attendent que ton élan les relève —
-              touche l’une d’elles pour agir dans son domaine.</p>
+              ${Glyph('pousse', 'iw-gly')}
+              <p>Ton île s’éveille. Touche une fondation pour agir dans son domaine.</p>
             </div>`
           : null}
       </div>`;
@@ -3805,7 +4080,7 @@ body {
     var chests = chestList(st).slice().reverse();   // plus récents en haut (miroir du ponton)
     return html`
       <div class="isl-list">
-        <p class="isl-list-lead">Vue liste de ton île — équivalent complet de la scène. Chaque
+        <p class="isl-list-lead">Vue liste de ton île, équivalent complet de la scène. Chaque
         domaine s’ouvre ici comme en le touchant sur la carte.</p>
 
         <h3 class="isl-list-h">Parcelles de domaine (5)</h3>
@@ -3816,18 +4091,18 @@ body {
               ? ('Niveau ' + p.level + ' · élan ' + p.elan + ' · plus que ' + p.remaining + ' avant le niveau ' + (p.level + 1))
               : 'Fondation en ruines · en sommeil';
             var aria = built
-              ? ('Parcelle ' + p.domain.label + ' — bâtiment de niveau ' + p.level + ', élan ' + p.elan +
+              ? ('Parcelle ' + p.domain.label + ', bâtiment de niveau ' + p.level + ', élan ' + p.elan +
                  '. Plus que ' + p.remaining + ' d’élan avant le niveau ' + (p.level + 1) + '.')
-              : ('Parcelle ' + p.domain.label + ' — fondation en ruines, en sommeil. Le bâtiment s’élèvera avec ton élan.');
+              : ('Parcelle ' + p.domain.label + ', fondation en ruines, en sommeil. Le bâtiment s’élèvera avec ton élan.');
             return html`
               <li class="isl-item ${built ? 'built' : ''}" tabindex="0" aria-label=${aria}>
-                <span class="ii-emoji" aria-hidden="true">${p.domain.emoji}</span>
+                ${Glyph(p.domain.id, 'ii-gly')}
                 <span class="ii-main">
                   <span class="ii-title">${p.domain.label}${built ? html`<span class="ii-lv">Nv ${p.level}</span>` : null}</span>
                   <span class="ii-state">${state}</span>
                   <div class="ii-actions">
                     <button class="lnk dm-open" type="button"
-                            aria-label=${'Ouvrir le domaine ' + p.domain.label + ' — collection ' + p.collGot + ' sur ' + p.collTotal}
+                            aria-label=${'Ouvrir le domaine ' + p.domain.label + ', collection ' + p.collGot + ' sur ' + p.collTotal}
                             onClick=${function () { openDomain(p.domain.id); }}>Voir le domaine · ${p.collGot}/${p.collTotal}</button>
                   </div>
                 </span>
@@ -3835,15 +4110,15 @@ body {
           })}
         </ul>
 
-        <h3 class="isl-list-h">À découvrir · coffres (${chests.length})</h3>
+        <h3 class="isl-list-h">Au port · coffres (${chests.length})</h3>
         ${chests.length
           ? html`<ul class="isl-items">
               ${chests.map(function (c) {
                 var t = chestTypes.get(c.type);
                 var typeLabel = t ? t.label : 'Coffre';
                 return html`
-                  <li class="isl-item" aria-label=${typeLabel + ' — ' + (c.sourceLabel || 'à ouvrir') + '.'}>
-                    <span class="ii-emoji" aria-hidden="true">🧰</span>
+                  <li class="isl-item" aria-label=${typeLabel + '. ' + (c.sourceLabel || 'à ouvrir') + '.'}>
+                    ${Glyph('coffre', 'ii-gly')}
                     <span class="ii-main">
                       <span class="ii-title">${typeLabel}</span>
                       <span class="ii-state">${c.sourceLabel}</span>
@@ -3855,7 +4130,7 @@ body {
                   </li>`;
               })}
             </ul>`
-          : html`<p class="empty-soft">Aucun coffre en attente — tes prochaines actions en feront accoster au ponton.</p>`}
+          : html`<p class="empty-soft">Aucun coffre en attente. Tes prochaines actions en feront accoster au port.</p>`}
       </div>`;
   }
 
@@ -3903,7 +4178,7 @@ body {
     if (!c.obtained) {
       return html`
         <li class=${cardShell(c.rarity, false)}
-            aria-label=${'À découvrir — un objet ' + cards.rarityLabel(c.rarity) + ' de ce domaine, pas encore obtenu.'}>
+            aria-label=${'À découvrir : un objet ' + cards.rarityLabel(c.rarity) + ' de ce domaine, pas encore obtenu.'}>
           <span class="dmc-art">${silhouette(c.id)}</span>
           <span class="dmc-name">À découvrir</span>
           <span class="rc-rarity rc-rarity--${c.rarity} dim">${cards.rarityLabel(c.rarity)}</span>
@@ -3918,7 +4193,7 @@ body {
         <button class="dmc-btn" type="button"
                 aria-label=${'Obtenu : ' + name + ' (' + cards.rarityLabel(rarity) + '), le ' + fmtDay(entry.day) + '. Voir le souvenir.'}
                 onClick=${function () { showDetail(entry.id); }}>
-          <span class="dmc-art"><span class="dmc-emoji" aria-hidden="true">${glyph(item)}</span></span>
+          <span class="dmc-art">${Glyph(glyphName(item), 'dmc-gly')}</span>
           <span class="dmc-name">${name}</span>
           <span class="rc-rarity rc-rarity--${rarity}">${cards.rarityLabel(rarity)}</span>
           <span class="dmc-day" aria-hidden="true">${fmtDay(entry.day)}</span>
@@ -3933,7 +4208,7 @@ body {
           <span class="dm-count" aria-label=${coll.got + ' objets du catalogue obtenus sur ' + coll.total}>${coll.got}<span class="dmc-tot">/${coll.total}</span></span>
         </div>
         <p class="dm-note">Chaque objet garde le souvenir de l’action réelle qui l’a mérité.
-        Les silhouettes restent à découvrir — rien ne presse.</p>
+        Les silhouettes restent à découvrir, rien ne presse.</p>
         <ul class="dm-grid">${coll.catalogue.map(CollCard)}</ul>
         ${coll.extra.length
           ? html`
@@ -3963,7 +4238,7 @@ body {
           ${hb.freq ? html`<div class="dmh-sub">${hb.freq}</div>` : null}
           ${count >= 1 && next
             ? html`<div class="dmh-goal" aria-label=${'Plus que ' + next.remaining + ' avant le jalon des ' + next.threshold}>
-                     <span aria-hidden="true">🏆</span> Plus que <strong>${next.remaining}</strong> avant le jalon des ${next.threshold}</div>`
+                     ${Glyph('jalon', 'hg-gly')} <span>Plus que <strong>${next.remaining}</strong> avant le jalon des ${next.threshold}</span></div>`
             : null}
         </div>
         ${done
@@ -4002,9 +4277,9 @@ body {
             </div>
           </div>
           <div class="aq-main">
-            <div class="aq-title"><span class="h-emoji" aria-hidden="true">${d ? d.emoji : '•'}</span>${aq.title}</div>
+            <div class="aq-title">${Glyph(aq.domain, 'h-gly')}${aq.title}</div>
             <div class="aq-sub">${(d ? d.label : aq.domain)} · ${aq.minutes} min estimées</div>
-            <p class="aq-note">Le chrono tourne pour de vrai — même si tu fermes l’app, il reprend où il en était.</p>
+            <p class="aq-note">Le chrono tourne pour de vrai : même si tu fermes l’app, il reprend où il en était.</p>
           </div>
         </div>
         <div class="aq-foot">
@@ -4013,7 +4288,7 @@ body {
             : html`
               <div class="aq-gate">
                 <button class="btn aq-finish" type="button" disabled>J’ai fini</button>
-                <span class="aq-gatehint">Encore ~${gateMin} min avant de pouvoir valider — rien ne presse.</span>
+                <span class="aq-gatehint">Encore ~${gateMin} min avant de pouvoir valider. Rien ne presse.</span>
               </div>`}
           ${menuConfirmAbandon
             ? null
@@ -4049,7 +4324,7 @@ body {
                         onClick=${function () { menuPerso.minutes = m; repaint(); }}>${m} min</button>`;
             })}
           </div>
-          <p class="pq-note">Ta récompense dépendra de la durée — elle se révélera à la fin, jamais avant.</p>
+          <p class="pq-note">Ta récompense dépendra de la durée. Elle se révélera à la fin, jamais avant.</p>
           <button class="btn" type="button" disabled=${!p.title.trim()}
                   onClick=${function () { startPersoHere(dom); }}>Démarrer cette quête</button>
         </div>
@@ -4067,7 +4342,8 @@ body {
         ${actNote
           ? html`
             <div class="note-soft dm-actnote" role="status">
-              <span>${actNote}</span>
+              ${Glyph(actNote.gly, 'ns-gly')}
+              <span>${actNote.text}</span>
               <button class="lnk" type="button" onClick=${clearNote}>OK</button>
             </div>`
           : null}
@@ -4076,13 +4352,13 @@ body {
         ${habits.length
           ? html`<ul class="dm-hlist">${habits.map(function (hb) { return MenuHabit(st, hb); })}</ul>`
           : html`<p class="empty-soft">Aucune habitude dans ce domaine pour l’instant. Crée-en une depuis
-             l’onglet <strong>Habitudes</strong> — elle apparaîtra ici, prête à valider.</p>`}
+             l’onglet <strong>Habitudes</strong>. Elle apparaîtra ici, prête à valider.</p>`}
 
         <h4 class="dm-subh">Quête</h4>
         ${activeHere
           ? MenuActiveQuest(aq)
           : activeElsewhere
-            ? html`<p class="dm-note">Une quête de <strong>${labelOf(aq.domain)}</strong> est déjà en cours —
+            ? html`<p class="dm-note">Une quête de <strong>${labelOf(aq.domain)}</strong> est déjà en cours :
                un seul chrono à la fois. Termine-la (ou arrête-la) pour en lancer une ici.</p>`
             : MenuQuestLauncher(st, dom)}
       </section>`;
@@ -4100,12 +4376,12 @@ body {
     if (!e) { detailInvId = null; return GridBody(st, domains.get(openDomainId)); }
     var item = cards.resolve(e.itemId);
     var d = domains.get(item.domain);
-    var meta = (d ? d.label : (item.domain || '—')) + ' · ' + cards.rarityLabel(item.rarity) + ' · obtenu le ' + fmtDay(e.day);
+    var meta = (d ? d.label : (item.domain || 'Domaine')) + ' · ' + cards.rarityLabel(item.rarity) + ' · obtenu le ' + fmtDay(e.day);
     return html`
       <div class="dm-body dm-detail">
         <button class="dm-back" type="button" onClick=${backToGrid} aria-label="Retour à la collection">← Retour</button>
         <div class=${'dm-detail-card dm-card--' + item.rarity}>
-          <span class="dmd-emoji" aria-hidden="true">${glyph(item)}</span>
+          ${Glyph(glyphName(item), 'dmd-gly')}
           <div class="dmd-name">${item.name}</div>
           <span class="rc-rarity rc-rarity--${item.rarity}">${cards.rarityLabel(item.rarity)}</span>
         </div>
@@ -4130,8 +4406,8 @@ body {
     var span = info.nextAt - base;
     var pct = (built && span > 0) ? Math.max(0, Math.min(100, Math.round(((info.elan - base) / span) * 100))) : 0;
     var barAria = built
-      ? ('Progression vers le niveau ' + (info.level + 1) + ' : ' + pct + ' pour cent — plus que ' + info.remaining + ' d’élan.')
-      : 'Fondation en sommeil — aucune progression pour l’instant.';
+      ? ('Progression vers le niveau ' + (info.level + 1) + ' : ' + pct + ' pour cent, plus que ' + info.remaining + ' d’élan.')
+      : 'Fondation en sommeil, aucune progression pour l’instant.';
     return html`
       <header class="dm-hero">
         <div class="dm-heroband">
@@ -4151,7 +4427,7 @@ body {
           </div>
           <p class="dm-state">${built
             ? html`<strong>${info.elan}</strong> d’élan · plus que <strong>${info.remaining}</strong> avant le niveau ${info.level + 1}`
-            : 'Fondation en ruines — ta première action de ce domaine la relèvera.'}</p>
+            : 'Fondation en ruines. Ta première action de ce domaine la relèvera.'}</p>
           <p class="dm-state dm-stat2"><strong>${coll.got}/${coll.total}</strong> objets de collection réunis</p>
         </div>
       </header>`;
@@ -4204,15 +4480,15 @@ body {
     var list = chestList(st).slice().reverse();     // plus récents en haut (comme la pile M1)
     var n = list.length;
     var stateLine = n
-      ? (n + ' coffre' + (n > 1 ? 's' : '') + ' accosté' + (n > 1 ? 's' : '') + ' — rien ne presse')
-      : 'Le ponton est calme pour l’instant';
+      ? (n + ' coffre' + (n > 1 ? 's' : '') + ' accosté' + (n > 1 ? 's' : '') + ', rien ne presse')
+      : 'Le port est calme pour l’instant';
     return html`
-      <div class="dom-menu chest-hub" role="dialog" aria-modal="true" aria-label="Ponton des coffres — À découvrir"
+      <div class="dom-menu chest-hub" role="dialog" aria-modal="true" aria-label="Port des coffres, à découvrir"
            onKeyDown=${function (e) { if (e.key === 'Escape') { closeChestHub(); return; } trapTab(e); }}>
         <div class="dm-backdrop" onClick=${closeChestHub} aria-hidden="true"></div>
         <div class="dm-panel" tabindex="-1" ref=${focusPanel}>
           <header class="dm-head">
-            <span class="dm-emoji" aria-hidden="true">🛶</span>
+            ${Glyph('port', 'dm-gly')}
             <div class="dm-headmain">
               <h2 class="dm-title">À découvrir</h2>
               <p class="dm-state">${stateLine}</p>
@@ -4222,11 +4498,11 @@ body {
           <div class="dm-body">
             ${n
               ? html`
-                <p class="dm-note">Tes coffres accostent ici — chacun garde le souvenir de ce que tu as
-                accompli. Ouvre-les à ton rythme ; l’objet rejoindra la collection de son domaine.</p>
+                <p class="dm-note">Tes coffres accostent ici. Ouvre-les à ton rythme : l’objet rejoindra la
+                collection de son domaine.</p>
                 <ul class="chest-list">${list.map(HubChestCard)}</ul>`
-              : html`<p class="empty-soft big">Aucun coffre en attente. Accomplis une action — habitude, quête,
-                jalon — et un coffre viendra accoster au ponton.</p>`}
+              : html`<p class="empty-soft big">Aucun coffre en attente. Accomplis une habitude, une quête ou un
+                jalon, et un coffre viendra accoster ici.</p>`}
           </div>
         </div>
       </div>`;
@@ -4274,11 +4550,12 @@ body {
   var actions = window.AscendActions;
   var derive = window.AscendDerive;
   var domains = window.AscendDomains;
+  var glyphs = window.AscendGlyphs;
   var chestTypes = window.AscendChests;
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.19';
+  var VER = '0.20';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
@@ -4287,6 +4564,13 @@ body {
     tab: 'habitudes',           // 'habitudes' | 'ile' — onglet courant (jamais persisté)
     islandView: 'scene',        // 'scene' | 'liste' — bascule de la scène île (Phase 2.1)
     form: { title: '', domain: domains.list[0].id, freq: '' },
+    // 4.2e — l'écran M1 s'ouvrait sur un FORMULAIRE déplié, avant même la liste, et
+    // empilait un second formulaire complet (le lanceur de quêtes) dessous : trois
+    // formulaires et deux jeux identiques de chips de domaine sur un même écran.
+    // Grief de Leo : « pas assez simple à comprendre ». Ces deux booléens sont l'état
+    // de repli des deux blocs d'action ; éphémères, jamais persistés, jamais dérivés.
+    showCreator: false,
+    showQuests: false,
     editingId: null,
     edit: { title: '', domain: '', freq: '' },
     confirmDeleteId: null,
@@ -4329,7 +4613,7 @@ body {
   function onCreateSubmit(e) {
     if (e && e.preventDefault) e.preventDefault();
     var created = actions.createHabit(ui.form.title, ui.form.domain, ui.form.freq);
-    if (created) resetForm();
+    if (created) { resetForm(); ui.showCreator = false; }   // 4.2e : le bloc se replie une fois l'habitude posée
     paint();
   }
   // Valider une habitude. Si la validation FRANCHIT un jalon (Phase 1.5), on lève le bandeau
@@ -4387,13 +4671,13 @@ body {
   /* --- quêtes minutées (Phase 1.4) --- */
   function startCatalogueQuest(q) {
     actions.startQuest({ questId: q.id, title: q.title, domain: q.domain, minutes: q.minutes });
-    ui.quest.done = null; ui.quest.confirmAbandon = false;
+    ui.quest.done = null; ui.quest.confirmAbandon = false; ui.showQuests = false;
     paint();
   }
   function startPersoQuest() {
     var p = ui.quest.perso;
     var res = actions.startQuest({ questId: null, title: p.title, domain: p.domain, minutes: p.minutes });
-    if (res && res.ok) { resetPerso(); ui.quest.done = null; ui.quest.confirmAbandon = false; }
+    if (res && res.ok) { resetPerso(); ui.quest.done = null; ui.quest.confirmAbandon = false; ui.showQuests = false; }
     paint();
   }
   function finishActiveQuest() {
@@ -4429,6 +4713,18 @@ body {
   function confirmDelete(id) { ui.confirmDeleteId = null; actions.deleteHabit(id); paint(); }
 
   /* --------------------------------------------------------------- composants */
+  /* Glyphe dessiné (4.2e) : remplace les emojis, sans exception (arbitrage Leo).
+     Peint en `currentColor`, il prend l'encre du texte qui le porte : il suit donc
+     les tokens d'ambiance et reste AA d'office, ce qu'un emoji (qui porte sa propre
+     couleur, et son propre dessin selon l'appareil) ne pouvait pas faire. */
+  function Glyph(name, cls) {
+    return html`
+      <svg class=${'gly' + (cls ? ' ' + cls : '')} viewBox="0 0 24 24"
+           aria-hidden="true" focusable="false">
+        ${glyphs.paths(name).map(function (d) { return html`<path d=${d} />`; })}
+      </svg>`;
+  }
+
   function DomainChips(selectedId, onPick) {
     return html`
       <div class="dom-select" role="group" aria-label="Domaine">
@@ -4437,7 +4733,7 @@ body {
           return html`
             <button type="button" class="dom-chip" aria-pressed=${on ? 'true' : 'false'}
                     onClick=${function () { onPick(d.id); }}>
-              <span class="d-emoji" aria-hidden="true">${d.emoji}</span>${d.label}
+              ${Glyph(d.id, 'd-gly')}${d.label}
             </button>`;
         })}
       </div>`;
@@ -4492,7 +4788,7 @@ body {
     return html`
       <div class="habit">
         <div class="habit-head">
-          <span class="h-emoji" aria-hidden="true">${d ? d.emoji : '•'}</span>
+          ${Glyph(hb.domain, 'h-gly')}
           <div class="h-main">
             <div class="h-title">${hb.title}</div>
             <div class="h-sub">${sub}</div>
@@ -4504,7 +4800,7 @@ body {
         </div>
         ${count >= 1 && next
           ? html`<div class="h-goal" aria-label=${'Plus que ' + next.remaining + ' avant le jalon des ' + next.threshold}>
-                   <span class="hg-ico" aria-hidden="true">🏆</span>
+                   ${Glyph('jalon', 'hg-gly')}
                    <span>Plus que <strong>${next.remaining}</strong> avant le jalon des ${next.threshold}</span>
                  </div>`
           : null}
@@ -4540,8 +4836,9 @@ body {
     if (!m) return null;
     return html`
       <div class="note-soft" role="status">
-        <span>✨ Jalon des <strong>${m.threshold}</strong> franchi — ton <strong>${m.chestLabel}</strong>${' '}
-        vient d’accoster au ponton de ton île.</span>
+        ${Glyph('jalon', 'ns-gly')}
+        <span>Jalon des <strong>${m.threshold}</strong> franchi. Ton <strong>${m.chestLabel}</strong>${' '}
+        vient d’accoster au port de ton île.</span>
         <button class="lnk" type="button"
                 onClick=${function () { ui.milestoneDone = null; paint(); }}>OK</button>
       </div>`;
@@ -4556,8 +4853,9 @@ body {
     var plural = m.count > 1;
     return html`
       <div class="note-soft" role="status">
-        <span>🏛️ Ton <strong>${m.domainLabel}</strong> atteint le <strong>niveau ${m.level}</strong> —
-        ${plural ? 'des Coffres de cristal ont accosté' : 'un Coffre de cristal a accosté'} au ponton de ton île.</span>
+        ${Glyph('batiment', 'ns-gly')}
+        <span>Ton <strong>${m.domainLabel}</strong> atteint le <strong>niveau ${m.level}</strong>.${' '}
+        ${plural ? 'Des Coffres de cristal ont accosté' : 'Un Coffre de cristal a accosté'} au port de ton île.</span>
         <button class="lnk" type="button"
                 onClick=${function () { ui.levelDone = null; paint(); }}>OK</button>
       </div>`;
@@ -4566,9 +4864,11 @@ body {
   function EmptyState() {
     return html`
       <div class="empty">
-        <div class="e-emoji" aria-hidden="true">🌱</div>
+        ${Glyph('pousse', 'e-gly')}
         <div class="e-title">Ton île attend sa première graine</div>
-        <p>Crée une habitude que tu veux faire souvent — elle réveillera ton île.</p>
+        <p>Choisis une habitude que tu veux faire souvent. Elle réveillera ton île.</p>
+        <button class="btn" type="button"
+                onClick=${function () { ui.showCreator = true; paint(); }}>Créer ma première habitude</button>
       </div>`;
   }
 
@@ -4579,7 +4879,7 @@ body {
     var d = domains.get(item.domain);
     return html`
       <div class="reward-card">
-        <span class="rc-emoji" aria-hidden="true">${d ? d.emoji : '✨'}</span>
+        ${Glyph(item.domain, 'rc-gly')}
         <div class="rc-name">${item.name}</div>
         <span class="rc-rarity rc-rarity--${item.rarity}">${cards.rarityLabel(item.rarity)}</span>
       </div>`;
@@ -4637,9 +4937,9 @@ body {
             </div>
           </div>
           <div class="aq-main">
-            <div class="aq-title"><span class="h-emoji" aria-hidden="true">${d ? d.emoji : '•'}</span>${aq.title}</div>
+            <div class="aq-title">${Glyph(aq.domain, 'h-gly')}${aq.title}</div>
             <div class="aq-sub">${(d ? d.label : aq.domain)} · ${aq.minutes} min estimées</div>
-            <p class="aq-note">Le chrono tourne pour de vrai — même si tu fermes l’app, il reprend où il en était.</p>
+            <p class="aq-note">Le chrono tourne pour de vrai : même si tu fermes l’app, il reprend où il en était.</p>
           </div>
         </div>
         <div class="aq-foot">
@@ -4648,7 +4948,7 @@ body {
             : html`
               <div class="aq-gate">
                 <button class="btn aq-finish" type="button" disabled>J’ai fini</button>
-                <span class="aq-gatehint">Encore ~${gateMin} min avant de pouvoir valider — rien ne presse.</span>
+                <span class="aq-gatehint">Encore ~${gateMin} min avant de pouvoir valider. Rien ne presse.</span>
               </div>`}
           ${ui.quest.confirmAbandon
             ? null
@@ -4705,7 +5005,7 @@ body {
                         onClick=${function () { ui.quest.perso.minutes = m; paint(); }}>${m} min</button>`;
             })}
           </div>
-          <p class="pq-note">Ta récompense dépendra de la durée — elle se révélera à la fin, jamais avant.</p>
+          <p class="pq-note">Ta récompense dépendra de la durée. Elle se révélera à la fin, jamais avant.</p>
           <button class="btn" type="button" disabled=${!p.title.trim()}
                   onClick=${startPersoQuest}>Démarrer cette quête</button>
         </div>
@@ -4719,23 +5019,49 @@ body {
     var active = derive.isValidActiveQuest(aq);
     return html`
       <section class="section quest-section" aria-label="Quêtes minutées">
-        <h2 class="sec-title">Quêtes minutées</h2>
-        <p class="sec-note">Une action, un chrono honnête. À la moitié du temps, tu peux valider —
-        et tu reçois un coffre à la hauteur de l’effort.</p>
         ${ui.quest.done
           ? html`
             <div class="note-soft" role="status">
-              <span>Quête accomplie 🎉 — ton <strong>${ui.quest.done.label}</strong> vient d’accoster au ponton de ton île.</span>
+              ${Glyph('succes', 'ns-gly')}
+              <span>Quête accomplie. Ton <strong>${ui.quest.done.label}</strong> vient d’accoster au port de ton île.</span>
               <button class="lnk" type="button" onClick=${function () { ui.quest.done = null; paint(); }}>OK</button>
             </div>`
           : null}
-        ${active ? ActiveQuestCard(aq) : QuestLauncher()}
+        ${active
+          ? html`
+            <h2 class="sec-title">Quête en cours</h2>
+            ${ActiveQuestCard(aq)}`
+          : Disclose('quests-body', ui.showQuests, 'chrono', 'Lancer une quête',
+                     function () { ui.showQuests = !ui.showQuests; paint(); },
+                     function () {
+                       return html`
+                         <p class="sec-note">Une action, un chrono honnête. À la moitié du temps tu peux
+                         valider, et tu reçois un coffre à la hauteur de l’effort.</p>
+                         ${QuestLauncher()}`;
+                     })}
       </section>`;
   }
 
   // Écran M1 (habitudes / quêtes) — un onglet. Brique lobby (b) : la pile de coffres « À
   // découvrir » a QUITTÉ cet écran (les coffres accostent au ponton de l'île, Phase 3.2) ;
   // seule la cérémonie 1.3 reste montée à la racine de l'App, partagée avec l'île.
+  /* Bloc dépliable (4.2e) : un bouton qui porte son propre état, et le contenu en dessous.
+     C'est ce qui permet à l'écran de s'ouvrir sur TA LISTE plutôt que sur un formulaire,
+     sans rien retirer de ce qu'on pouvait y faire. `aria-expanded` + `aria-controls` :
+     un lecteur d'écran annonce l'état et sait ce que le bouton commande. */
+  function Disclose(id, open, gly, label, onToggle, body) {
+    return html`
+      <div class="disclose">
+        <button class="disclose-btn" type="button" aria-expanded=${open ? 'true' : 'false'}
+                aria-controls=${id} onClick=${onToggle}>
+          ${Glyph(gly, 'dc-gly')}
+          <span>${label}</span>
+          <span class="dc-chev" aria-hidden="true">${open ? '▴' : '▾'}</span>
+        </button>
+        <div class="disclose-body" id=${id}>${open ? body() : null}</div>
+      </div>`;
+  }
+
   function HabitScreen() {
     var habits = (store.get().habits || []).filter(function (hb) { return hb && hb.id; });
     return html`
@@ -4743,11 +5069,8 @@ body {
         <header class="app-hero">
           <div class="eyebrow">ASCEND · v${VER}</div>
           <h1>Tes habitudes</h1>
-          <p class="lede">Chaque fois que tu la fais pour de vrai, valide-la ici.
-          Rien ne se perd, rien ne se punit — ton île avance avec toi.</p>
+          <p class="lede">Valide-les ici chaque fois que tu les fais pour de vrai.</p>
         </header>
-
-        ${Creator()}
 
         <section class="section" aria-label="Tes habitudes">
           ${LevelBanner()}
@@ -4755,6 +5078,8 @@ body {
           ${habits.length
             ? html`<div class="habits">${habits.map(HabitCard)}</div>`
             : EmptyState()}
+          ${Disclose('creator-body', ui.showCreator, 'plus', 'Nouvelle habitude',
+                     function () { ui.showCreator = !ui.showCreator; paint(); }, Creator)}
         </section>
 
         ${QuestSection()}
@@ -4764,8 +5089,8 @@ body {
   // Barre d'onglets (bas) : bascule Île ↔ Habitudes. Fixe, sûre pour l'encoche (safe-area).
   function TabBar() {
     var tabs = [
-      { id: 'ile', label: 'Île', emoji: '🏝️' },
-      { id: 'habitudes', label: 'Habitudes', emoji: '🌱' }
+      { id: 'ile', label: 'Île', gly: 'ile' },
+      { id: 'habitudes', label: 'Habitudes', gly: 'pousse' }
     ];
     return html`
       <nav class="tabbar" role="tablist" aria-label="Navigation principale">
@@ -4775,7 +5100,7 @@ body {
             <button type="button" class="tab ${on ? 'on' : ''}" role="tab"
                     aria-selected=${on ? 'true' : 'false'}
                     onClick=${function () { if (ui.tab !== t.id) { ui.tab = t.id; paint(); } }}>
-              <span class="tab-emoji" aria-hidden="true">${t.emoji}</span>
+              ${Glyph(t.gly, 'tab-gly')}
               <span class="tab-label">${t.label}</span>
             </button>`;
         })}
