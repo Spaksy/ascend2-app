@@ -1126,6 +1126,45 @@ body {
   }
 }
 
+/* LE MUSÉE — sa pierre (Phase 3.3). Même mécanisme EXACT que la teinte par domaine de la
+   4.2d : on surcharge --roof/--roof-2 sur le monument, rien de plus. Le village porte des
+   toits de couleur, le musée est en pierre claire : c'est ce qui le désigne comme le lieu
+   civique au centre, sans lui inventer un vocabulaire à part (murs, fenêtres dorées, ombres
+   et fleuron restent ceux de tout le monde). Rien d'écrit ne passe dessus : l'AA n'est pas
+   en jeu, exactement comme pour les 5 toits. */
+.isl-musee { --roof: #DCD3C0; --roof-2: #B4A88F; }
+[data-ambiance="crepuscule"] .isl-musee { --roof: #E2D2C3; --roof-2: #B9A491; }
+[data-ambiance="nuit"] .isl-musee { --roof: #4E5064; --roof-2: #363848; }
+
+/* LE HALL TIMELINE — la frise chronologique (Phase 3.3).
+   Un vrai fil vertical avec une perle par jour : sans lui, ce ne serait qu'une liste
+   groupée par date. Les cartes d'événement réemploient la matière des cartes de coffre
+   (surface, liseré, rayon) — le musée n'introduit aucune matière nouvelle. */
+.tl { list-style: none; }
+.tl-day { position: relative; padding: 0 0 18px 24px; }
+.tl-day::before {
+  content: ''; position: absolute; left: 5px; top: 7px; bottom: 0;
+  width: 2px; background: var(--line);
+}
+.tl-day:last-child { padding-bottom: 2px; }
+.tl-day:last-child::before { bottom: auto; height: 12px; }
+.tl-day::after {
+  content: ''; position: absolute; left: 0; top: 3px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--surface); border: 2px solid var(--accent);
+}
+.tl-date { font-size: 12px; font-weight: 700; color: var(--ink-2); margin-bottom: 8px; }
+.tl-events { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.tl-ev {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 10px 14px;
+}
+.tl-gly { width: 22px; height: 22px; flex: 0 0 auto; color: var(--ink-2); }
+.tl-ev.mark .tl-gly { color: var(--gly-gold); }
+.tl-main { flex: 1; min-width: 0; }
+.tl-name { font-weight: 700; font-size: 14px; }
+.tl-sub { color: var(--ink-2); font-size: 12px; margin-top: 2px; word-break: break-word; }
 </style>
 </head>
 <body>
@@ -1741,6 +1780,32 @@ body {
         { d: 'M12 11.2v7.6', w: 2 },
         { d: 'M16.6 11.2v7.6', w: 2 },
         { d: 'M3.6 20.6h16.8', w: 2.2 }
+      ]
+    },
+    // Coupole sur colonnade : le musée, monument central de l'île. Se distingue du
+    // « bâtiment » générique par son dôme (là où l'autre porte un fronton triangulaire).
+    // Le fleuron doré est posé AU-DESSUS de la coupole, donc sur le FOND de la page :
+    // sur l'aplat du dôme il aurait disparu en ambiance nuit (règle 1 de l'accent).
+    musee: {
+      rich: [
+        { d: 'M10.9 3.4a1.1 1.1 0 1 0 2.2 0 1.1 1.1 0 1 0-2.2 0z', f: 1, a: 1 },
+        { d: 'M12 4.5v2.2', w: 1.7 },
+        { d: 'M5.6 11.4a6.4 5.5 0 0 1 12.8 0z', f: 1 },
+        { d: 'M4.2 12.9h15.6', w: 2.2 },
+        { d: 'M6.7 13.5v5.4', w: 2 },
+        { d: 'M10.2 13.5v5.4', w: 2 },
+        { d: 'M13.8 13.5v5.4', w: 2 },
+        { d: 'M17.3 13.5v5.4', w: 2 },
+        { d: 'M4.6 19.3h14.8', w: 1.6 },
+        { d: 'M3 21.3h18', w: 2.4 }
+      ],
+      plain: [
+        { d: 'M5.8 11.6a6.2 5.4 0 0 1 12.4 0z', f: 1 },
+        { d: 'M4 13h16', w: 2.1 },
+        { d: 'M7 13.8v5', w: 2 },
+        { d: 'M12 13.8v5', w: 2 },
+        { d: 'M17 13.8v5', w: 2 },
+        { d: 'M3.4 20.8h17.2', w: 2.2 }
       ]
     },
     // Coupe : un jalon franchi. Étoile dorée DANS la coupe (donc sur le fond).
@@ -2471,6 +2536,78 @@ body {
     return { tier: tier, resetsPity: tier !== 'bois' };
   }
 
+  /* ------------------------------------------------- frise chronologique (Phase 3.3)
+     Le Hall Timeline du musée rejoue l'histoire RÉELLE. Arbitrage Leo : « objets +
+     moments marquants » — pas le journal de bord exhaustif de chaque validation, qui
+     après trois mois d'usage noierait le récit sous des centaines de lignes identiques.
+
+     Tout est DÉRIVÉ, rien n'est stocké : les objets viennent d'`inventory`, les jalons et
+     les quêtes accomplies d'`history`, et les MONTÉES DE NIVEAU sont reconstituées en
+     rejouant l'historique dans l'ordre (l'élan se cumule, on note le jour où il franchit
+     un palier). Un niveau n'a jamais été stocké — invariant 2.2 — il ne pouvait donc être
+     daté qu'ainsi. Une save éditée à la main ne peut pas s'inventer un moment.
+
+     Retourne [{day, events:[…]}, …], du jour le PLUS RÉCENT au plus ancien. */
+  var EVENT_WEIGHT = { level: 0, milestone: 1, item: 2, quest: 3 };
+  function byEventWeight(a, b) { return (EVENT_WEIGHT[a.kind] | 0) - (EVENT_WEIGHT[b.kind] | 0); }
+
+  function timeline(state) {
+    var hist = historyOf(state), inv = inventoryOf(state);
+    var byDay = {}, order = [], i;
+    function dayBucket(day) {
+      if (!byDay[day]) { byDay[day] = { day: day, events: [] }; order.push(byDay[day]); }
+      return byDay[day];
+    }
+
+    /* 1. Les objets obtenus : le cœur de la frise, chacun avec son souvenir daté. */
+    var mileSameDay = {};
+    for (i = 0; i < inv.length; i++) {
+      var it = inv[i];
+      if (!it || typeof it.day !== 'string' || !it.day) continue;
+      dayBucket(it.day).events.push({
+        kind: 'item', invId: it.id, itemId: it.itemId, day: it.day,
+        sourceLabel: (typeof it.sourceLabel === 'string') ? it.sourceLabel : ''
+      });
+      if (typeof it.itemId === 'string' && it.itemId.indexOf('mile_') === 0) {
+        mileSameDay[it.itemId + '|' + it.day] = true;
+      }
+    }
+
+    /* 2. Jalons et quêtes accomplies. Un jalon dont la CARTE a été découverte le même jour
+       est absorbé par elle (elle dit déjà « 10ᵉ Constance » et porte son visuel) ; si le
+       coffre n'a été ouvert que plus tard, les deux moments ont vraiment eu lieu, chacun
+       à sa date. */
+    for (i = 0; i < hist.length; i++) {
+      var e = hist[i];
+      if (!e || typeof e.day !== 'string' || !e.day) continue;
+      if (e.kind === 'milestone') {
+        if (mileSameDay[e.refId + '|' + e.day]) continue;
+        dayBucket(e.day).events.push({ kind: 'milestone', domain: e.domain, day: e.day, itemId: e.refId });
+      } else if (e.kind === 'quest') {
+        dayBucket(e.day).events.push({ kind: 'quest', domain: e.domain, day: e.day });
+      }
+    }
+
+    /* 3. Les montées de niveau, RECONSTITUÉES : l'historique est rejoué dans son ordre — qui
+       est chronologique, puisqu'on ne valide jamais dans le passé — en cumulant l'élan par
+       domaine. Le niveau 1 est le jour où la fondation a été posée (le tout premier élan). */
+    var acc = {};
+    for (i = 0; i < hist.length; i++) {
+      var h = hist[i];
+      if (!h || typeof h.day !== 'string' || !h.day) continue;
+      if (typeof h.elan !== 'number' || !isFinite(h.elan)) continue;
+      var before = acc[h.domain] || 0, after = before + h.elan;
+      acc[h.domain] = after;
+      for (var lv = levelFromElan(before) + 1; lv <= levelFromElan(after); lv++) {
+        dayBucket(h.day).events.push({ kind: 'level', domain: h.domain, day: h.day, level: lv });
+      }
+    }
+
+    order.sort(function (a, b) { return a.day < b.day ? 1 : (a.day > b.day ? -1 : 0); });
+    for (i = 0; i < order.length; i++) order[i].events.sort(byEventWeight);
+    return order;
+  }
+
   window.AscendDerive = {
     habitCount: habitCount,
     nextMilestone: nextMilestone,
@@ -2488,6 +2625,8 @@ body {
     buildingLevel: buildingLevel,
     buildingInfo: buildingInfo,
     totalBuildingLevels: totalBuildingLevels,
+    // Frise chronologique du musée (Phase 3.3) — dérivée de history + inventory.
+    timeline: timeline,
     ELAN_NV2: ELAN_NV2,
     ELAN_GROWTH: ELAN_GROWTH
   };
@@ -3070,6 +3209,82 @@ body {
   // il prolonge une pointe de terre. Ses coordonnées ne bougent pas (ancre stable).
   var PONTON = { x: 786, y: 566 };
 
+
+  /* --------------------------------------------------------------- LE MUSÉE (Phase 3.3)
+     Le monument central promis par le GDD §6.3, et attendu par la 4.2c : la place a été
+     dessinée VIDE pour lui, avec ses six sentiers qui y convergent déjà. Il est TOUJOURS
+     présent, dès l'état neuf — c'est un LIEU, pas une récompense : ce qu'on y trouve
+     grandit, lui ne change pas de taille (contrairement aux cinq bâtiments de domaine).
+
+     Comme `buildingMetrics` pour les cinq archétypes, MUSEE est la SOURCE UNIQUE de sa
+     géométrie : le dessin ET la boîte de tap s'y réfèrent, ils ne peuvent pas diverger.
+     Son vocabulaire est celui du village (mêmes classes, mêmes tokens, mêmes fenêtres
+     dorées la nuit) ; c'est sa SILHOUETTE qui le distingue — une coupole sur colonnade,
+     là où les domaines portent fronton, pignon, dents de scie ou toit courbe.
+     Ancre stable `musee` : l'asset 2.4 s'y substituera sans rien déplacer. */
+  var MUSEE = {
+    x: 500, y: 316,   // ancre = ligne de SOL, posée en retrait sur la place (le parvis reste devant)
+    half: 42, over: 5, stepH: 8, colH: 46, entaH: 8, drumH: 11, domeH: 24
+  };
+  MUSEE.colY = -MUSEE.stepH;                 // pied des colonnes (haut du perron)
+  MUSEE.entaY = MUSEE.colY - MUSEE.colH;     // chapiteaux, sous l'entablement
+  MUSEE.drumY = MUSEE.entaY - MUSEE.entaH;   // dessus de l'entablement
+  MUSEE.domeY = MUSEE.drumY - MUSEE.drumH;   // naissance de la coupole, sur le tambour
+  MUSEE.topY = MUSEE.domeY - MUSEE.domeH;    // sommet de la coupole (le fleuron monte encore un peu)
+  MUSEE.domeR = MUSEE.half - 14;
+  // Entraxes EXPLICITES, pas un pas régulier : la travée centrale est plus large que les
+  // autres. C'est la travée royale d'un portique, et surtout c'est elle qui laisse la porte
+  // se voir — au premier jet, six colonnes régulières la coupaient en deux.
+  MUSEE.colX = [-37, -24, -11, 11, 24, 37];
+
+  function museumNode() {
+    var M = MUSEE, half = M.half, i;
+    // Colonnade en matière de TOIT. Leçon coûteuse de la 4.2c : le portique de la palestre,
+    // dessiné en matière de mur SUR un mur, était rigoureusement invisible.
+    var cols = [];
+    for (i = 0; i < M.colX.length; i++) {
+      cols.push(html`<rect key=${'c' + i} class="isl-roof" x=${M.colX[i] - 3} y=${M.entaY}
+                           width="6" height=${M.colH} rx="1.2" />`);
+    }
+    // Perron : trois marches serrées, qui posent le monument. Au premier jet elles débordaient
+    // de part et d'autre et se lisaient comme des PLANCHES empilées, pas comme un emmarchement.
+    var steps = [];
+    for (i = 0; i < 3; i++) {
+      var sw = half + M.over + 5 - i * 4;
+      steps.push(html`<rect key=${'s' + i} class="isl-eaves" x=${-sw} y=${-2.7 * (i + 1)}
+                            width=${sw * 2} height="2.9" rx=".8" />`);
+    }
+    var rr = M.domeR;
+    var dome = 'M ' + (-rr) + ' ' + M.domeY + ' a ' + rr + ' ' + M.domeH + ' 0 0 1 ' + (rr * 2) + ' 0 Z';
+    // Moitié éclairée : l'astre est au nord-ouest depuis la 4.2d, la lumière vient de la gauche.
+    var domeHi = 'M ' + (-rr) + ' ' + M.domeY + ' a ' + rr + ' ' + M.domeH + ' 0 0 1 ' + rr + ' ' + (-M.domeH) + ' L 0 ' + M.domeY + ' Z';
+    return html`
+      <g id="musee" class="isl-musee" transform=${'translate(' + M.x + ',' + M.y + ')'}>
+        <ellipse class="isl-cast" cx=${(half * .45 + 7).toFixed(1)} cy="2.5" rx=${(half * 1.12).toFixed(1)} ry="10" />
+        ${steps}
+        <rect class="isl-tower" x=${-half + 3} y=${M.entaY} width=${(half - 3) * 2} height=${M.colH} rx="1.5" />
+        <rect class="isl-door" x="-7" y=${M.colY - 26} width="14" height="26" rx="1.4" />
+        <rect class="isl-win" x="-34" y=${M.entaY + 13} width="7" height="9" rx="1.1" />
+        <rect class="isl-win" x="27" y=${M.entaY + 13} width="7" height="9" rx="1.1" />
+        ${cols}
+        <rect class="isl-roof" x=${-half - M.over} y=${M.drumY} width=${(half + M.over) * 2} height=${M.entaH} rx="1.2" />
+        <rect class="isl-roof-hi" x=${-half - M.over - 3} y=${M.drumY - 3.4} width=${(half + M.over + 3) * 2} height="3.8" rx="1.6" />
+        <rect class="isl-tower" x=${-rr - 4} y=${M.domeY} width=${(rr + 4) * 2} height=${M.drumH} rx="1.2" />
+        <path class="isl-roof" d=${dome} />
+        <path class="isl-roof-hi" d=${domeHi} />
+        <circle class="isl-finial" cx="0" cy=${M.topY - 4.5} r="3" />
+      </g>`;
+  }
+
+  /* Le point est-il sur le MUSÉE ? Une seule boîte suffit : contrairement au port (4.2e), le
+     monument est compact et symétrique. Elle est testée AVANT les parcelles et le port, et
+     mesurée sans conflit avec aucun d'eux — la plus proche, `physique`, est en avant-plan
+     bien plus bas. */
+  function museumAt(pt) {
+    var M = MUSEE, dx = pt.x - M.x, dy = pt.y - M.y;
+    return Math.abs(dx) <= M.half + M.over + 8 && dy <= 14 && dy >= M.topY - 12;
+  }
+
   /* -------------------------------------------------------- TEXTURE DU TERRAIN (4.2d)
      Tout était en APLATS : un vert uni pour l'herbe, un beige uni pour le sable — la moitié
      de l'écran sans une seule aspérité. On sème donc des touffes d'herbe et du grain de
@@ -3191,6 +3406,7 @@ body {
   var openDomainId = null;  // domaine dont le « menu du domaine » est ouvert (éphémère, jamais persisté)
   var detailInvId = null;   // objet (invId) dont le détail-souvenir est affiché dans le menu, ou null
   var chestHubOpen = false; // hub des coffres (ponton) ouvert (éphémère, jamais persisté)
+  var museumOpen = false;   // musée (Hall Timeline) ouvert (éphémère, jamais persisté)
   // ACTIONS DEPUIS L'ÎLE (Phase 3.3) — état d'UI éphémère du « menu du domaine » quand il agit.
   var actNote = null;             // feedback doux après une action (validation d'habitude / quête accomplie)
   var menuConfirmAbandon = false; // confirmation d'arrêt d'une quête lancée depuis le menu
@@ -3308,6 +3524,8 @@ body {
   function backToGrid() { detailInvId = null; repaint(); }
   function openChestHub() { rememberFocus(); chestHubOpen = true; openDomainId = null; detailInvId = null; repaint(); }
   function closeChestHub() { chestHubOpen = false; repaint(); restoreFocus(); }
+  function openMuseum() { rememberFocus(); museumOpen = true; openDomainId = null; detailInvId = null; chestHubOpen = false; repaint(); }
+  function closeMuseum() { museumOpen = false; repaint(); restoreFocus(); }
 
   /* ---------------------------------- actions depuis l'île (Phase 3.3) : habitudes & quêtes
      Le menu du domaine ne montre plus seulement la collection : on y AGIT sans quitter l'île.
@@ -3402,8 +3620,9 @@ body {
     if (dy >= -66 && dy < -14) return dx >= -18 && dx <= 62;
     return false;
   }
-  // Tap (sans pan) : ponton → hub des coffres ; bâtiment → menu de domaine.
+  // Tap (sans pan) : musée → Hall Timeline ; port → hub des coffres ; bâtiment → menu de domaine.
   function handleTap(pt) {
+    if (museumAt(pt)) { openMuseum(); return; }
     if (pontonAt(pt)) { openChestHub(); return; }
     var dom = parcelleDomainAt(pt);
     if (dom) openDomain(dom);
@@ -3590,6 +3809,12 @@ body {
     return out;
   }
   function parcelleNode(p) { return (p.level >= 1) ? building(p) : ruin(p); }
+
+  /* Le musée prend place dans le MÊME tri de profondeur que les parcelles : il se dresse au
+     centre, entre les deux parcelles du fond, et c'est ce tri par y qui fait lire les écarts
+     comme de la perspective (4.2d) plutôt que comme un encombrement. */
+  function sceneObjects(ps) { return ps.concat([{ museum: true, y: MUSEE.y }]).sort(byDepth); }
+  function sceneNode(o) { return o.museum ? museumNode() : parcelleNode(o); }
 
   /* Le MÊME dessin, réemployé en vignette dans le bandeau du menu du domaine (4.2b) : on ne
      redessine rien, le bandeau montre le bâtiment RÉEL à son niveau réel. En mode `hero` on
@@ -4279,14 +4504,14 @@ body {
           <!-- CALQUE parcelles — TRIÉES par profondeur (y croissant) : les parcelles du fond
                sont peintes en premier, celles de l'avant les recouvrent. C'est ce tri qui fait
                lire l'écart comme de la PERSPECTIVE et non comme un encombrement. -->
-          <g class="isl-parcelles">${ps.slice().sort(byDepth).map(parcelleNode)}</g>
+          <g class="isl-parcelles">${sceneObjects(ps).map(sceneNode)}</g>
           <!-- CALQUE ponton des coffres (Phase 3.2 : tap → hub des coffres → cérémonie 1.3) -->
           <g class="isl-pontons">${pontonNode()}</g>
 
           <rect class="isl-brume" x="-80" y="-80" width=${WORLD.w + 160} height=${WORLD.h + 160} fill="url(#isl-fog)" />
         </svg>
 
-        <div class="isl-hint" aria-hidden="true">Touche un bâtiment ou le port · glisse pour explorer</div>
+        <div class="isl-hint" aria-hidden="true">Touche un bâtiment, le musée ou le port · glisse pour explorer</div>
 
         <button class="isl-recenter" type="button" onClick=${recenter} aria-label="Recentrer la vue de l’île">Recentrer</button>
 
@@ -4307,7 +4532,8 @@ body {
   function List() {
     var st = store.get();
     var ps = parcelles();
-    var chests = chestList(st).slice().reverse();   // plus récents en haut (miroir du ponton)
+    var chests = chestList(st).slice().reverse();   // plus récents en haut (miroir du port)
+    var mus = museumSummary(st);
     return html`
       <div class="isl-list">
         <p class="isl-list-lead">Vue liste de ton île, équivalent complet de la scène. Chaque
@@ -4338,6 +4564,23 @@ body {
                 </span>
               </li>`;
           })}
+        </ul>
+
+        <h3 class="isl-list-h">Le musée</h3>
+        <ul class="isl-items">
+          <li class="isl-item built" tabindex="0"
+              aria-label=${'Le musée, monument central de ton île. ' + mus.line + '.'}>
+            ${Glyph('musee', 'ii-gly')}
+            <span class="ii-main">
+              <span class="ii-title">Le musée</span>
+              <span class="ii-state">${mus.line}</span>
+              <div class="ii-actions">
+                <button class="lnk dm-open" type="button"
+                        aria-label="Visiter le musée et lire la frise de ton histoire"
+                        onClick=${openMuseum}>Visiter le musée</button>
+              </div>
+            </span>
+          </li>
         </ul>
 
         <h3 class="isl-list-h">Au port · coffres (${chests.length})</h3>
@@ -4738,6 +4981,99 @@ body {
       </div>`;
   }
 
+  /* --------------------------------------------- LE MUSÉE : le Hall Timeline (Phase 3.3)
+     La frise rejoue l'histoire RÉELLE, groupée par jour, du plus récent au plus ancien.
+     Arbitrage Leo : « objets + moments marquants » — les validations ordinaires n'y figurent
+     pas ligne à ligne, elles y sont déjà sous forme d'objets. Tout vient de `derive.timeline`,
+     donc de `history` et `inventory` : le musée ne stocke RIEN et ne peut rien inventer.
+     Les salles par domaine et l'exposition en vitrine sont la version suivante ; rien ici
+     ne les anticipe. Le dialog réemploie le vocabulaire des deux autres (`dm-*`, piège à
+     tabulation, focus rendu au déclencheur) : aucune plomberie neuve. */
+  function eventNode(ev) {
+    // Les MOMENTS (un niveau gagné, un jalon franchi) portent l'accent doré ; les objets
+    // gardent l'encre. C'est la seule hiérarchie visuelle de la frise, et elle suffit.
+    var mark = (ev.kind === 'level' || ev.kind === 'milestone');
+    var gly, name, sub;
+    if (ev.kind === 'item') {
+      var it = cards.resolve(ev.itemId);
+      gly = glyphName(it);
+      name = it.name;
+      sub = ev.sourceLabel || (labelOf(it.domain) + ', ' + cards.rarityLabel(it.rarity));
+    } else if (ev.kind === 'milestone') {
+      gly = 'jalon';
+      name = cards.resolve(ev.itemId).name;
+      sub = 'Jalon franchi en ' + labelOf(ev.domain);
+    } else if (ev.kind === 'level') {
+      gly = (ev.level >= 2) ? 'batiment' : 'pousse';
+      name = (ev.level >= 2)
+        ? labelOf(ev.domain) + ' passe au niveau ' + ev.level
+        : labelOf(ev.domain) + ' pose sa fondation';
+      sub = (ev.level >= 2) ? 'Ton bâtiment a grandi' : 'Le domaine s’éveille';
+    } else {
+      gly = 'chrono';
+      name = 'Quête accomplie';
+      sub = labelOf(ev.domain);
+    }
+    return html`
+      <li class=${'tl-ev' + (mark ? ' mark' : '')}>
+        ${Glyph(gly, 'tl-gly')}
+        <div class="tl-main">
+          <p class="tl-name">${name}</p>
+          <p class="tl-sub">${sub}</p>
+        </div>
+      </li>`;
+  }
+
+  function dayNode(d) {
+    return html`
+      <li class="tl-day" key=${d.day}>
+        <p class="tl-date">${fmtDay(d.day)}</p>
+        <ul class="tl-events">${d.events.map(eventNode)}</ul>
+      </li>`;
+  }
+
+  // Résumé de la frise, PARTAGÉ par le panneau et par le miroir Liste : une seule
+  // formulation, donc aucun risque que les deux surfaces se contredisent.
+  function museumSummary(st) {
+    var days = derive.timeline(st), moments = 0;
+    for (var i = 0; i < days.length; i++) moments += days[i].events.length;
+    return {
+      days: days, moments: moments,
+      line: days.length
+        ? (moments + ' moment' + (moments > 1 ? 's' : '') + ' sur ' + days.length + ' jour' + (days.length > 1 ? 's' : ''))
+        : 'La frise attend ton premier geste'
+    };
+  }
+
+  function MuseumPanel() {
+    var sum = museumSummary(store.get());
+    var days = sum.days, stateLine = sum.line;
+    return html`
+      <div class="dom-menu museum" role="dialog" aria-modal="true" aria-label="Le musée, hall de la frise"
+           onKeyDown=${function (e) { if (e.key === 'Escape') { closeMuseum(); return; } trapTab(e); }}>
+        <div class="dm-backdrop" onClick=${closeMuseum} aria-hidden="true"></div>
+        <div class="dm-panel" tabindex="-1" ref=${focusPanel}>
+          <header class="dm-head">
+            ${Glyph('musee', 'dm-gly')}
+            <div class="dm-headmain">
+              <h2 class="dm-title">Le musée</h2>
+              <p class="dm-state">${stateLine}</p>
+            </div>
+            <button class="dm-close" type="button" aria-label="Fermer" onClick=${closeMuseum}>✕</button>
+          </header>
+          <div class="dm-body">
+            ${days.length
+              ? html`
+                <p class="dm-note">Le hall de la frise rejoue ton histoire, jour après jour. Tout ce
+                qui s’y trouve, tu l’as vécu pour de vrai.</p>
+                <ol class="tl">${days.map(dayNode)}</ol>`
+              : html`<p class="empty-soft big">Ton musée vient d’ouvrir. Sa frise se remplira d’elle-même,
+                à mesure que tu avanceras pour de vrai.</p>`}
+          </div>
+        </div>
+      </div>`;
+  }
+
   /* --------------------------------------------------------------------- écran complet */
   function Screen(ctx) {
     repaint = (ctx && typeof ctx.repaint === 'function') ? ctx.repaint : function () {};
@@ -4757,6 +5093,7 @@ body {
         ${view === 'scene' ? Scene() : List()}
         ${openDomainId ? DomainMenu() : null}
         ${chestHubOpen ? ChestHub() : null}
+        ${museumOpen ? MuseumPanel() : null}
       </main>`;
   }
 
@@ -4785,7 +5122,7 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.21';
+  var VER = '0.22';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
