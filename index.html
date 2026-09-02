@@ -50,6 +50,7 @@
   --on-accent: #0E211F;              /* 5.9:1 sur --accent */
   --accent-soft: rgba(61, 169, 160, .14);
   --gold: #C9A24B;
+  --gly-gold: #7E6226;               /* accent des glyphes : 5.73:1 / surface · 5.18:1 / bg */
   --on-gold: #2A2410;                /* 6.1:1 sur --gold */
   --gold-soft: rgba(201, 162, 75, .16);
   --shadow: rgba(30, 42, 46, .10);
@@ -84,6 +85,7 @@
   --on-accent: #2E2028;              /* 5.9:1 sur --accent */
   --accent-soft: rgba(232, 146, 124, .16);
   --gold: #C99A3E;
+  --gly-gold: #875D25;              /* accent des glyphes : 5.51:1 / surface · 5.15:1 / surface-2 */
   --on-gold: #2A2410;               /* 5.5:1 sur --gold */
   --gold-soft: rgba(201, 154, 62, .16);
   --shadow: rgba(74, 52, 40, .12);
@@ -114,6 +116,7 @@
   --on-accent: #0A1020;             /* 7.9:1 sur --accent */
   --accent-soft: rgba(110, 168, 255, .16);
   --gold: #E8C06A;
+  --gly-gold: #E8C06A;              /* accent des glyphes : 9.34:1 / surface (l'or clair tient de nuit) */
   --on-gold: #241C08;               /* 10.6:1 sur --gold */
   --gold-soft: rgba(232, 192, 106, .16);
   --shadow: rgba(0, 0, 0, .45);
@@ -325,9 +328,28 @@ body {
    silhouettes de la scène. Chaque site ne règle que sa TAILLE (et parfois sa couleur). */
 .gly {
   width: 1.15em; height: 1.15em; flex: 0 0 auto; display: block;
-  fill: none; stroke: currentColor; stroke-width: 1.7;
+  fill: none; stroke: currentColor;
   stroke-linecap: round; stroke-linejoin: round;
 }
+/* 4.2f — trait MODULÉ, APLATS, et UN accent doré (le grief de Leo sur la v0.20 :
+   « des dessins très voire trop simplistes »). Trois mécaniques, aucune couleur
+   codée en dur :
+   - l'épaisseur vient de `--w`, posée par glyphs.js partie par partie. Elle NE PEUT
+     PAS être une propriété CSS sur `.gly` : en SVG une propriété CSS écrase l'attribut
+     de présentation du <path>, donc un `stroke-width` ici rendrait muettes toutes les
+     épaisseurs du dessin. La variable, elle, se laisse défaulter sans écraser ;
+   - un APLAT est peint ET tracé de sa propre couleur : ce fin trait lui arrondit les
+     angles, ce qui évite d'écrire des chemins à coins arrondis partout ;
+   - l'ACCENT ne se pose jamais SUR un aplat en `currentColor` (règle tenue dans
+     glyphs.js) : il tombe donc toujours sur le fond de la page, où son contraste est
+     mesurable — et mesuré. `--gly-accent` permet à un site de l'inverser.
+   L'accent a son PROPRE or (`--gly-gold`), plus profond que `--gold` en lumière du
+   jour : mesure faite, `--gold` ne tient que 2,40:1 sur le blanc — c'est un or de
+   FOND (il se paire avec `--on-gold`), pas un or de trait. */
+.gly path { stroke-width: var(--w, 1.7); }
+.gly .gly-f { fill: currentColor; stroke: currentColor; stroke-width: .9; }
+.gly .gly-a { stroke: var(--gly-accent, var(--gly-gold)); }
+.gly .gly-f.gly-a { fill: var(--gly-accent, var(--gly-gold)); stroke: var(--gly-accent, var(--gly-gold)); }
 
 .note-soft {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -673,7 +695,8 @@ body {
   background: var(--surface); border: 1px solid var(--gold);
   border-radius: var(--r-lg); box-shadow: 0 16px 48px -14px rgba(0, 0, 0, .5);
 }
-.rc-gly { width: 52px; height: 52px; color: var(--gold); }
+/* Le glyphe entier est doré ici : l'accent s'inverse en encre, sinon il disparaît. */
+.rc-gly { width: 52px; height: 52px; color: var(--gold); --gly-accent: var(--ink); }
 .rc-name { font-weight: 700; font-size: 18px; color: var(--ink); text-align: center; word-break: break-word; }
 .rc-rarity {
   font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
@@ -904,7 +927,9 @@ body {
 .isl-parcelle .isl-sign-gly { opacity: .7; }
 .isl-badge-sh { fill: var(--land-2); opacity: .22; }
 .isl-parcelle { opacity: .96; }
-.isl-sign-gly { fill: none; stroke: var(--ink-2); stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+.isl-sign-gly { fill: none; stroke: var(--ink-2); stroke-linecap: round; stroke-linejoin: round; }
+.isl-sign-gly path { stroke-width: var(--w, 2.1); }
+.isl-sign-gly .gly-f { fill: var(--ink-2); stroke: var(--ink-2); stroke-width: .9; }
 
 /* TEINTE PAR DOMAINE (4.2d, arbitrage Leo « teinte discrète : toit + enseigne »).
    Les 5 toits étaient EXACTEMENT la même terracotta : ce que les vieux handoffs appelaient
@@ -986,6 +1011,7 @@ body {
 .isl-sill  { stroke: var(--wall-2); stroke-width: 1.2; opacity: .6; }
 .isl-built .isl-badge { fill: var(--surface); opacity: .95; }
 .isl-built .isl-sign-gly { opacity: 1; stroke: var(--roof-2); }
+.isl-built .isl-sign-gly .gly-f { fill: var(--roof-2); stroke: var(--roof-2); }
 
 /* Pastille « X/Y » sous la parcelle (Phase 3.1) : affordance « tappable » + progression de
    collection à même la scène (cap « île = lobby »). Décorative (la vue Liste est le miroir a11y). */
@@ -1527,7 +1553,7 @@ body {
   };
 })();
 
-/* ASCEND v2 — Glyphes dessinés (Phase 4.2e).
+/* ASCEND v2 — Glyphes dessinés (Phase 4.2e, redessinés en 4.2f).
 
    Grief nommé par Leo sur la v0.19 : « les emojis pour les bâtiments ça ne fait
    vraiment absolument pas premium ». Arbitrage : TOUS les emojis de l'app, sans
@@ -1540,109 +1566,306 @@ body {
    l'encre du texte qui les porte), et substituables par un asset 2.4 sur la même
    ancre.
 
-   Données PURES : chaque entrée est une liste de `d` de <path>, sur une grille de
-   24×24, pensés pour `fill:none; stroke:currentColor` (aucun remplissage, aucun
-   trait codé en dur). Les consommateurs (app.js, island.js) construisent le nœud :
-   en HTML un <svg class="gly">, dans la scène un <g> mis à l'échelle. */
+   --- 4.2f : le second grief de Leo sur la v0.20 ---
+   « c'est plus des emoji, certes, mais des dessins très voire trop simplistes ».
+   Il avait raison, et c'était mesurable : les 13 glyphes étaient TOUS mono-trait,
+   une seule épaisseur, aucun remplissage, aucun détail — un jeu d'icônes
+   d'interface, pas un jeu de symboles de jeu. Trois arbitrages pour le corriger :
+
+   1. TRAIT MODULÉ + APLATS. Le trait cesse d'être uniforme (contour porteur ~2,3 ·
+      trait courant 1,7 · détail fin ~1,1) et la forme prend des APLATS là où elle
+      le demande. C'est la différence entre un pictogramme et une illustration.
+   2. ENCRE + UN ACCENT DORÉ. Le corps reste dans l'encre du texte ; UN détail
+      passe en or (la barre de l'haltère, l'étoile de la coupole, la coche du
+      succès…). C'est ce point chaud qui fait « précieux ».
+   3. DEUX NIVEAUX DE DÉTAIL. `rich` pour les grands sites (≥ 24 px : cartes,
+      détail-souvenir, états vides), `plain` pour les petits (15–22 px) et pour les
+      enseignes gravées de la scène. Un dessin riche devient une bouillie à 15 px ;
+      un dessin épuré s'ennuie à 56 px.
+
+   Trois règles que l'accent doré ne viole JAMAIS :
+   - il ne se pose pas SUR un aplat en `currentColor` (en ambiance nuit l'encre est
+     claire et l'or aussi : le détail disparaîtrait). Il se pose sur le FOND de la
+     page, où son contraste est mesurable — et mesuré ;
+   - il n'existe que dans la version `rich` : à 15 px un liseré doré ne se lit pas,
+     et la version épurée doit rester juste en monochrome ;
+   - il ne décore pas les glyphes purement fonctionnels (`plus`, `chrono`, `ile`) :
+     l'or dit « précieux », pas « bouton ».
+
+   Données PURES : chaque variante est une liste de parties sur une grille de 24×24.
+   Clés d'une partie — `d` : le chemin ; `w` : l'épaisseur du trait (absente = celle
+   du site) ; `f` : la partie est un APLAT (peint, pas tracé) ; `a` : la partie porte
+   l'ACCENT. Aucune couleur codée en dur : les consommateurs (app.js, island.js)
+   traduisent `f`/`a` en classes, et le CSS décide de l'encre. */
 (function () {
   'use strict';
 
   var GLYPHS = {
     /* --- identité des 5 domaines (remplace 🏋️ 🧠 📖 🎨 🧘) --- */
-    // Haltère : la barre et ses disques.
-    physique: [
-      'M4.5 12h15',
-      'M7 8.5v7', 'M17 8.5v7',
-      'M3.5 10.2v3.6', 'M20.5 10.2v3.6'
-    ],
-    // Coupole d'observatoire surmontée de son étoile : l'archétype du domaine.
-    mental: [
-      'M3.5 20.5h17',
-      'M6 20.5a6 6 0 0 1 12 0',
-      'M12 2.5q.7 3.2 3.4 3.9Q12.7 7.1 12 10.3q-.7-3.2-3.4-3.9Q11.3 5.7 12 2.5z',
-      'M8.6 20.5v-3.2', 'M15.4 20.5v-3.2'
-    ],
-    // Livre ouvert sur son dos.
-    connaissances: [
-      'M12 7.2C10 5.6 7 5.1 4 5.5v12.8c3-.4 6 .1 8 1.7 2-1.6 5-2.1 8-1.7V5.5c-3-.4-6 .1-8 1.7z',
-      'M12 7.2v12.8'
-    ],
-    // Palette de peintre et ses godets.
-    creativite: [
-      'M12 3.4a8.6 8.6 0 1 0 0 17.2c1.4 0 2.1-.9 2.1-1.8 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8h1.7a3.9 3.9 0 0 0 3.9-3.9c0-3.9-3.8-7.1-8.5-7.1z',
-      'M8 8.6h.01', 'M6.4 12.6h.01', 'M9.4 16.2h.01', 'M13.6 7.6h.01'
-    ],
-    // Feuille et sa nervure.
-    bienetre: [
-      'M4.6 19.4C4.6 11 10.2 5.4 19.4 5.4c0 9.2-5.6 14.8-14.8 14',
-      'M4.6 19.4C8 16 11.6 12.6 16.4 9.8'
-    ],
+    // Haltère : quatre disques, colliers, et la barre moletée en or.
+    physique: {
+      rich: [
+        { d: 'M9.4 12h5.2', w: 2.6, a: 1 },
+        { d: 'M6.8 6.8h2.6v10.4H6.8z', f: 1 },
+        { d: 'M14.6 6.8h2.6v10.4h-2.6z', f: 1 },
+        { d: 'M3.6 9.2h1.9v5.6H3.6z', f: 1 },
+        { d: 'M18.5 9.2h1.9v5.6h-1.9z', f: 1 },
+        { d: 'M2.4 11v2', w: 2.2 },
+        { d: 'M21.6 11v2', w: 2.2 }
+      ],
+      plain: [
+        { d: 'M4.6 12h14.8', w: 2 },
+        { d: 'M7 8.4h2.6v7.2H7z', f: 1 },
+        { d: 'M14.4 8.4H17v7.2h-2.6z', f: 1 },
+        { d: 'M3.4 10.4v3.2', w: 2 },
+        { d: 'M20.6 10.4v3.2', w: 2 }
+      ]
+    },
+    // Coupole d'observatoire : tambour ajouré, coupole en aplat, étoile dorée.
+    mental: {
+      rich: [
+        { d: 'M12 2q.62 2.9 3.1 3.55Q12.62 6.2 12 9.1 11.38 6.2 8.9 5.55 11.38 4.9 12 2z', f: 1, a: 1 },
+        { d: 'M6.5 15.2a5.5 5.5 0 0 1 11 0z', f: 1 },
+        { d: 'M5.5 15.2h13', w: 2.2 },
+        { d: 'M7 20.4v-5.2', w: 2 },
+        { d: 'M17 20.4v-5.2', w: 2 },
+        { d: 'M9.9 20.4v-2.6', w: 1.2 },
+        { d: 'M14.1 20.4v-2.6', w: 1.2 },
+        { d: 'M3.6 20.4h16.8', w: 2.4 }
+      ],
+      plain: [
+        { d: 'M12 2.6q.6 2.7 3 3.3-2.4.6-3 3.3-.6-2.7-3-3.3 2.4-.6 3-3.3z', f: 1 },
+        { d: 'M6.6 15.4a5.4 5.4 0 0 1 10.8 0z', f: 1 },
+        { d: 'M6.8 20.4v-5', w: 2 },
+        { d: 'M17.2 20.4v-5', w: 2 },
+        { d: 'M3.8 20.4h16.4', w: 2.2 }
+      ]
+    },
+    // Livre ouvert : couverture porteuse, lignes de texte fines, signet doré.
+    connaissances: {
+      rich: [
+        { d: 'M12 6.9C10 5.3 7.2 4.8 4.2 5.2v12.6c3-.4 5.8.1 7.8 1.7 2-1.6 4.8-2.1 7.8-1.7V5.2c-3-.4-5.8.1-7.8 1.7z', w: 2.3 },
+        { d: 'M12 6.9v12.6', w: 2 },
+        { d: 'M6.6 9.1c1.3-.2 2.4-.1 3.4.3', w: 1.1 },
+        { d: 'M6.6 11.9c1.3-.2 2.4-.1 3.4.3', w: 1.1 },
+        { d: 'M6.6 14.7c1.3-.2 2.4-.1 3.4.3', w: 1.1 },
+        { d: 'M14 9.4c1-.4 2.1-.5 3.4-.3', w: 1.1 },
+        { d: 'M14 12.2c1-.4 2.1-.5 3.4-.3', w: 1.1 },
+        { d: 'M15.5 4.9h1.9v5l-.95-1.1-.95 1.1z', f: 1, a: 1 }
+      ],
+      plain: [
+        { d: 'M12 7.2C10 5.6 7 5.1 4 5.5v12.8c3-.4 6 .1 8 1.7 2-1.6 5-2.1 8-1.7V5.5c-3-.4-6 .1-8 1.7z', w: 2.1 },
+        { d: 'M12 7.2v12.8', w: 2 }
+      ]
+    },
+    // Palette de peintre : contour porteur, godets en aplat, le premier doré.
+    creativite: {
+      rich: [
+        { d: 'M12 3.2a8.8 8.8 0 1 0 0 17.6c1.45 0 2.15-.92 2.15-1.85 0-.5-.2-.92-.5-1.32-.3-.4-.5-.82-.5-1.32 0-1.03.82-1.85 1.85-1.85h1.75a4 4 0 0 0 4-4c0-4-3.9-7.26-8.75-7.26z', w: 2.3 },
+        { d: 'M7 8.4a1.25 1.25 0 1 0 2.5 0 1.25 1.25 0 1 0-2.5 0z', f: 1, a: 1 },
+        { d: 'M5.25 12.4a1.25 1.25 0 1 0 2.5 0 1.25 1.25 0 1 0-2.5 0z', f: 1 },
+        { d: 'M8.15 16.2a1.25 1.25 0 1 0 2.5 0 1.25 1.25 0 1 0-2.5 0z', f: 1 },
+        { d: 'M12.15 7.5a1.25 1.25 0 1 0 2.5 0 1.25 1.25 0 1 0-2.5 0z', f: 1 }
+      ],
+      plain: [
+        { d: 'M12 3.4a8.6 8.6 0 1 0 0 17.2c1.4 0 2.1-.9 2.1-1.8 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8h1.7a3.9 3.9 0 0 0 3.9-3.9c0-3.9-3.8-7.1-8.5-7.1z', w: 2 },
+        { d: 'M6.85 8.6a1.15 1.15 0 1 0 2.3 0 1.15 1.15 0 1 0-2.3 0z', f: 1 },
+        { d: 'M5.25 12.6a1.15 1.15 0 1 0 2.3 0 1.15 1.15 0 1 0-2.3 0z', f: 1 },
+        { d: 'M8.25 16.2a1.15 1.15 0 1 0 2.3 0 1.15 1.15 0 1 0-2.3 0z', f: 1 }
+      ]
+    },
+    // Feuille : contour porteur et nervures en grand, aplat plein en petit (à 15 px
+    // c'est la MASSE qui se lit, pas le détail) ; goutte de rosée dorée.
+    bienetre: {
+      rich: [
+        { d: 'M4.8 19.2C4.8 10.9 10.5 5.2 19.2 5.2c0 8.7-5.7 14.4-14.4 14z', w: 2.3 },
+        { d: 'M5.4 18.6C8.7 15.3 12 12.1 16.6 9.5', w: 1.6 },
+        { d: 'M8.4 15.6 8 12.2', w: 1.1 },
+        { d: 'M11.3 12.9 11 9.7', w: 1.1 },
+        { d: 'M9.5 14.6l3.2.4', w: 1.1 },
+        { d: 'M2.6 21.4c.7-1.1 1.4-2 2.2-2.8', w: 2.2 },
+        { d: 'M12.4 11.1a1.15 1.15 0 1 0 2.3 0 1.15 1.15 0 1 0-2.3 0z', f: 1, a: 1 }
+      ],
+      plain: [
+        { d: 'M4.8 19.2C4.8 10.9 10.5 5.2 19.2 5.2c0 8.7-5.7 14.4-14.4 14z', f: 1 },
+        { d: 'M2.6 21.4c.7-1.1 1.4-2 2.2-2.8', w: 2.2 }
+      ]
+    },
 
     /* --- navigation & repères (remplace 🏝️ 🌱 🏛️ 🏆 🧰 🛶 ✨ 🎉) --- */
-    // Île posée sur ses vagues : l'onglet du monde.
-    ile: [
-      'M6.4 14.4c1.6-4.4 3.4-6.6 5.6-6.6s4 2.2 5.6 6.6z',
-      'M12 7.8V5.4',
-      'M3 18.2c1.8-1.1 3.6-1.1 5.4 0s3.6 1.1 5.4 0 3.6-1.1 5.4 0'
-    ],
+    // Île posée sur ses vagues : l'onglet du monde. Pas d'or : c'est un repère de
+    // navigation, pas une récompense.
+    ile: {
+      rich: [
+        { d: 'M16 14.6c1.05-3.5 2.3-5.25 3.75-5.25S22.9 11.1 24 14.6z', f: 1 },
+        { d: 'M3.4 14.6c1.9-5.7 4.1-8.55 6.6-8.55s4.7 2.85 6.6 8.55z', f: 1 },
+        { d: 'M1.6 15.4h20.8', w: 1.6 },
+        { d: 'M1.4 18.4c1.9-1.2 3.8-1.2 5.7 0s3.8 1.2 5.7 0 3.8-1.2 5.7 0', w: 2.2 },
+        { d: 'M3.2 21.4c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0', w: 1.3 }
+      ],
+      plain: [
+        { d: 'M6.2 14.6c1.7-4.7 3.6-7 5.8-7s4.1 2.3 5.8 7z', f: 1 },
+        { d: 'M12 7.6V5.2', w: 2 },
+        { d: 'M3 18.2c1.8-1.1 3.6-1.1 5.4 0s3.6 1.1 5.4 0 3.6-1.1 5.4 0', w: 2 }
+      ]
+    },
     // Jeune pousse : l'onglet des habitudes, et l'île qui s'éveille.
-    pousse: [
-      'M12 20.6v-7.2',
-      'M12 13.4c0-3 2.1-5.1 5.1-5.1 0 3-2.1 5.1-5.1 5.1z',
-      'M12 16c0-2.4-1.7-4.1-4.1-4.1 0 2.4 1.7 4.1 4.1 4.1z'
-    ],
-    // Édifice à fronton : une montée de niveau de bâtiment.
-    batiment: [
-      'M3.6 20.4h16.8',
-      'M6 20.4V10.2l6-3.8 6 3.8v10.2',
-      'M10 20.4v-4.8h4v4.8'
-    ],
-    // Coupe : un jalon franchi.
-    jalon: [
-      'M8.4 3.8h7.2v4.1a3.6 3.6 0 0 1-7.2 0z',
-      'M8.4 5.2H5.9a3 3 0 0 0 3 3', 'M15.6 5.2h2.5a3 3 0 0 1-3 3',
-      'M12 11.5v3.4', 'M9.2 20.2h5.6', 'M10.2 14.9h3.6v5.3h-3.6z'
-    ],
-    // Coffre cerclé : les récompenses en attente.
-    coffre: [
-      'M3.8 10.4h16.4v9.2H3.8z',
-      'M3.8 10.4 6 6.2h12l2.2 4.2',
-      'M12 10.4v9.2',
-      'M10.2 13.4h3.6v3.2h-3.6z'
-    ],
-    // Ancre : le port où les coffres accostent.
-    port: [
-      'M12 7.6v12.8',
-      'M12 6.8a2.1 2.1 0 1 0 0-4.2 2.1 2.1 0 0 0 0 4.2z',
-      'M8.8 10.2h6.4',
-      'M4.6 12.6H6.9a7.4 7.4 0 0 0 10.2 0h2.3'
-    ],
-    // Étincelle : ce qui vient d'arriver de bon.
-    etincelle: [
-      'M12 2.8q.9 4.2 4.4 5.1Q12.9 8.8 12 13q-.9-4.2-4.4-5.1Q11.1 7 12 2.8z',
-      'M17.8 14.4q.5 2.4 2.5 2.9-2 .5-2.5 2.9-.5-2.4-2.5-2.9 2-.5 2.5-2.9z'
-    ],
-    // Coche cerclée : un accomplissement validé.
-    succes: [
-      'M12 3.4a8.6 8.6 0 1 0 0 17.2 8.6 8.6 0 0 0 0-17.2z',
-      'M8.2 12.2l2.7 2.7 5.1-5.4'
-    ],
-    // Croix d'addition : ouvrir le formulaire de création (4.2e).
-    plus: [
-      'M12 5.2v13.6', 'M5.2 12h13.6'
-    ],
-    // Chronomètre : lancer une quête minutée (4.2e).
-    chrono: [
-      'M12 20.8a7.9 7.9 0 1 0 0-15.8 7.9 7.9 0 0 0 0 15.8z',
-      'M12 9.2v3.7l2.6 1.6',
-      'M9.4 3.2h5.2'
-    ]
+    pousse: {
+      rich: [
+        { d: 'M11.6 21.6c0-4.2.3-7.6 1-10.2', w: 2.4 },
+        { d: 'M12.6 11.4c.4-3.5 2.8-5.6 6.4-5.6-.3 3.6-2.5 5.9-6.4 5.6z', f: 1 },
+        { d: 'M11.9 14.6c-.9-2.9-3.2-4.4-6.5-4.2.7 3 3 4.6 6.5 4.2z', f: 1 },
+        { d: 'M12.2 17.2c1-2.1 2.8-3.1 5.3-3-.7 2.2-2.5 3.2-5.3 3z', f: 1 }
+      ],
+      plain: [
+        { d: 'M11.7 21.4c0-4 .3-7.2 1-9.8', w: 2.3 },
+        { d: 'M12.6 11.8c.4-3.4 2.7-5.4 6.2-5.4-.3 3.5-2.4 5.7-6.2 5.4z', f: 1 },
+        { d: 'M11.9 14.8c-.9-2.8-3.1-4.2-6.3-4 .7 2.9 2.9 4.4 6.3 4z', f: 1 }
+      ]
+    },
+    // Édifice à fronton : une montée de niveau. Oculus doré dans le fronton.
+    batiment: {
+      rich: [
+        { d: 'M12 3 20.6 8.9H3.4z', w: 2.3 },
+        { d: 'M10.85 7.2a1.15 1.15 0 1 0 2.3 0 1.15 1.15 0 1 0-2.3 0z', f: 1, a: 1 },
+        { d: 'M4.4 11.1h15.2', w: 2.2 },
+        { d: 'M7.2 11.4v7.4', w: 2 },
+        { d: 'M12 11.4v7.4', w: 2 },
+        { d: 'M16.8 11.4v7.4', w: 2 },
+        { d: 'M4.6 19.1h14.8', w: 1.6 },
+        { d: 'M3.4 21.2h17.2', w: 2.4 }
+      ],
+      plain: [
+        { d: 'M12 4 20.2 9.2H3.8z', f: 1 },
+        { d: 'M7.4 11.2v7.6', w: 2 },
+        { d: 'M12 11.2v7.6', w: 2 },
+        { d: 'M16.6 11.2v7.6', w: 2 },
+        { d: 'M3.6 20.6h16.8', w: 2.2 }
+      ]
+    },
+    // Coupe : un jalon franchi. Étoile dorée DANS la coupe (donc sur le fond).
+    jalon: {
+      rich: [
+        { d: 'M7.7 3.4h8.6v4.5a4.3 4.3 0 0 1-8.6 0z', w: 2.3 },
+        { d: 'M12 4.5q.45 1.85 2.2 2.3Q12.45 7.25 12 9.1 11.55 7.25 9.8 6.8 11.55 6.35 12 4.5z', f: 1, a: 1 },
+        { d: 'M7.7 5H5.2a3.1 3.1 0 0 0 2.9 3.1', w: 1.9 },
+        { d: 'M16.3 5h2.5a3.1 3.1 0 0 1-2.9 3.1', w: 1.9 },
+        { d: 'M12 12.4v3', w: 2.3 },
+        { d: 'M9.6 15.2h4.8v1.9H9.6z', f: 1 },
+        { d: 'M7.8 17.9h8.4v2.7H7.8z', f: 1 }
+      ],
+      plain: [
+        { d: 'M8 3.8h8v4.2a4 4 0 0 1-8 0z', f: 1 },
+        { d: 'M8 5.3H5.6a2.9 2.9 0 0 0 2.7 2.9', w: 1.9 },
+        { d: 'M16 5.3h2.4a2.9 2.9 0 0 1-2.7 2.9', w: 1.9 },
+        { d: 'M12 12.2v3.2', w: 2.2 },
+        { d: 'M8.2 17.6h7.6v3H8.2z', f: 1 }
+      ]
+    },
+    // Coffre cerclé : les récompenses en attente. Serrure dorée sur le fond.
+    coffre: {
+      rich: [
+        { d: 'M3.7 10.9V9.6c0-2.3 3.7-3.9 8.3-3.9s8.3 1.6 8.3 3.9v1.3z', f: 1 },
+        { d: 'M3.7 10.9h16.6v9H3.7z', w: 2.3 },
+        { d: 'M8.2 11.2v8.4', w: 1.3 },
+        { d: 'M15.8 11.2v8.4', w: 1.3 },
+        { d: 'M10.7 12.5h2.6v3.1h-2.6z', f: 1, a: 1 }
+      ],
+      plain: [
+        { d: 'M4 11.2V9.9c0-2.2 3.6-3.7 8-3.7s8 1.5 8 3.7v1.3z', f: 1 },
+        { d: 'M4 11.2h16v8.6H4z', w: 2.1 },
+        { d: 'M10.7 13.2h2.6v3h-2.6z', f: 1 }
+      ]
+    },
+    // Ancre : le port où les coffres accostent. Anneau doré.
+    port: {
+      rich: [
+        { d: 'M12 7.4v12.6', w: 2.4 },
+        { d: 'M9.9 4.7a2.1 2.1 0 1 0 4.2 0 2.1 2.1 0 1 0-4.2 0z', w: 2, a: 1 },
+        { d: 'M8.4 9.9h7.2', w: 2.2 },
+        { d: 'M4.2 12.2h2.6a7.7 7.7 0 0 0 10.4 0h2.6', w: 2.4 },
+        { d: 'M4.2 12.2l1.7-2.2', w: 1.7 },
+        { d: 'M19.8 12.2l-1.7-2.2', w: 1.7 }
+      ],
+      plain: [
+        { d: 'M12 7.6v12.4', w: 2.2 },
+        { d: 'M9.9 4.7a2.1 2.1 0 1 0 4.2 0 2.1 2.1 0 1 0-4.2 0z', w: 1.9 },
+        { d: 'M8.8 10.2h6.4', w: 2 },
+        { d: 'M4.6 12.6h2.3a7.4 7.4 0 0 0 10.2 0h2.3', w: 2.1 }
+      ]
+    },
+    // Étincelle : ce qui vient d'arriver de bon. La petite est dorée.
+    etincelle: {
+      rich: [
+        { d: 'M11.4 2.2q.95 4.6 4.75 5.6Q12.35 8.8 11.4 13.4 10.45 8.8 6.65 7.8 10.45 6.8 11.4 2.2z', f: 1 },
+        { d: 'M18 13.6q.5 2.5 2.6 3.1-2.1.6-2.6 3.1-.5-2.5-2.6-3.1 2.1-.6 2.6-3.1z', f: 1, a: 1 },
+        { d: 'M6.4 15.6q.36 1.8 1.9 2.25-1.54.45-1.9 2.25-.36-1.8-1.9-2.25 1.54-.45 1.9-2.25z', f: 1 }
+      ],
+      plain: [
+        { d: 'M11.6 2.8q.9 4.2 4.4 5.1-3.5.9-4.4 5.1-.9-4.2-4.4-5.1 3.5-.9 4.4-5.1z', f: 1 },
+        { d: 'M17.8 14.4q.5 2.4 2.5 2.9-2 .5-2.5 2.9-.5-2.4-2.5-2.9 2-.5 2.5-2.9z', f: 1 }
+      ]
+    },
+    // Coche cerclée : un accomplissement validé. La coche EST l'accent.
+    succes: {
+      rich: [
+        { d: 'M12 3.4a8.6 8.6 0 1 0 0 17.2 8.6 8.6 0 0 0 0-17.2z', w: 2.4 },
+        { d: 'M12 1.4a10.6 10.6 0 1 0 0 21.2 10.6 10.6 0 0 0 0-21.2z', w: 1 },
+        { d: 'M7.9 12.2 11 15.3l5.3-5.7', w: 2.5, a: 1 }
+      ],
+      plain: [
+        { d: 'M12 3.4a8.6 8.6 0 1 0 0 17.2 8.6 8.6 0 0 0 0-17.2z', w: 2 },
+        { d: 'M8.2 12.2l2.7 2.7 5.1-5.4', w: 2.2 }
+      ]
+    },
+    // Croix d'addition : ouvrir le formulaire de création (4.2e). Pas d'or : un bouton.
+    plus: {
+      rich: [
+        { d: 'M6.4 3.6h11.2a2.8 2.8 0 0 1 2.8 2.8v11.2a2.8 2.8 0 0 1-2.8 2.8H6.4a2.8 2.8 0 0 1-2.8-2.8V6.4a2.8 2.8 0 0 1 2.8-2.8z', w: 1.8 },
+        { d: 'M12 7.8v8.4', w: 2.5 },
+        { d: 'M7.8 12h8.4', w: 2.5 }
+      ],
+      plain: [
+        { d: 'M12 5.2v13.6', w: 2.2 },
+        { d: 'M5.2 12h13.6', w: 2.2 }
+      ]
+    },
+    // Chronomètre : lancer une quête minutée (4.2e). Pas d'or : un bouton.
+    chrono: {
+      rich: [
+        { d: 'M12 21.2a8.4 8.4 0 1 0 0-16.8 8.4 8.4 0 0 0 0 16.8z', w: 2.3 },
+        { d: 'M10.5 2.2h3v2.3h-3z', f: 1 },
+        { d: 'M9.2 2.4h5.6', w: 2.2 },
+        { d: 'M17.9 5.4 19.3 4', w: 2 },
+        { d: 'M12 12.8V8.6', w: 2.3 },
+        { d: 'M12 12.8l2.9 1.9', w: 1.5 },
+        { d: 'M12 6.6v1.1', w: 1.1 },
+        { d: 'M12 19v-1.1', w: 1.1 },
+        { d: 'M18.2 12.8h-1.1', w: 1.1 },
+        { d: 'M5.8 12.8h1.1', w: 1.1 }
+      ],
+      plain: [
+        { d: 'M12 20.8a7.9 7.9 0 1 0 0-15.8 7.9 7.9 0 0 0 0 15.8z', w: 2 },
+        { d: 'M12 9.2v3.7l2.6 1.6', w: 1.9 },
+        { d: 'M9.4 3.2h5.2', w: 2.1 }
+      ]
+    }
   };
 
+  // Traduit une partie de données en attributs de <path> : classe (aplat / accent)
+  // et épaisseur. Aucune couleur ici — c'est le CSS qui décide de l'encre.
+  function toPart(p) {
+    var cls = (p.f ? 'gly-f' : '') + (p.a ? (p.f ? ' ' : '') + 'gly-a' : '');
+    return { d: p.d, cls: cls || null, w: p.w || null };
+  }
+
   window.AscendGlyphs = {
-    // Liste de `d` pour un nom ; nom inconnu → l'étincelle (jamais un trou).
-    paths: function (name) {
-      return Object.prototype.hasOwnProperty.call(GLYPHS, name) ? GLYPHS[name] : GLYPHS.etincelle;
+    /* Parties d'un glyphe. `small` demande la version épurée (petits sites et
+       enseignes de la scène) ; par défaut, la version riche.
+       Nom inconnu → l'étincelle (jamais un trou). */
+    parts: function (name, small) {
+      var g = Object.prototype.hasOwnProperty.call(GLYPHS, name) ? GLYPHS[name] : GLYPHS.etincelle;
+      return (small ? g.plain : g.rich).map(toPart);
     },
     has: function (name) {
       return Object.prototype.hasOwnProperty.call(GLYPHS, name);
@@ -2983,26 +3206,33 @@ body {
     return null;
   }
 
-  /* Glyphe dessiné (4.2e) : remplace les emojis, sans exception (arbitrage Leo).
-     Deux formes du MÊME jeu de chemins (glyphs.js), donc un seul dessin à maintenir :
+  /* Glyphe dessiné (4.2e, redessiné en 4.2f) : remplace les emojis, sans exception
+     (arbitrage Leo). Deux formes du MÊME jeu de dessins (glyphs.js), donc un seul
+     jeu à maintenir :
      - Glyph() pour le HTML (menus, listes) : peint en `currentColor`, il prend l'encre
        du texte qui le porte et reste AA d'office ;
      - signGlyph() pour la SCÈNE, où il faut un <g> mis à l'échelle plutôt qu'un <svg>
        imbriqué : la grille 24×24 est recentrée sur (0,0) puis réduite au disque de
        l'enseigne. Son trait suit le zoom de la scène (pas de non-scaling-stroke, qui
-       figerait l'épaisseur et ferait maigrir le dessin en zoomant). */
-  function Glyph(name, cls) {
+       figerait l'épaisseur et ferait maigrir le dessin en zoomant).
+     L'enseigne prend TOUJOURS la version épurée (4.2f) : elle est gravée petit, et
+     son accent doré jurerait avec la teinte de toit du domaine (4.2d). */
+  function Glyph(name, cls, small) {
     return html`
       <svg class=${'gly' + (cls ? ' ' + cls : '')} viewBox="0 0 24 24"
            aria-hidden="true" focusable="false">
-        ${glyphs.paths(name).map(function (d) { return html`<path d=${d} />`; })}
+        ${glyphs.parts(name, small).map(function (p) {
+          return html`<path d=${p.d} class=${p.cls} style=${p.w ? '--w:' + p.w : null} />`;
+        })}
       </svg>`;
   }
   function signGlyph(name, cy, s) {
     var t = 'translate(0,' + cy + ') scale(' + s + ') translate(-12,-12)';
     return html`
       <g class="isl-sign-gly" transform=${t}>
-        ${glyphs.paths(name).map(function (d) { return html`<path d=${d} />`; })}
+        ${glyphs.parts(name, 1).map(function (p) {
+          return html`<path d=${p.d} class=${p.cls} style=${p.w ? '--w:' + p.w : null} />`;
+        })}
       </g>`;
   }
 
@@ -4238,7 +4468,7 @@ body {
           ${hb.freq ? html`<div class="dmh-sub">${hb.freq}</div>` : null}
           ${count >= 1 && next
             ? html`<div class="dmh-goal" aria-label=${'Plus que ' + next.remaining + ' avant le jalon des ' + next.threshold}>
-                     ${Glyph('jalon', 'hg-gly')} <span>Plus que <strong>${next.remaining}</strong> avant le jalon des ${next.threshold}</span></div>`
+                     ${Glyph('jalon', 'hg-gly', 1)} <span>Plus que <strong>${next.remaining}</strong> avant le jalon des ${next.threshold}</span></div>`
             : null}
         </div>
         ${done
@@ -4277,7 +4507,7 @@ body {
             </div>
           </div>
           <div class="aq-main">
-            <div class="aq-title">${Glyph(aq.domain, 'h-gly')}${aq.title}</div>
+            <div class="aq-title">${Glyph(aq.domain, 'h-gly', 1)}${aq.title}</div>
             <div class="aq-sub">${(d ? d.label : aq.domain)} · ${aq.minutes} min estimées</div>
             <p class="aq-note">Le chrono tourne pour de vrai : même si tu fermes l’app, il reprend où il en était.</p>
           </div>
@@ -4342,7 +4572,7 @@ body {
         ${actNote
           ? html`
             <div class="note-soft dm-actnote" role="status">
-              ${Glyph(actNote.gly, 'ns-gly')}
+              ${Glyph(actNote.gly, 'ns-gly', 1)}
               <span>${actNote.text}</span>
               <button class="lnk" type="button" onClick=${clearNote}>OK</button>
             </div>`
@@ -4555,7 +4785,7 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.20';
+  var VER = '0.21';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
@@ -4713,15 +4943,20 @@ body {
   function confirmDelete(id) { ui.confirmDeleteId = null; actions.deleteHabit(id); paint(); }
 
   /* --------------------------------------------------------------- composants */
-  /* Glyphe dessiné (4.2e) : remplace les emojis, sans exception (arbitrage Leo).
-     Peint en `currentColor`, il prend l'encre du texte qui le porte : il suit donc
-     les tokens d'ambiance et reste AA d'office, ce qu'un emoji (qui porte sa propre
-     couleur, et son propre dessin selon l'appareil) ne pouvait pas faire. */
-  function Glyph(name, cls) {
+  /* Glyphe dessiné (4.2e, redessiné en 4.2f) : remplace les emojis, sans exception
+     (arbitrage Leo). Peint en `currentColor`, il prend l'encre du texte qui le porte :
+     il suit donc les tokens d'ambiance et reste AA d'office, ce qu'un emoji (qui porte
+     sa propre couleur, et son propre dessin selon l'appareil) ne pouvait pas faire.
+     `small` demande la version épurée : glyphs.js tient DEUX niveaux de détail, et
+     c'est le site d'appel qui sait sa taille réelle (ici : tout ce qui rend sous
+     24 px). Un dessin riche devient une bouillie à 15 px. */
+  function Glyph(name, cls, small) {
     return html`
       <svg class=${'gly' + (cls ? ' ' + cls : '')} viewBox="0 0 24 24"
            aria-hidden="true" focusable="false">
-        ${glyphs.paths(name).map(function (d) { return html`<path d=${d} />`; })}
+        ${glyphs.parts(name, small).map(function (p) {
+          return html`<path d=${p.d} class=${p.cls} style=${p.w ? '--w:' + p.w : null} />`;
+        })}
       </svg>`;
   }
 
@@ -4733,7 +4968,7 @@ body {
           return html`
             <button type="button" class="dom-chip" aria-pressed=${on ? 'true' : 'false'}
                     onClick=${function () { onPick(d.id); }}>
-              ${Glyph(d.id, 'd-gly')}${d.label}
+              ${Glyph(d.id, 'd-gly', 1)}${d.label}
             </button>`;
         })}
       </div>`;
@@ -4800,7 +5035,7 @@ body {
         </div>
         ${count >= 1 && next
           ? html`<div class="h-goal" aria-label=${'Plus que ' + next.remaining + ' avant le jalon des ' + next.threshold}>
-                   ${Glyph('jalon', 'hg-gly')}
+                   ${Glyph('jalon', 'hg-gly', 1)}
                    <span>Plus que <strong>${next.remaining}</strong> avant le jalon des ${next.threshold}</span>
                  </div>`
           : null}
@@ -4836,7 +5071,7 @@ body {
     if (!m) return null;
     return html`
       <div class="note-soft" role="status">
-        ${Glyph('jalon', 'ns-gly')}
+        ${Glyph('jalon', 'ns-gly', 1)}
         <span>Jalon des <strong>${m.threshold}</strong> franchi. Ton <strong>${m.chestLabel}</strong>${' '}
         vient d’accoster au port de ton île.</span>
         <button class="lnk" type="button"
@@ -4853,7 +5088,7 @@ body {
     var plural = m.count > 1;
     return html`
       <div class="note-soft" role="status">
-        ${Glyph('batiment', 'ns-gly')}
+        ${Glyph('batiment', 'ns-gly', 1)}
         <span>Ton <strong>${m.domainLabel}</strong> atteint le <strong>niveau ${m.level}</strong>.${' '}
         ${plural ? 'Des Coffres de cristal ont accosté' : 'Un Coffre de cristal a accosté'} au port de ton île.</span>
         <button class="lnk" type="button"
@@ -4937,7 +5172,7 @@ body {
             </div>
           </div>
           <div class="aq-main">
-            <div class="aq-title">${Glyph(aq.domain, 'h-gly')}${aq.title}</div>
+            <div class="aq-title">${Glyph(aq.domain, 'h-gly', 1)}${aq.title}</div>
             <div class="aq-sub">${(d ? d.label : aq.domain)} · ${aq.minutes} min estimées</div>
             <p class="aq-note">Le chrono tourne pour de vrai : même si tu fermes l’app, il reprend où il en était.</p>
           </div>
@@ -5022,7 +5257,7 @@ body {
         ${ui.quest.done
           ? html`
             <div class="note-soft" role="status">
-              ${Glyph('succes', 'ns-gly')}
+              ${Glyph('succes', 'ns-gly', 1)}
               <span>Quête accomplie. Ton <strong>${ui.quest.done.label}</strong> vient d’accoster au port de ton île.</span>
               <button class="lnk" type="button" onClick=${function () { ui.quest.done = null; paint(); }}>OK</button>
             </div>`
@@ -5054,7 +5289,7 @@ body {
       <div class="disclose">
         <button class="disclose-btn" type="button" aria-expanded=${open ? 'true' : 'false'}
                 aria-controls=${id} onClick=${onToggle}>
-          ${Glyph(gly, 'dc-gly')}
+          ${Glyph(gly, 'dc-gly', 1)}
           <span>${label}</span>
           <span class="dc-chev" aria-hidden="true">${open ? '▴' : '▾'}</span>
         </button>
