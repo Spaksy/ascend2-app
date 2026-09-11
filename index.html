@@ -634,7 +634,11 @@ body {
 }
 .dmh-main { flex: 1 1 160px; min-width: 0; }
 .dmh-title { font-weight: 700; font-size: 15px; color: var(--ink); display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; word-break: break-word; }
-.dmh-count { font-size: 15px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+/* Le compteur prend --ink, comme son JUMEAU de M1 (.habit .h-count). Il était en --accent depuis
+   la 3.3 : mesuré sur fond rendu, 2,85:1 le jour et 2,26:1 au crépuscule — sous AA. Le design
+   system le dit depuis la 0.3 : --accent est un REMPLISSAGE, jamais une encre de texte.
+   Défaut PRÉ-EXISTANT révélé par la mesure de la 3.3b, pas une régression. */
+.dmh-count { font-size: 15px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
 .dmh-count .u { font-size: 11px; font-weight: 600; color: var(--ink-2); }
 .dmh-sub { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
 .dmh-goal { font-size: 12px; color: var(--ink-2); margin-top: 6px; display: flex; align-items: center; gap: 6px; }
@@ -1165,6 +1169,136 @@ body {
 .tl-main { flex: 1; min-width: 0; }
 .tl-name { font-weight: 700; font-size: 14px; }
 .tl-sub { color: var(--ink-2); font-size: 12px; margin-top: 2px; word-break: break-word; }
+
+/* ============ LES SALLES DU MUSÉE & LEURS VITRINES (Phase 3.3b) ============
+   Le hall porte cinq PORTES ; derrière chacune, une salle où l'on expose ce qu'on choisit de
+   montrer. La salle est une surface spatiale : scène SVG + miroir Liste, bascule locale.
+   La scène prend la PIERRE du musée en portant `isl-musee` — le même porteur de tokens que le
+   monument (4.2d/3.3a), donc aucune teinte inventée et aucune valeur dupliquée en 3 ambiances.
+   Les classes sont propres à la salle (`rm-*`) parce que les classes de la scène de l'île
+   pointent vers des dégradés définis dans les <defs> de CETTE scène : réutilisées ici, elles
+   seraient silencieusement sans remplissage. */
+
+/* --- les portes du hall --- */
+.rm-doors { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 6px; }
+.rm-door > button, .rm-door.locked {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  min-height: 62px; padding: 10px 14px; border-radius: var(--r-lg);
+  background: var(--surface); border: 1px solid var(--line); color: var(--ink); font: inherit;
+}
+.rm-door > button { cursor: pointer; }
+.rm-door > button:hover { border-color: var(--accent); }
+.rm-door > button:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.rm-door.locked { background: var(--surface-2); border-style: dashed; }
+.rm-door.locked:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.rm-door-gly { width: 26px; height: 26px; flex: 0 0 auto; color: var(--ink-2); }
+.rm-door > button .rm-door-gly { color: var(--accent); }
+.rm-door-m { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.rm-door-t { font-weight: 700; font-size: 15px; }
+.rm-door-s { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+.rm-door-go { flex: 0 0 auto; color: var(--ink-2); font-size: 17px; }
+.rm-h { margin-top: 26px; }
+
+/* --- barre de la salle : retour au hall + bascule Scène/Liste --- */
+.rm-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.rm-seg { margin-left: auto; }
+.rm-note { margin-top: 12px; }
+/* L'indice a une hauteur CONSTANTE et tient sur une ligne. Mesuré : rendu conditionnellement,
+   son apparition faisait grandir la feuille de 44 px — soit la hauteur d'une cible — pile entre
+   le tap qui choisit l'objet et celui qui désigne la vitrine. La scène doit être immobile dans
+   cette fenêtre : c'est là qu'on vise. */
+.rm-hint {
+  margin: 8px 0 10px; height: 18px; line-height: 18px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rm-hint strong { color: var(--ink); }
+
+/* --- la scène de la salle --- */
+.rm-scene {
+  display: block; width: 100%; height: auto; border-radius: var(--r-md);
+  border: 1px solid var(--line); overflow: hidden; touch-action: none;
+  background: var(--surface-2);
+}
+/* ÉCHELLE DE VALEURS. Premier jet : mur, sol et socles tous pris dans les pierres pâles
+   (--wall / --plaza / --roof). Mesuré au canvas : socle contre sol **1,03:1** — exactement
+   la même couleur — et rang du fond contre mur 1,21 à 1,32:1. La salle était un aplat beige
+   où seuls les glyphes se voyaient. Les paliers sont donc bâtis sur --ink en voile : c'est le
+   SEUL axe de contraste garanti dans les trois ambiances (l'encre est par définition ce qui
+   tranche le plus sur le fond), là où --plaza et --plaza-2 s'inversent carrément la nuit. */
+.rm-ground { fill: var(--wall); }
+.rm-cornice { fill: var(--roof-2); }
+.rm-pilaster { fill: var(--ink); opacity: .09; }
+.rm-wainscot { fill: var(--ink); opacity: .1; }
+.rm-floor { fill: var(--ink); opacity: .14; }
+.rm-tile { fill: none; stroke: var(--ink); stroke-width: 1.4; opacity: .12; }
+.rm-cast { fill: var(--ink); opacity: .16; }
+.rm-base { fill: var(--wall); }
+.rm-base-sh { fill: var(--ink); opacity: .17; }
+.rm-cap { fill: var(--roof-2); }
+.rm-pane { fill: var(--wall); }
+.rm-glass { fill: var(--ink); opacity: .07; }
+/* Le cadre est ce qui fait lire une vitrine du RANG DU FOND : là-bas le socle clair et le verre
+   sont presque à la valeur du mur, et le cadre est en plus réduit par l'échelle de perspective.
+   Il est donc épais — mesuré à 1,35:1 contre le mur au premier jet, un cheveu qui disparaissait. */
+.rm-frame { fill: none; stroke: var(--roof-2); stroke-width: 2.6; }
+.rm-gly { fill: none; stroke: var(--ink); stroke-linecap: round; stroke-linejoin: round; }
+.rm-gly path { stroke-width: var(--w, 2.1); }
+.rm-gly .gly-f { fill: var(--ink); stroke: var(--ink); stroke-width: .9; }
+.rm-case { cursor: pointer; }
+/* La boîte de tap : invisible mais pleine (fill:none ne recevrait aucun pointeur). */
+.rm-hit { fill: transparent; }
+/* Vitrine LIBRE pendant qu'un objet est choisi. Le liseré doré est visible À L'ARRÊT : le
+   battement n'est qu'un renfort, donc reduce-motion ne prive personne du repère. */
+.rm-free {
+  fill: none; stroke: var(--gold); stroke-width: 2.4; stroke-dasharray: 7 5;
+  animation: rm-pulse 1.6s ease-in-out infinite;
+}
+.rm-sel { fill: none; stroke: var(--gold); stroke-width: 2.8; }
+@keyframes rm-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+
+/* --- la réserve (scène) : « choisir puis poser » --- */
+.rm-shelf { margin-top: 18px; }
+.rm-shelf-l { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.rm-pick {
+  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px;
+  border-radius: var(--r-pill); background: var(--surface); border: 1px solid var(--line);
+  color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.rm-pick:hover { border-color: var(--accent); }
+.rm-pick:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.rm-pick[aria-pressed="true"] { background: var(--gold-soft); border-color: var(--gold); }
+.rm-pick-gly { width: 20px; height: 20px; flex: 0 0 auto; color: var(--ink-2); }
+.rm-pick[aria-pressed="true"] .rm-pick-gly { color: var(--ink); }
+.rm-pick-n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 22ch; }
+
+/* --- le miroir Liste de la salle : chaque vitrine se garnit au clavier (mécanique 2.3) --- */
+.rm-rows { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.rm-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 10px 14px;
+}
+.rm-row-n { font-weight: 700; font-size: 14px; flex: 0 0 auto; }
+.rm-sel-in { flex: 1 1 150px; min-width: 0; min-height: 44px; margin: 0; }
+.rm-off { flex: 0 0 auto; min-height: 44px; padding: 0 16px; font-size: 14px; }
+.rm-reserve { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.rm-reserve > li {
+  display: flex; align-items: center; gap: 10px; min-height: 44px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 9px 13px;
+}
+.rm-reserve > li:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.rm-res-gly { width: 20px; height: 20px; flex: 0 0 auto; color: var(--ink-2); }
+.rm-res-n { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600; word-break: break-word; }
+.rm-res-d { flex: 0 0 auto; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+/* --- la seconde porte, dans le menu du domaine --- */
+.dm-roomgo {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; min-height: 48px; margin-bottom: 14px; font-size: 14px;
+}
+.dm-roomgly { width: 22px; height: 22px; flex: 0 0 auto; color: var(--accent); }
+.dm-roomsoft { margin-bottom: 14px; }
 </style>
 </head>
 <body>
@@ -2175,7 +2309,7 @@ body {
       if (ms) {
         return {
           id: itemId, domain: mdomain,
-          name: th + 'ᵉ — ' + ms.virtue,         // ex. « 10ᵉ — Constance » (déterministe)
+          name: th + 'ᵉ ' + ms.virtue,           // ex. « 10ᵉ Constance » (déterministe)
           rarity: tierRarity(ms.tier), milestone: true, threshold: th
         };
       }
@@ -2536,6 +2670,101 @@ body {
     return { tier: tier, resetsPity: tier !== 'bois' };
   }
 
+  /* ----------------------------------------- salles du musée & vitrines (Phase 3.3b)
+     Une salle par domaine, débloquée au NIVEAU 2 de son bâtiment (GDD §6.3). C'est
+     l'atterrissage des décorations retirées de l'île en 4.2b : `placements` était persisté
+     et hydraté depuis, JAMAIS relu — ces fonctions sont les premières à le relire.
+
+     Ce qui est STOCKÉ se réduit au strict minimum non calculable : quel objet occupe quelle
+     vitrine, soit `{invId, zone:'musee.<domaine>', slot}`. Le TDD §4 écrivait `x, y` : c'était
+     pour un placement LIBRE, celui de l'île. Les vitrines sont des emplacements DISCRETS —
+     leurs coordonnées se dérivent de l'index (island.js/SHOWCASES), donc les stocker
+     violerait l'invariant. Le `slot` est le seul fait que le calcul ne peut pas retrouver.
+     Les anciennes positions `zone:'ile'` ne sont jamais lues ici et restent intactes.
+
+     Tout le reste se dérive : le nombre de vitrines (du niveau), ce qu'une salle contient
+     (de `inventory`), ce qui reste à exposer (le complément). Une position ORPHELINE (objet
+     disparu, vitrine au-delà de la salle actuelle, doublon) est IGNORÉE au rendu — jamais
+     supprimée : rétrograder un niveau est impossible, mais une save bricolée ne doit ni
+     faire tomber le rendu ni perdre les choix du joueur. */
+  var ROOM_LEVEL = 2;          // niveau d'ouverture d'une salle (GDD §6.3)
+  var ROOM_SLOTS_BASE = 3;     // vitrines à l'ouverture (arbitrage Leo : la règle 2.3, éprouvée)
+  var ROOM_SLOTS_CAP = 8;      // … + 1 par niveau gagné, plafond 8
+
+  function museumZone(domain) { return 'musee.' + domain; }
+
+  // Nombre de vitrines d'une salle — DÉRIVÉ du niveau, jamais stocké : la salle s'agrandit
+  // parce que le domaine a VRAIMENT progressé (règle d'or). 0 = salle encore en sommeil.
+  function roomSlots(level) {
+    if (!(level >= ROOM_LEVEL)) return 0;
+    return Math.min(ROOM_SLOTS_CAP, ROOM_SLOTS_BASE + (level - ROOM_LEVEL));
+  }
+
+  function placementsOf(state) {
+    return (state && Array.isArray(state.placements)) ? state.placements : [];
+  }
+  // Index des entrées d'inventaire par leur id (l'invId d'une position les désigne).
+  function invById(state) {
+    var inv = inventoryOf(state), m = {};
+    for (var i = 0; i < inv.length; i++) if (inv[i] && typeof inv[i].id === 'string') m[inv[i].id] = inv[i];
+    return m;
+  }
+  // Un objet appartient-il à CETTE salle ? Son domaine est DÉRIVÉ de son itemId (cards.resolve) :
+  // cartes du catalogue, décos génératives et cartes-jalons en portent toutes un — « tout est
+  // exposable » (arbitrage Leo), chacun dans la salle de son domaine.
+  function itemOfEntry(entry) {
+    return (entry && typeof entry.itemId === 'string') ? cards.resolve(entry.itemId) : null;
+  }
+
+  /* État complet d'une salle, pour la scène ET son miroir Liste (une seule source, donc
+     aucun risque que les deux surfaces se contredisent) :
+     { domain, level, unlocked, slots, cases:[…|null], shelf:[…], shown, nextAt } */
+  function roomInfo(state, domain) {
+    var level = buildingLevel(state, domain);
+    var slots = roomSlots(level);
+    var zone = museumZone(domain);
+    var byId = invById(state), ps = placementsOf(state);
+    var cases = [], taken = {}, i, shown = 0;
+    for (i = 0; i < slots; i++) cases.push(null);
+    for (i = 0; i < ps.length; i++) {
+      var p = ps[i];
+      if (!p || p.zone !== zone || typeof p.invId !== 'string') continue;
+      if (typeof p.slot !== 'number' || !isFinite(p.slot)) continue;
+      var slot = p.slot | 0;
+      if (slot < 0 || slot >= slots) continue;         // vitrine hors de la salle ACTUELLE → ignorée
+      if (cases[slot] || taken[p.invId]) continue;     // doublon de position → la première gagne
+      var e = byId[p.invId]; if (!e) continue;         // objet disparu → ignoré, jamais nettoyé
+      var it = itemOfEntry(e); if (!it || it.domain !== domain) continue;
+      cases[slot] = { entry: e, item: it, slot: slot };
+      taken[p.invId] = true;
+      shown++;
+    }
+    // La réserve : tout ce que ce domaine t'a donné et qui n'est pas exposé ici.
+    var inv = inventoryOf(state), shelf = [];
+    for (i = 0; i < inv.length; i++) {
+      var en = inv[i];
+      if (!en || typeof en.id !== 'string' || taken[en.id]) continue;
+      var it2 = itemOfEntry(en);
+      if (it2 && it2.domain === domain) shelf.push({ entry: en, item: it2 });
+    }
+    return {
+      domain: domain, level: level, unlocked: slots > 0, slots: slots,
+      cases: cases, shelf: shelf, shown: shown,
+      nextAt: (slots > 0 && slots < ROOM_SLOTS_CAP) ? (level + 1) : 0
+    };
+  }
+
+  // Les 5 salles, pour le hall (ses portes) et pour le miroir Liste. DÉRIVÉ de bout en bout.
+  function museumRooms(state) {
+    var list = domains.list, out = [];
+    for (var i = 0; i < list.length; i++) {
+      var r = roomInfo(state, list[i].id);
+      out.push({ domain: list[i], level: r.level, unlocked: r.unlocked,
+                 slots: r.slots, shown: r.shown, waiting: r.shelf.length });
+    }
+    return out;
+  }
+
   /* ------------------------------------------------- frise chronologique (Phase 3.3)
      Le Hall Timeline du musée rejoue l'histoire RÉELLE. Arbitrage Leo : « objets +
      moments marquants » — pas le journal de bord exhaustif de chaque validation, qui
@@ -2627,6 +2856,13 @@ body {
     totalBuildingLevels: totalBuildingLevels,
     // Frise chronologique du musée (Phase 3.3) — dérivée de history + inventory.
     timeline: timeline,
+    // Salles du musée (Phase 3.3b) — seule la POSITION est stockée, tout le reste se dérive.
+    museumZone: museumZone,
+    roomSlots: roomSlots,
+    roomInfo: roomInfo,
+    museumRooms: museumRooms,
+    ROOM_LEVEL: ROOM_LEVEL,
+    ROOM_SLOTS_CAP: ROOM_SLOTS_CAP,
     ELAN_NV2: ELAN_NV2,
     ELAN_GROWTH: ELAN_GROWTH
   };
@@ -2824,10 +3060,97 @@ body {
     return null;
   }
 
-  /* Phase 4.2b — le PLACEMENT sur l'île (2.3 : putOnIsland / takeOffIsland) a été RETIRÉ sur
-     arbitrage de Leo : les objets se disposeront dans le MUSÉE (M3.3), pas sur l'île. Aucune
-     mutation ne touche donc plus `placements` ; les positions déjà enregistrées restent dans
-     la save, intactes (non destructif — voir state.js). */
+  /* --------------------------------------- exposition au musée (Phase 3.3b) : les vitrines
+     Le PLACEMENT sur l'île (2.3 : putOnIsland / takeOffIsland) avait été retiré en 4.2b sur
+     arbitrage de Leo — « les emplacements de déco seront dans le musée ». Les voici. Ces trois
+     mutations sont les SEULES à écrire `placements`, et elles n'y écrivent que des positions
+     de MUSÉE (`zone:'musee.<domaine>'`) : les anciennes positions `zone:'ile'` ne sont ni lues
+     ni touchées, elles traversent intactes (non destructif, invariant absolu — voir state.js).
+
+     NON DESTRUCTIF de bout en bout : ranger un objet retire sa POSITION, jamais l'objet — il
+     retourne dans la réserve de sa salle et reste dans `inventory`, avec son souvenir.
+     Le geste est « choisir puis poser » (arbitrage du 2026-07-23, remonté au musée). */
+
+  // Positions du musée, filtrées : retire celles qui désignent cet objet, et/ou occupent
+  // cette vitrine. Fonction pure sur le tableau (copie), jamais de mutation en place.
+  function withoutMuseum(list, zone, invId, slot) {
+    return list.filter(function (p) {
+      if (!p || p.zone !== zone) return true;                       // autres zones : intouchées
+      if (invId != null && p.invId === invId) return false;
+      if (slot != null && typeof p.slot === 'number' && (p.slot | 0) === slot) return false;
+      return true;
+    });
+  }
+  // L'objet d'une entrée d'inventaire est-il exposable dans la salle de `domain` ?
+  // (Son domaine est DÉRIVÉ de l'itemId : cartes, décos génératives et jalons en portent un.)
+  function exposable(st, invId, domain) {
+    var inv = st.inventory || [];
+    for (var i = 0; i < inv.length; i++) {
+      var e = inv[i];
+      if (!e || e.id !== invId || typeof e.itemId !== 'string') continue;
+      var it = cards.resolve(e.itemId);
+      return (it && it.domain === domain) ? e : null;
+    }
+    return null;
+  }
+
+  // Expose un objet dans une vitrine. Si elle est occupée, son occupant repart à la réserve
+  // (arbitrage 2.3 : « choisir puis poser sur case occupée = l'occupant retourne à l'inventaire »).
+  // Refus PROPRE si la salle dort encore, si la vitrine n'existe pas, ou si l'objet n'est pas
+  // de ce domaine. Retourne { ok, reason }.
+  function exposeInMuseum(invId, domain, slot) {
+    var st = store.get();
+    if (!domains.has(domain)) return { ok: false, reason: 'domaine' };
+    var room = derive.roomInfo(st, domain);
+    if (!room.unlocked) return { ok: false, reason: 'en_sommeil' };
+    slot = slot | 0;
+    if (slot < 0 || slot >= room.slots) return { ok: false, reason: 'vitrine' };
+    if (!exposable(st, invId, domain)) return { ok: false, reason: 'introuvable' };
+    var zone = derive.museumZone(domain);
+    var next = withoutMuseum(st.placements || [], zone, invId, slot);
+    next = next.concat([{ invId: invId, zone: zone, slot: slot }]);
+    store.set({ placements: next });
+    return { ok: true, reason: 'expose' };
+  }
+
+  // Déplace un objet DÉJÀ exposé vers une autre vitrine — le geste « glisser ». Sur une vitrine
+  // occupée, c'est un ÉCHANGE POSITIONNEL (l'occupant prend la place libérée) et non un renvoi
+  // à la réserve : glisser déplace, il ne range pas. Une seule écriture pour les deux objets.
+  function moveInMuseum(invId, domain, slot) {
+    var st = store.get();
+    if (!domains.has(domain)) return { ok: false, reason: 'domaine' };
+    var room = derive.roomInfo(st, domain);
+    if (!room.unlocked) return { ok: false, reason: 'en_sommeil' };
+    slot = slot | 0;
+    if (slot < 0 || slot >= room.slots) return { ok: false, reason: 'vitrine' };
+    var from = -1, occupant = null, i;
+    for (i = 0; i < room.slots; i++) {
+      if (room.cases[i] && room.cases[i].entry.id === invId) from = i;
+    }
+    if (from < 0) return exposeInMuseum(invId, domain, slot);   // pas encore exposé → simple pose
+    if (from === slot) return { ok: true, reason: 'inchange' };
+    occupant = room.cases[slot] ? room.cases[slot].entry.id : null;
+    var zone = derive.museumZone(domain);
+    var next = withoutMuseum(st.placements || [], zone, invId, slot);
+    if (occupant) next = withoutMuseum(next, zone, occupant, null);
+    next = next.concat([{ invId: invId, zone: zone, slot: slot }]);
+    if (occupant) next = next.concat([{ invId: occupant, zone: zone, slot: from }]);
+    store.set({ placements: next });
+    return { ok: true, reason: occupant ? 'echange' : 'deplace' };
+  }
+
+  // Range un objet exposé : seule sa POSITION est retirée. L'objet reste dans `inventory`
+  // avec son souvenir, et retourne dans la réserve de sa salle. Idempotent (rien à ranger → no-op).
+  function takeFromShowcase(invId, domain) {
+    var st = store.get();
+    if (!domains.has(domain)) return { ok: false, reason: 'domaine' };
+    var zone = derive.museumZone(domain);
+    var list = st.placements || [];
+    var next = withoutMuseum(list, zone, invId, null);
+    if (next.length === list.length) return { ok: false, reason: 'introuvable' };
+    store.set({ placements: next });
+    return { ok: true, reason: 'range' };
+  }
 
   // Ouvre un coffre : c'est ICI que le tirage (dérivé, idempotent tant que non ouvert) est
   // FIGÉ en une entrée d'inventory (GDD §4.3, TDD §4). Le coffre quitte la pile ; l'objet
@@ -2943,7 +3266,11 @@ body {
     openChest: openChest,
     startQuest: startQuest,
     finishQuest: finishQuest,
-    abandonQuest: abandonQuest
+    abandonQuest: abandonQuest,
+    // Exposition au musée (Phase 3.3b) — les seules mutations de `placements`.
+    exposeInMuseum: exposeInMuseum,
+    moveInMuseum: moveInMuseum,
+    takeFromShowcase: takeFromShowcase
   };
 })();
 
@@ -2956,12 +3283,17 @@ body {
      de son domaine — bandeau illustré (le bâtiment RÉEL, à son niveau) + agir (valider une
      habitude, lancer une quête) + sa collection en cartes ;
    - le HUB DES COFFRES (3.2) : taper le ponton ouvre la pile « À découvrir » → cérémonie 1.3 ;
+   - le MUSÉE (3.3a/3.3b) : taper le monument central ouvre son hall — la frise de ton histoire
+     et les cinq portes vers les SALLES de domaine, où l'on expose en vitrine ce qu'on choisit
+     de montrer. Chaque salle a sa scène ET son miroir Liste, avec une bascule locale ;
    - une VUE LISTE MIROIR sémantique (accessibilité NON négociable) : équivalent complet de la
-     scène — les deux hubs y sont atteignables au clavier (mêmes dialogs).
+     scène — les trois hubs y sont atteignables au clavier (mêmes dialogs).
 
-   4.2b — le PLACEMENT des décorations sur l'île (Phase 2.3) a été RETIRÉ sur arbitrage de Leo :
-   les objets se disposeront dans le MUSÉE (M3.3), pas sur l'île. Les positions déjà enregistrées
-   restent dans la save (`placements`, jamais détruites, plus jamais lues ici) — voir state.js.
+   4.2b — le PLACEMENT des décorations sur l'île (Phase 2.3) avait été RETIRÉ sur arbitrage de
+   Leo : les objets se disposent dans le MUSÉE, pas sur l'île. La 3.3b est l'atterrissage promis
+   — `placements`, persisté et hydraté sans jamais être relu depuis, l'est enfin, et seulement
+   pour les positions de vitrine (`zone:'musee.<domaine>'`). Les anciennes positions `zone:'ile'`
+   ne sont ni lues ni touchées : elles traversent intactes (voir state.js).
 
    Invariant d'intégrité (TDD §4) : tout ce qui s'affiche ici est DÉRIVÉ (niveau, élan,
    collection X/Y, coffres) ; ce module n'écrit RIEN d'autre que via actions.*.
@@ -3407,6 +3739,12 @@ body {
   var detailInvId = null;   // objet (invId) dont le détail-souvenir est affiché dans le menu, ou null
   var chestHubOpen = false; // hub des coffres (ponton) ouvert (éphémère, jamais persisté)
   var museumOpen = false;   // musée (Hall Timeline) ouvert (éphémère, jamais persisté)
+  // SALLES DU MUSÉE (Phase 3.3b) — navigation et geste, tous ÉPHÉMÈRES : la save ne connaît
+  // que les positions de vitrine. `picked` = l'objet choisi dont on cherche la vitrine.
+  var museumRoom = null;    // domaine de la salle visitée, ou null = le hall (la frise)
+  var roomView = 'scene';   // 'scene' | 'liste' — bascule LOCALE à la salle (arbitrage Leo)
+  var pickedInvId = null;   // « choisir puis poser » : objet choisi, en attente d'une vitrine
+  var roomNote = null;      // un mot doux après un geste (exposé, rangé, échangé)
   // ACTIONS DEPUIS L'ÎLE (Phase 3.3) — état d'UI éphémère du « menu du domaine » quand il agit.
   var actNote = null;             // feedback doux après une action (validation d'habitude / quête accomplie)
   var menuConfirmAbandon = false; // confirmation d'arrêt d'une quête lancée depuis le menu
@@ -3442,15 +3780,16 @@ body {
         })}
       </svg>`;
   }
-  function signGlyph(name, cy, s) {
+  function sceneGlyph(name, cls, cy, s) {
     var t = 'translate(0,' + cy + ') scale(' + s + ') translate(-12,-12)';
     return html`
-      <g class="isl-sign-gly" transform=${t}>
+      <g class=${cls} transform=${t}>
         ${glyphs.parts(name, 1).map(function (p) {
           return html`<path d=${p.d} class=${p.cls} style=${p.w ? '--w:' + p.w : null} />`;
         })}
       </g>`;
   }
+  function signGlyph(name, cy, s) { return sceneGlyph(name, 'isl-sign-gly', cy, s); }
 
   // Nom du glyphe dessiné d'un objet (4.2e ; les vrais SVG Claude Design suivront en 2.4).
   function glyphName(item) {
@@ -3524,8 +3863,22 @@ body {
   function backToGrid() { detailInvId = null; repaint(); }
   function openChestHub() { rememberFocus(); chestHubOpen = true; openDomainId = null; detailInvId = null; repaint(); }
   function closeChestHub() { chestHubOpen = false; repaint(); restoreFocus(); }
-  function openMuseum() { rememberFocus(); museumOpen = true; openDomainId = null; detailInvId = null; chestHubOpen = false; repaint(); }
-  function closeMuseum() { museumOpen = false; repaint(); restoreFocus(); }
+  function resetRoom() { museumRoom = null; roomView = 'scene'; pickedInvId = null; roomNote = null; }
+  function openMuseum() { rememberFocus(); museumOpen = true; openDomainId = null; detailInvId = null; chestHubOpen = false; resetRoom(); repaint(); }
+  function closeMuseum() { museumOpen = false; resetRoom(); repaint(); restoreFocus(); }
+  // SECONDE PORTE (arbitrage Leo, 3.3b) : on entre dans une salle par le monument (le hall)
+  // OU directement depuis le bâtiment de son domaine. Deux chemins vers le MÊME lieu — le
+  // musée n'est pas dupliqué, il a juste une porte de service. Le focus mémorisé à l'ouverture
+  // du menu de domaine est CONSERVÉ (pas de restoreFocus ici) : fermer le musée rendra bien
+  // le focus au déclencheur d'origine.
+  function gotoRoom(dom) {
+    openDomainId = null; detailInvId = null; resetMenuAct();
+    museumOpen = true; chestHubOpen = false; resetRoom();
+    museumRoom = dom; repaint();
+  }
+  function enterRoom(dom) { museumRoom = dom; roomView = 'scene'; pickedInvId = null; roomNote = null; repaint(); }
+  function backToHall() { resetRoom(); repaint(); }
+  function setRoomView(v) { roomView = (v === 'liste') ? 'liste' : 'scene'; pickedInvId = null; repaint(); }
 
   /* ---------------------------------- actions depuis l'île (Phase 3.3) : habitudes & quêtes
      Le menu du domaine ne montre plus seulement la collection : on y AGIT sans quitter l'île.
@@ -4673,7 +5026,25 @@ body {
         </button>
       </li>`;
   }
-  function CollectionSection(st, coll) {
+  /* SECONDE PORTE vers la salle du domaine (arbitrage Leo, 3.3b). La collection ici est le
+     CATALOGUE (ce que tu as réuni) ; la salle est ce que tu CHOISIS de montrer. Depuis le
+     bâtiment, on y va sans traverser le hall — le musée reste unique, il a deux entrées. */
+  function RoomLink(st, dom) {
+    var r = derive.roomInfo(st, dom.id);
+    if (!r.unlocked) {
+      return html`<p class="empty-soft dm-roomsoft">La salle de ce domaine au musée ouvrira au
+        niveau ${derive.ROOM_LEVEL} de ton ${dom.label}. Rien ne presse.</p>`;
+    }
+    return html`
+      <button class="btn ghost dm-roomgo" type="button"
+              aria-label=${'Visiter la salle ' + dom.label + ' au musée : ' + showcaseLine(r.shown, r.slots) + '.'}
+              onClick=${function () { gotoRoom(dom.id); }}>
+        ${Glyph('musee', 'dm-roomgly')}
+        <span>Visiter la salle · ${r.shown}/${r.slots}</span>
+      </button>`;
+  }
+
+  function CollectionSection(st, coll, dom) {
     return html`
       <section class="dm-coll">
         <div class="dm-collhead">
@@ -4682,6 +5053,7 @@ body {
         </div>
         <p class="dm-note">Chaque objet garde le souvenir de l’action réelle qui l’a mérité.
         Les silhouettes restent à découvrir, rien ne presse.</p>
+        ${RoomLink(st, dom)}
         <ul class="dm-grid">${coll.catalogue.map(CollCard)}</ul>
         ${coll.extra.length
           ? html`
@@ -4841,7 +5213,7 @@ body {
     return html`
       <div class="dm-body">
         ${DomainActions(st, dom)}
-        ${CollectionSection(st, coll || domainCollection(st, dom.id))}
+        ${CollectionSection(st, coll || domainCollection(st, dom.id), dom)}
       </div>`;
   }
   function DetailView(st) {
@@ -5045,31 +5417,413 @@ body {
     };
   }
 
-  function MuseumPanel() {
-    var sum = museumSummary(store.get());
-    var days = sum.days, stateLine = sum.line;
+  /* ------------------------------------- LES SALLES & LEURS VITRINES (Phase 3.3b)
+     L'atterrissage promis des décorations retirées de l'île en 4.2b : on EXPOSE ici ce qu'on
+     a choisi de montrer. La collection du menu de domaine reste le CATALOGUE (X/Y, silhouettes) ;
+     la salle est le choix du joueur, et c'est ce choix qui fait sa valeur (GDD §6.3).
+
+     La salle est une surface SPATIALE : elle a donc sa scène ET son miroir Liste, avec une
+     bascule LOCALE (arbitrage Leo) — le miroir reste collé à la surface qu'il reflète.
+     Rien d'autre que la POSITION n'est stocké (derive.roomInfo) ; le nombre de vitrines, ce
+     qu'elles portent et la réserve sont tous DÉRIVÉS. */
+  /* Cadrage RESSERRÉ après rastérisation : au premier jet (h 310, mur à 152) le rang du fond
+     culminait à y 95 et laissait 30 % de l'image en mur nu au-dessus — la salle avait l'air
+     vide alors qu'elle était pleine. Le mur descend, les deux rangs remontent : la marge haute
+     tombe à ~9 %, et le sol prend la place qu'il mérite dans un lieu qu'on regarde d'en bas. */
+  var ROOM = { w: 440, h: 232, wall: 96 };
+
+  /* Les 8 vitrines : des ancres FIXES, révélées dans cet ordre à mesure que la salle grandit
+     (3 au niveau 2, +1 par niveau, cap 8). L'ordre part du centre de l'avant-plan et s'écarte :
+     une salle de 3 vitrines est déjà composée, et surtout une vitrine déjà occupée NE BOUGE
+     JAMAIS quand la salle s'agrandit — sinon les objets sauteraient d'un niveau à l'autre.
+     Deux rangs : celui du fond est plus petit (perspective), l'avant-plan est à l'échelle 1. */
+  var SHOWCASES = [
+    { x: 165, y: 210, s: 1 },
+    { x: 275, y: 210, s: 1 },
+    { x: 172, y: 102, s: .78 },
+    { x: 268, y: 102, s: .78 },
+    { x: 55,  y: 210, s: 1 },
+    { x: 385, y: 210, s: 1 },
+    { x: 79,  y: 102, s: .78 },
+    { x: 361, y: 102, s: .78 }
+  ];
+  // Dallage en perspective : les fuyantes convergent vers un point haut, derrière le mur.
+  var FLOOR_LINES = (function () {
+    var back = [40, 120, 200, 280, 360], out = [], i;
+    for (i = 0; i < back.length; i++) {
+      out.push({ x1: back[i], x2: 220 + (back[i] - 220) * 1.95 });
+    }
+    return out;
+  })();
+  // Joints du dallage : au ras du rang du fond et tout à l'avant. Rastérisés au premier jet à
+  // mi-hauteur des vitrines, ils les BALAFRAIENT d'un trait continu — le verre les laissait
+  // passer. Le fond de vitrine est devenu opaque (rm-pane) ; ils restent néanmoins tenus à
+  // l'écart des corps, un joint de sol n'ayant rien à faire à hauteur d'objet.
+  var FLOOR_BANDS = [108, 228];
+  // Pilastres dans les INTERVALLES entre vitrines du fond (sinon ils passent derrière et ne se
+  // voient pas). Cinq, aux milieux des cinq intervalles : le premier jet en avait quatre, et
+  // laissait un trou de 176 unités au centre du mur.
+  var PILASTERS = [26, 120, 215, 309, 403];
+
+  /* --------------------------------------------------- gestes de la salle (éphémères) */
+  var dragFrom = null;   // glisser en cours : { invId, slot, x, y, moved } — jamais persisté
+
+  // « N vitrine(s) garnie(s) sur M » — une seule formulation, partagée par l'en-tête du
+  // panneau, les portes du hall et la seconde porte du menu de domaine : les trois ne
+  // peuvent pas se contredire, et l'accord suit le nombre COMPTÉ (0 et 1 au singulier).
+  function showcaseLine(shown, slots) {
+    var s = shown > 1 ? 's' : '';
+    return shown + ' vitrine' + s + ' garnie' + s + ' sur ' + slots;
+  }
+  function roomItemName(st, invId) {
+    var e = invEntry(st, invId);
+    return e ? cards.resolve(e.itemId).name : 'Ton objet';
+  }
+  function clearRoomNote() { roomNote = null; repaint(); }
+
+  // « Choisir puis poser » : poser l'objet choisi dans cette vitrine. Sur une vitrine occupée,
+  // l'occupant repart dans la réserve (arbitrage 2.3, remonté ici) — il n'est jamais perdu.
+  function placeHere(slot) {
+    var dom = museumRoom;
+    if (!dom || !pickedInvId) return;
+    var st = store.get();
+    var occ = derive.roomInfo(st, dom).cases[slot];
+    var nm = roomItemName(st, pickedInvId);
+    var displaced = (occ && occ.entry.id !== pickedInvId) ? occ.item.name : null;
+    var res = actions.exposeInMuseum(pickedInvId, dom, slot);
+    if (res && res.ok) {
+      roomNote = { gly: 'musee', text: displaced
+        ? (nm + ' prend la vitrine. ' + displaced + ' retourne dans ta réserve.')
+        : (nm + ' est exposé.') };
+    }
+    pickedInvId = null;
+    repaint();
+  }
+  // Glisser : ÉCHANGE positionnel (l'occupant prend la place libérée). Glisser déplace, il ne range pas.
+  function dropOn(invId, slot) {
+    var dom = museumRoom;
+    if (!dom) return;
+    var nm = roomItemName(store.get(), invId);
+    var res = actions.moveInMuseum(invId, dom, slot);
+    if (res && res.ok && res.reason !== 'inchange') {
+      roomNote = { gly: 'musee', text: nm + (res.reason === 'echange'
+        ? ' échange sa place avec sa voisine.' : ' change de vitrine.') };
+    }
+    pickedInvId = null;
+    repaint();
+  }
+  // Ranger : seule la position part. L'objet reste dans ta collection, avec son souvenir.
+  function takeOff(invId) {
+    var dom = museumRoom;
+    if (!dom) return;
+    var nm = roomItemName(store.get(), invId);
+    var res = actions.takeFromShowcase(invId, dom);
+    if (res && res.ok) roomNote = { gly: 'musee', text: nm + ' retourne dans ta réserve. Rien n’est perdu.' };
+    pickedInvId = null;
+    repaint();
+  }
+  // Choisir (ou déchoisir) un objet. La note n'est pas effacée ici non plus : une fois posée
+  // elle est REMPLACÉE par la suivante, à hauteur constante — la rétracter à chaque choix
+  // faisait respirer le panneau à chaque tap, et la scène avec lui.
+  function pickObject(invId) {
+    pickedInvId = (pickedInvId === invId) ? null : invId;
+    repaint();
+  }
+  function tapCase(slot, occ) {
+    if (pickedInvId && !(occ && occ.entry.id === pickedInvId)) { placeHere(slot); return; }
+    if (occ) { pickObject(occ.entry.id); return; }
+    repaint();
+  }
+  /* La vitrine sous ce point ÉCRAN. On interroge le document plutôt que de convertir des
+     coordonnées : la salle n'a ni pan ni zoom, et `elementFromPoint` ne peut pas se tromper
+     de cible — là où un calcul maison devrait refaire à la main la règle « l'avant-plan
+     l'emporte » que l'ordre de dessin applique déjà. */
+  function slotFromPoint(cx, cy) {
+    var el = document.elementFromPoint(cx, cy);
+    if (!el || !el.closest) return null;
+    var g = el.closest('[data-slot]');
+    if (!g) return null;
+    var n = parseInt(g.getAttribute('data-slot'), 10);
+    return isFinite(n) ? n : null;
+  }
+  function caseDown(e, slot, occ) {
+    if (!occ) return;
+    try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
+    dragFrom = { invId: occ.entry.id, slot: slot, x: e.clientX, y: e.clientY, moved: false };
+    // On ne CHOISIT au pointerdown que si rien ne l'est déjà : sinon taper une vitrine occupée
+    // pendant qu'un autre objet est choisi écraserait le choix au lieu de poser dessus.
+    // Et on NE TOUCHE PAS à la note ici : la retirer changeait la hauteur du panneau au moment
+    // exact où le doigt se pose, et la scène glissait sous lui — mesuré, le glisser atterrissait
+    // alors une vitrine plus loin. La note vit désormais SOUS la scène, qui ne bouge plus.
+    if (!pickedInvId) { pickedInvId = occ.entry.id; repaint(); }
+  }
+  function caseMove(e) {
+    if (!dragFrom) return;
+    if (Math.abs(e.clientX - dragFrom.x) > 8 || Math.abs(e.clientY - dragFrom.y) > 8) dragFrom.moved = true;
+  }
+  function caseUp(e, slot, occ) {
+    var d = dragFrom; dragFrom = null;
+    if (d && d.moved) {
+      var t = slotFromPoint(e.clientX, e.clientY);
+      if (t !== null && t !== d.slot) { dropOn(d.invId, t); return; }
+      pickedInvId = null; repaint(); return;   // lâché dans le vide : rien ne bouge
+    }
+    tapCase(slot, occ);
+  }
+
+  /* ------------------------------------------------------------- la scène de la salle */
+  function showcaseNode(sc, slot, occ, free) {
+    var body = [];
+    body.push(html`<ellipse key="sh" class="rm-cast" cx="3" cy="2" rx="30" ry="6.5" />`);
+    body.push(html`<rect key="pl" class="rm-cap" x="-26" y="-5" width="52" height="5" rx="1.4" />`);
+    body.push(html`<rect key="ba" class="rm-base" x="-22" y="-28" width="44" height="28" />`);
+    body.push(html`<rect key="bs" class="rm-base-sh" x="8" y="-28" width="14" height="28" />`);
+    body.push(html`<rect key="ca" class="rm-cap" x="-27" y="-34" width="54" height="6" rx="1.5" />`);
+    // Fond de vitrine OPAQUE, puis le voile du verre par-dessus. Translucide de bout en bout,
+    // la vitrine laissait voir les joints du dallage qui la traversaient de part en part.
+    body.push(html`<rect key="pa" class="rm-pane" x="-21" y="-92" width="42" height="58" rx="2" />`);
+    body.push(html`<rect key="gl" class="rm-glass" x="-21" y="-92" width="42" height="58" rx="2" />`);
+    body.push(html`<rect key="fr" class="rm-frame" x="-21" y="-92" width="42" height="58" rx="2" />`);
+    body.push(html`<rect key="to" class="rm-cap" x="-24" y="-97" width="48" height="6" rx="1.5" />`);
+    if (occ) body.push(sceneGlyph(glyphName(occ.item), 'rm-gly', -62, 1.5));
+    if (free) body.push(html`<rect key="fe" class="rm-free" x="-25" y="-96" width="50" height="66" rx="3" />`);
+    if (occ && pickedInvId === occ.entry.id) {
+      body.push(html`<rect key="se" class="rm-sel" x="-25" y="-96" width="50" height="66" rx="3" />`);
+    }
+    var label = occ
+      ? (occ.item.name + ', vitrine ' + (slot + 1))
+      : ('Vitrine ' + (slot + 1) + ', libre');
+    /* La boîte de tap n'est PAS mise à l'échelle avec la vitrine : au rang du fond (0,78) une
+       cible suivant l'échelle tomberait sous 44 pt sur un téléphone étroit. Elle est donc posée
+       sur l'ancre, à taille pleine, et l'ordre de dessin (le fond d'abord) laisse l'avant-plan
+       gagner les 8 unités où les deux rangs se frôlent. */
     return html`
-      <div class="dom-menu museum" role="dialog" aria-modal="true" aria-label="Le musée, hall de la frise"
-           onKeyDown=${function (e) { if (e.key === 'Escape') { closeMuseum(); return; } trapTab(e); }}>
+      <g key=${'sc' + slot} class="rm-case" data-slot=${slot}
+         onPointerDown=${function (e) { caseDown(e, slot, occ); }}
+         onPointerMove=${caseMove}
+         onPointerUp=${function (e) { caseUp(e, slot, occ); }}>
+        <g transform=${'translate(' + sc.x + ',' + sc.y + ') scale(' + sc.s + ')'}>${body}</g>
+        <rect class="rm-hit" x=${sc.x - 38} y=${sc.y - 108} width="76" height="116" >
+          <title>${label}</title>
+        </rect>
+      </g>`;
+  }
+
+  function RoomScene(room) {
+    var free = !!pickedInvId;
+    // Rang du fond d'abord : la profondeur se joue à l'ordre de dessin, comme sur l'île.
+    var order = [], i;
+    for (i = 0; i < room.slots; i++) order.push(i);
+    order.sort(function (a, b) { return SHOWCASES[a].y - SHOWCASES[b].y; });
+    return html`
+      <svg class="rm-scene isl-musee" viewBox=${'0 0 ' + ROOM.w + ' ' + ROOM.h}
+           preserveAspectRatio="xMidYMax meet" role="img"
+           aria-label=${'Vue de la salle : ' + showcaseLine(room.shown, room.slots) + '.'}>
+        <rect class="rm-ground" x="0" y="0" width=${ROOM.w} height=${ROOM.h} />
+        ${PILASTERS.map(function (x, k) {
+          return html`<rect key=${'pi' + k} class="rm-pilaster" x=${x} y="8" width="11" height=${ROOM.wall - 26} />`;
+        })}
+        <rect class="rm-cornice" x="0" y="0" width=${ROOM.w} height="8" />
+        <rect class="rm-wainscot" x="0" y=${ROOM.wall - 18} width=${ROOM.w} height="18" />
+        <rect class="rm-floor" x="0" y=${ROOM.wall} width=${ROOM.w} height=${ROOM.h - ROOM.wall} />
+        ${FLOOR_LINES.map(function (l, k) {
+          return html`<path key=${'fl' + k} class="rm-tile"
+                            d=${'M ' + l.x1 + ' ' + ROOM.wall + ' L ' + l.x2.toFixed(1) + ' ' + ROOM.h} />`;
+        })}
+        ${FLOOR_BANDS.map(function (y, k) {
+          return html`<path key=${'fb' + k} class="rm-tile" d=${'M 0 ' + y + ' H ' + ROOM.w} />`;
+        })}
+        ${order.map(function (slot) {
+          return showcaseNode(SHOWCASES[slot], slot, room.cases[slot], free && !room.cases[slot]);
+        })}
+      </svg>`;
+  }
+
+  /* La RÉSERVE : ce que ce domaine t'a donné et que tu n'exposes pas. En scène elle est faite
+     de boutons « choisir » ; le miroir Liste la montre sans commande, puisque là-bas c'est le
+     menu déroulant de chaque vitrine qui pose les objets (mécanique du placement 2.3). */
+  function ShelfCard(x) {
+    var picked = pickedInvId === x.entry.id;
+    return html`
+      <li class="rm-shelf-i" key=${x.entry.id}>
+        <button class=${'rm-pick' + (picked ? ' on' : '')} type="button" aria-pressed=${picked ? 'true' : 'false'}
+                aria-label=${(picked ? 'Choisi : ' : 'Choisir : ') + x.item.name + ', ' + cards.rarityLabel(x.item.rarity) +
+                             '. Touche ensuite une vitrine libre pour l’y poser.'}
+                onClick=${function () { pickObject(x.entry.id); }}>
+          ${Glyph(glyphName(x.item), 'rm-pick-gly')}
+          <span class="rm-pick-n">${x.item.name}</span>
+        </button>
+      </li>`;
+  }
+
+  function RoomList(room, dom) {
+    var choices = room.shelf.slice();
+    return html`
+      <div class="rm-list">
+        <p class="dm-note">Miroir de la salle. Chaque vitrine se garnit ici au clavier : choisis
+        un objet dans son menu, ou remets-la à vide pour ranger.</p>
+        <ul class="rm-rows">
+          ${room.cases.map(function (occ, i) {
+            var opts = choices.slice();
+            if (occ) opts.unshift({ entry: occ.entry, item: occ.item });
+            return html`
+              <li class="rm-row" key=${'r' + i}>
+                <span class="rm-row-n">Vitrine ${i + 1}</span>
+                <select class="in rm-sel-in" value=${occ ? occ.entry.id : ''}
+                        aria-label=${'Vitrine ' + (i + 1) + ' de la salle ' + dom.label + '. ' +
+                                     (occ ? ('Elle expose ' + occ.item.name + '.') : 'Elle est vide.')}
+                        onChange=${function (e) {
+                          var v = e.target.value;
+                          if (!v) { if (occ) takeOff(occ.entry.id); return; }
+                          pickedInvId = v; placeHere(i);
+                        }}>
+                  <option value="">Vitrine vide</option>
+                  ${opts.map(function (o) {
+                    return html`<option key=${o.entry.id} value=${o.entry.id}>${o.item.name}</option>`;
+                  })}
+                </select>
+                ${occ
+                  ? html`<button class="btn ghost rm-off" type="button"
+                                 aria-label=${'Ranger ' + occ.item.name + ' : il retourne dans ta réserve.'}
+                                 onClick=${function () { takeOff(occ.entry.id); }}>Ranger</button>`
+                  : null}
+              </li>`;
+          })}
+        </ul>
+        <h3 class="dm-h rm-h">Ta réserve · ${room.shelf.length}</h3>
+        ${room.shelf.length
+          ? html`<ul class="rm-reserve">
+              ${room.shelf.map(function (x) {
+                return html`
+                  <li key=${x.entry.id} tabindex="0"
+                      aria-label=${x.item.name + ', ' + cards.rarityLabel(x.item.rarity) + ', obtenu le ' + fmtDay(x.entry.day) + '. À exposer.'}>
+                    ${Glyph(glyphName(x.item), 'rm-res-gly')}
+                    <span class="rm-res-n">${x.item.name}</span>
+                    <span class="rm-res-d">${fmtDay(x.entry.day)}</span>
+                  </li>`;
+              })}
+            </ul>`
+          : html`<p class="empty-soft">Tout ce que ce domaine t’a donné est déjà exposé.</p>`}
+      </div>`;
+  }
+
+  function RoomBody(room, dom) {
+    var nothing = !room.shelf.length && !room.shown;
+    /* La note vit SOUS la scène (défaut mesuré en 3.3b) : posée au-dessus, son apparition et
+       sa disparition décalaient la scène verticalement — et un geste commencé avant le décalage
+       atterrissait sur la mauvaise vitrine. Sous la scène, plus rien ne bouge sous le doigt. */
+    var note = roomNote
+      ? html`<p class="note-soft rm-note">${Glyph(roomNote.gly, 'ns-gly')}<span>${roomNote.text}</span>
+             <button class="lnk" type="button" onClick=${clearRoomNote}>OK</button></p>`
+      : null;
+    return html`
+      <div class="dm-body rm-body">
+        <div class="rm-top">
+          <button class="dm-back" type="button" onClick=${backToHall} aria-label="Retour au hall du musée">← Le hall</button>
+          <div class="seg rm-seg" role="group" aria-label=${'Affichage de la salle ' + dom.label}>
+            <button type="button" class="seg-btn" aria-pressed=${roomView === 'scene' ? 'true' : 'false'}
+                    onClick=${function () { setRoomView('scene'); }}>Scène</button>
+            <button type="button" class="seg-btn" aria-pressed=${roomView === 'liste' ? 'true' : 'false'}
+                    onClick=${function () { setRoomView('liste'); }}>Liste</button>
+          </div>
+        </div>
+        ${roomView === 'liste'
+          ? html`${note}${RoomList(room, dom)}`
+          : html`
+            <p class="dm-note">Tu exposes ce que tu veux montrer. Un objet rangé n’est jamais
+            perdu : il retourne dans ta réserve, avec son souvenir.</p>
+            ${RoomScene(room)}
+            ${note}
+            <div class="rm-shelf">
+              <h3 class="dm-h">Ta réserve · ${room.shelf.length}</h3>
+              <p class="dm-note rm-hint">${pickedInvId
+                ? html`Choisi : <strong>${roomItemName(store.get(), pickedInvId)}</strong>. Touche une vitrine.`
+                : 'Touche un objet, puis sa vitrine ; glisse-le pour le déplacer.'}</p>
+              ${room.shelf.length
+                ? html`<ul class="rm-shelf-l">${room.shelf.map(ShelfCard)}</ul>`
+                : html`<p class="empty-soft">${nothing
+                    ? 'Cette salle est prête. Les objets de ce domaine viendront s’y poser.'
+                    : 'Tout ce que ce domaine t’a donné est déjà exposé.'}</p>`}
+            </div>`}
+      </div>`;
+  }
+
+  /* --------------------------------------------------------- le hall et ses cinq portes */
+  function doorNode(r) {
+    if (!r.unlocked) {
+      return html`
+        <li class="rm-door locked" key=${r.domain.id} tabindex="0"
+            aria-label=${'Salle ' + r.domain.label + ', en sommeil. Elle ouvrira au niveau ' +
+                         derive.ROOM_LEVEL + ' de ton ' + r.domain.label + '.'}>
+          ${Glyph(r.domain.id, 'rm-door-gly')}
+          <span class="rm-door-m">
+            <span class="rm-door-t">Salle ${r.domain.label}</span>
+            <span class="rm-door-s">En sommeil · elle ouvre au niveau ${derive.ROOM_LEVEL}</span>
+          </span>
+        </li>`;
+    }
+    return html`
+      <li class="rm-door" key=${r.domain.id}>
+        <button type="button"
+                aria-label=${'Entrer dans la salle ' + r.domain.label + ' : ' + showcaseLine(r.shown, r.slots) + '.'}
+                onClick=${function () { enterRoom(r.domain.id); }}>
+          ${Glyph(r.domain.id, 'rm-door-gly')}
+          <span class="rm-door-m">
+            <span class="rm-door-t">Salle ${r.domain.label}</span>
+            <span class="rm-door-s">${showcaseLine(r.shown, r.slots)}${r.waiting ? ' · ' + r.waiting + ' en réserve' : ''}</span>
+          </span>
+          <span class="rm-door-go" aria-hidden="true">→</span>
+        </button>
+      </li>`;
+  }
+
+  function HallBody(st) {
+    var sum = museumSummary(st);
+    var rooms = derive.museumRooms(st);
+    var open = 0;
+    for (var i = 0; i < rooms.length; i++) if (rooms[i].unlocked) open++;
+    return html`
+      <div class="dm-body">
+        <h3 class="dm-h">Les salles · ${open}/${rooms.length}</h3>
+        <p class="dm-note">Une salle par domaine. Elle ouvre au niveau ${derive.ROOM_LEVEL} de son
+        bâtiment, et gagne une vitrine à chaque niveau suivant.</p>
+        <ul class="rm-doors">${rooms.map(doorNode)}</ul>
+        <h3 class="dm-h rm-h">Le hall de la frise</h3>
+        ${sum.days.length
+          ? html`
+            <p class="dm-note">La frise rejoue ton histoire, jour après jour. Tout ce qui s’y
+            trouve, tu l’as vécu pour de vrai.</p>
+            <ol class="tl">${sum.days.map(dayNode)}</ol>`
+          : html`<p class="empty-soft big">Ton musée vient d’ouvrir. Sa frise se remplira d’elle-même,
+            à mesure que tu avanceras pour de vrai.</p>`}
+      </div>`;
+  }
+
+  function MuseumPanel() {
+    var st = store.get();
+    var dom = museumRoom ? domains.get(museumRoom) : null;
+    var room = dom ? derive.roomInfo(st, dom.id) : null;
+    if (dom && (!room || !room.unlocked)) { resetRoom(); dom = null; room = null; }
+    var title = dom ? ('Salle ' + dom.label) : 'Le musée';
+    var line = dom ? showcaseLine(room.shown, room.slots) : museumSummary(st).line;
+    return html`
+      <div class="dom-menu museum" role="dialog" aria-modal="true"
+           aria-label=${dom ? ('Musée, salle ' + dom.label) : 'Le musée, hall de la frise'}
+           onKeyDown=${function (e) {
+             if (e.key === 'Escape') { if (museumRoom) backToHall(); else closeMuseum(); return; }
+             trapTab(e);
+           }}>
         <div class="dm-backdrop" onClick=${closeMuseum} aria-hidden="true"></div>
         <div class="dm-panel" tabindex="-1" ref=${focusPanel}>
           <header class="dm-head">
-            ${Glyph('musee', 'dm-gly')}
+            ${Glyph(dom ? dom.id : 'musee', 'dm-gly')}
             <div class="dm-headmain">
-              <h2 class="dm-title">Le musée</h2>
-              <p class="dm-state">${stateLine}</p>
+              <h2 class="dm-title">${title}</h2>
+              <p class="dm-state">${line}</p>
             </div>
             <button class="dm-close" type="button" aria-label="Fermer" onClick=${closeMuseum}>✕</button>
           </header>
-          <div class="dm-body">
-            ${days.length
-              ? html`
-                <p class="dm-note">Le hall de la frise rejoue ton histoire, jour après jour. Tout ce
-                qui s’y trouve, tu l’as vécu pour de vrai.</p>
-                <ol class="tl">${days.map(dayNode)}</ol>`
-              : html`<p class="empty-soft big">Ton musée vient d’ouvrir. Sa frise se remplira d’elle-même,
-                à mesure que tu avanceras pour de vrai.</p>`}
-          </div>
+          ${dom ? RoomBody(room, dom) : HallBody(st)}
         </div>
       </div>`;
   }
@@ -5122,7 +5876,7 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.22';
+  var VER = '0.23';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
