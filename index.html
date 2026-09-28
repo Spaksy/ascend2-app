@@ -842,6 +842,22 @@ body {
   animation: cer-fill .9s .35s cubic-bezier(.3, .8, .3, 1) both;
 }
 
+/* v0.30 (3.2) — LA FORGE. Sobre par arbitrage : pas de rayons, pas d'éclat. Les cartes de la série
+   partent d'un cercle et convergent vers le centre en s'éteignant ; la relique se pose ensuite,
+   d'un léger mouvement vers le bas (elle « se pose sur son socle ») ; puis on lit ce qui l'a
+   forgée. Instantané en reduce-motion (durées ET délais neutralisés : 10-reduced-motion.css). */
+.cer-relic { margin: 18px 0 2px; }
+.cer-converge { position: absolute; left: 50%; top: 50%; width: 0; height: 0; z-index: 1; pointer-events: none; }
+.cer-shard {
+  position: absolute; left: -15px; top: -20px; width: 30px; height: 40px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 1.5px solid var(--cer-glow);
+  animation: cer-converge .9s calc(var(--i) * 45ms) cubic-bezier(.5, 0, .6, 1) both;
+}
+.cer-shard-gly { width: 16px; height: 16px; color: var(--ink-2); }
+.cer-relic .relic-card { gap: 8px; animation: cer-settle .6s .8s cubic-bezier(.2, .8, .3, 1) both; }
+.cer-forge .cer-forged, .cer-forge .cer-src, .cer-forge .btn { animation: cer-fade .4s 1.3s ease both; }
+
 /* Carte-récompense (placeholder géométrique ; SVG Claude Design plus tard) */
 .reward-card {
   display: inline-flex; flex-direction: column; align-items: center; gap: 12px;
@@ -893,6 +909,12 @@ body {
   100% { opacity: 1; transform: translateY(-96px) scale(1); }
 }
 @keyframes cer-emerge { from { transform: scale(.5); } }   /* sans `to` : finit sur l'état posé */
+@keyframes cer-converge {
+  0%   { opacity: 0; transform: rotate(var(--a)) translateY(-128px) rotate(calc(-1 * var(--a))); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--a)) translateY(0) rotate(calc(-1 * var(--a))) scale(.4); }
+}
+@keyframes cer-settle { from { opacity: 0; transform: translateY(-16px) scale(.94); } }   /* sans `to` */
 @keyframes cer-rays-in { from { opacity: 0; } }   /* sans `to` : on finit sur l'intensité graduée */
 @keyframes cer-fill { from { width: var(--from); } to { width: var(--to); } }
 @keyframes cer-tremble {
@@ -1341,6 +1363,9 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .001ms !important;
+    /* 3.2 : la forge enchaîne ses temps par DÉLAIS ; sans ceci, la relique resterait invisible
+       1,3 s derrière un `both`. Instantané veut dire instantané, délais compris. */
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: .001ms !important;
     scroll-behavior: auto !important;
@@ -1517,6 +1542,52 @@ body {
 }
 .dm-roomgly { width: 22px; height: 22px; flex: 0 0 auto; color: var(--accent); }
 .dm-roomsoft { margin-bottom: 14px; }
+
+/* ============ LA RELIQUE & SON SOCLE (Phase 3.2) ============
+   Placeholder PROPRE et substituable (l'objet dessiné = 6.4, sur l'ancre `data-relic`) : un socle
+   géométrique doré, le glyphe du domaine en variante riche au-dessus. Le MÊME dessin sert au
+   détail du musée et à la forge de la cérémonie. Le glyphe est tout doré, son accent s'inverse
+   en encre — exactement la règle de `.rc-gly` sur la carte-récompense. */
+.relic-art { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; }
+.relic-gly { width: 52px; height: 52px; color: var(--gold); --gly-accent: var(--ink); }
+.relic-wait {
+  width: 38px; height: 12px; margin: 26px 0 6px;
+  border: 2px dashed var(--gold); border-radius: 50%;
+}
+.relic-plinth {
+  width: 58px; height: 30px; margin-top: 4px; background: var(--gold);
+  box-shadow: inset -12px 0 0 rgba(0, 0, 0, .14);
+  clip-path: polygon(0 0, 100% 0, 100% 20%, 86% 20%, 86% 76%, 100% 76%, 100% 100%, 0 100%, 0 76%, 14% 76%, 14% 20%, 0 20%);
+}
+.relic-sub { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+
+/* --- le socle dans la scène de la salle : doré, à place propre, dans l'allée centrale --- */
+.rm-plinth { fill: var(--gold); }
+.rm-plinth-dim { fill: var(--ink); opacity: .1; }
+.rm-relic-gly { fill: none; stroke: var(--gly-gold); stroke-linecap: round; stroke-linejoin: round; }
+.rm-relic-gly path { stroke-width: var(--w, 1.7); }
+.rm-relic-gly .gly-f { fill: var(--gly-gold); stroke: var(--gly-gold); stroke-width: .9; }
+.rm-relic-gly .gly-a { stroke: var(--ink); }
+.rm-relic-gly .gly-f.gly-a { fill: var(--ink); stroke: var(--ink); }
+.rm-relic-wait { fill: none; stroke: var(--gold); stroke-width: 2; stroke-dasharray: 5 4; }
+.rm-socle-hit { cursor: pointer; }
+
+/* --- le socle dans le miroir Liste --- */
+.rm-socle-row { margin: 4px 0 10px; border-color: var(--gold); }
+.rm-socle-t { flex: 1 1 auto; min-width: 0; font-size: 14px; word-break: break-word; }
+
+/* --- le détail de la relique : ce qui l'a forgée --- */
+.rl-head {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--surface); border: 1px solid var(--gold);
+  border-radius: var(--r-lg); padding: 16px;
+}
+.rl-headmain { flex: 1 1 auto; min-width: 0; }
+.rl-name { font-size: 18px; font-weight: 700; }
+.rl-sub { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+.rl-line { font-size: 13px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.rl-parts { margin-top: 10px; }
+.rl-detail .empty-soft { margin-top: 14px; }
 </style>
 </head>
 <body>
@@ -1843,6 +1914,43 @@ body {
       _writeRaw(JSON.stringify({ v: SAVE_VERSION + 1, name: 'DuFutur', onboarded: true }));
       location.reload();
       return 'save de version future écrite → reload (doit être refusée, boot neuf)…';
+    },
+    // seedSerie(domaine, { complete, validations }) — Phase 3.2 : une save où la Série 1 d'un domaine
+    // est À UNE CARTE d'être complète (sa dernière carte attend dans un coffre de SA rareté, seul
+    // objet non obtenu de cette rareté → le tirage la donne à coup sûr), ou déjà COMPLÈTE
+    // (`complete: true`, le cas « vieille save »). `validations` (47 par défaut → Nv 3, salle
+    // ouverte ; 5 → Nv 1, salle en sommeil) : une par jour, jusqu'à hier. Écrit, puis recharge.
+    // N'emprunte AUCUN chemin réel : il ne fait qu'écrire une save, comme seed().
+    seedSerie: function (domain, opts) {
+      opts = opts || {};
+      var C = window.AscendCards, K = window.AscendChests;
+      var list = (C && C.serieCards) ? C.serieCards(domain, 1) : [];
+      if (!list.length) return 'domaine inconnu : ' + domain;
+      var n = (opts.validations > 0) ? (opts.validations | 0) : 47;
+      var start = new Date(); start.setDate(start.getDate() - n);
+      function dayAt(k) {
+        var d = new Date(start.getTime()); d.setDate(d.getDate() + k);
+        return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+      }
+      var src = 'Obtenu en validant « Séance du matin »';
+      var st = defaults(), k;
+      st.createdAt = dayAt(0);
+      st.habits = [{ id: 'h_seed', title: 'Séance du matin', domain: domain, freq: '', count: n, createdAt: dayAt(0) }];
+      for (k = 0; k < n; k++) st.history.push({ kind: 'habit', refId: 'h_seed', domain: domain, day: dayAt(k), elan: 1 });
+      var owned = opts.complete ? list.length : list.length - 1;
+      for (k = 0; k < owned; k++) {
+        st.inventory.push({ id: 'inv_seed' + k, itemId: list[k].id, day: dayAt(Math.floor(k * (n - 1) / list.length)),
+                            sourceLabel: src, photoId: null, note: null });
+      }
+      if (!opts.complete) {
+        var last = list[list.length - 1], type = 'bois';
+        for (k = 0; k < K.list.length; k++) if (K.list[k].rarity === last.rarity) { type = K.list[k].id; break; }
+        st.chests.push({ id: 'c_seed', type: type, domain: domain, sourceLabel: src, day: dayAt(n - 1) });
+      }
+      st.seen = { hist: st.history.length };
+      _writeRaw(serialize(st));
+      location.reload();
+      return 'série ' + domain + ' ' + (opts.complete ? 'complète' : 'à une carte (coffre au port)') + ' → reload…';
     },
     reset: function () { store.wipe(); return 'save supprimée + défauts ré-écrits.'; },
     // Inspecteurs (sans reload).
@@ -2394,55 +2502,55 @@ body {
   // déclarés pour le modèle (tirés dans leur phase). Ids GLOBALEMENT uniques (préfixe domaine).
   var POOLS = {
     physique: [
-      { id: 'phys_c1', name: 'Galet lisse',        rarity: 'commun' },
-      { id: 'phys_c2', name: 'Corde à sauter',     rarity: 'commun' },
-      { id: 'phys_c3', name: 'Gourde de voyage',   rarity: 'commun' },
-      { id: 'phys_c4', name: 'Ruban de course',    rarity: 'commun' },
-      { id: 'phys_c5', name: 'Caillou de sommet',  rarity: 'commun' },
-      { id: 'phys_c6', name: 'Brassard usé',       rarity: 'commun' },
-      { id: 'phys_r1', name: 'Médaille de bronze', rarity: 'rare' },
-      { id: 'phys_e1', name: 'Flamme du marathon', rarity: 'epique' },
-      { id: 'phys_l1', name: 'Atlas',              rarity: 'legendaire' }
+      { id: 'phys_c1', name: 'Galet lisse',        rarity: 'commun', serie: 1 },
+      { id: 'phys_c2', name: 'Corde à sauter',     rarity: 'commun', serie: 1 },
+      { id: 'phys_c3', name: 'Gourde de voyage',   rarity: 'commun', serie: 1 },
+      { id: 'phys_c4', name: 'Ruban de course',    rarity: 'commun', serie: 1 },
+      { id: 'phys_c5', name: 'Caillou de sommet',  rarity: 'commun', serie: 1 },
+      { id: 'phys_c6', name: 'Brassard usé',       rarity: 'commun', serie: 1 },
+      { id: 'phys_r1', name: 'Médaille de bronze', rarity: 'rare', serie: 1 },
+      { id: 'phys_e1', name: 'Flamme du marathon', rarity: 'epique', serie: 1 },
+      { id: 'phys_l1', name: 'Atlas',              rarity: 'legendaire', serie: 1 }
     ],
     mental: [
-      { id: 'ment_c1', name: 'Bille d’apaisement', rarity: 'commun' },
-      { id: 'ment_c2', name: 'Carnet de pensées',  rarity: 'commun' },
-      { id: 'ment_c3', name: 'Bougie douce',       rarity: 'commun' },
-      { id: 'ment_c4', name: 'Galet du calme',     rarity: 'commun' },
-      { id: 'ment_c5', name: 'Plume légère',       rarity: 'commun' },
-      { id: 'ment_c6', name: 'Sablier de pause',   rarity: 'commun' },
-      { id: 'ment_r1', name: 'Clé de sérénité',    rarity: 'rare' },
-      { id: 'ment_e1', name: 'Phare intérieur',    rarity: 'epique' }
+      { id: 'ment_c1', name: 'Bille d’apaisement', rarity: 'commun', serie: 1 },
+      { id: 'ment_c2', name: 'Carnet de pensées',  rarity: 'commun', serie: 1 },
+      { id: 'ment_c3', name: 'Bougie douce',       rarity: 'commun', serie: 1 },
+      { id: 'ment_c4', name: 'Galet du calme',     rarity: 'commun', serie: 1 },
+      { id: 'ment_c5', name: 'Plume légère',       rarity: 'commun', serie: 1 },
+      { id: 'ment_c6', name: 'Sablier de pause',   rarity: 'commun', serie: 1 },
+      { id: 'ment_r1', name: 'Clé de sérénité',    rarity: 'rare', serie: 1 },
+      { id: 'ment_e1', name: 'Phare intérieur',    rarity: 'epique', serie: 1 }
     ],
     connaissances: [
-      { id: 'conn_c1', name: 'Marque-page corné',      rarity: 'commun' },
-      { id: 'conn_c2', name: 'Bougie de lecture',      rarity: 'commun' },
-      { id: 'conn_c3', name: 'Encrier séché',          rarity: 'commun' },
-      { id: 'conn_c4', name: 'Feuille manuscrite',     rarity: 'commun' },
-      { id: 'conn_c5', name: 'Loupe de poche',         rarity: 'commun' },
-      { id: 'conn_c6', name: 'Ticket de bibliothèque', rarity: 'commun' },
-      { id: 'conn_r1', name: 'Parchemin ancien',       rarity: 'rare' },
-      { id: 'conn_e1', name: 'La Bibliothèque Éternelle', rarity: 'epique' }
+      { id: 'conn_c1', name: 'Marque-page corné',      rarity: 'commun', serie: 1 },
+      { id: 'conn_c2', name: 'Bougie de lecture',      rarity: 'commun', serie: 1 },
+      { id: 'conn_c3', name: 'Encrier séché',          rarity: 'commun', serie: 1 },
+      { id: 'conn_c4', name: 'Feuille manuscrite',     rarity: 'commun', serie: 1 },
+      { id: 'conn_c5', name: 'Loupe de poche',         rarity: 'commun', serie: 1 },
+      { id: 'conn_c6', name: 'Ticket de bibliothèque', rarity: 'commun', serie: 1 },
+      { id: 'conn_r1', name: 'Parchemin ancien',       rarity: 'rare', serie: 1 },
+      { id: 'conn_e1', name: 'La Bibliothèque Éternelle', rarity: 'epique', serie: 1 }
     ],
     creativite: [
-      { id: 'crea_c1', name: 'Crayon mâché',      rarity: 'commun' },
-      { id: 'crea_c2', name: 'Éclat de couleur',  rarity: 'commun' },
-      { id: 'crea_c3', name: 'Bouton dépareillé', rarity: 'commun' },
-      { id: 'crea_c4', name: 'Bille de verre',    rarity: 'commun' },
-      { id: 'crea_c5', name: 'Bout de ficelle',   rarity: 'commun' },
-      { id: 'crea_c6', name: 'Pastel usé',        rarity: 'commun' },
-      { id: 'crea_r1', name: 'Pinceau doré',      rarity: 'rare' },
-      { id: 'crea_e1', name: 'Palette du maître', rarity: 'epique' }
+      { id: 'crea_c1', name: 'Crayon mâché',      rarity: 'commun', serie: 1 },
+      { id: 'crea_c2', name: 'Éclat de couleur',  rarity: 'commun', serie: 1 },
+      { id: 'crea_c3', name: 'Bouton dépareillé', rarity: 'commun', serie: 1 },
+      { id: 'crea_c4', name: 'Bille de verre',    rarity: 'commun', serie: 1 },
+      { id: 'crea_c5', name: 'Bout de ficelle',   rarity: 'commun', serie: 1 },
+      { id: 'crea_c6', name: 'Pastel usé',        rarity: 'commun', serie: 1 },
+      { id: 'crea_r1', name: 'Pinceau doré',      rarity: 'rare', serie: 1 },
+      { id: 'crea_e1', name: 'Palette du maître', rarity: 'epique', serie: 1 }
     ],
     bienetre: [
-      { id: 'bien_c1', name: 'Galet tiède',      rarity: 'commun' },
-      { id: 'bien_c2', name: 'Brin de lavande',  rarity: 'commun' },
-      { id: 'bien_c3', name: 'Tasse fumante',    rarity: 'commun' },
-      { id: 'bien_c4', name: 'Coussin moelleux', rarity: 'commun' },
-      { id: 'bien_c5', name: 'Feuille de menthe',rarity: 'commun' },
-      { id: 'bien_c6', name: 'Plume d’oreiller', rarity: 'commun' },
-      { id: 'bien_r1', name: 'Fleur de quiétude',rarity: 'rare' },
-      { id: 'bien_e1', name: 'Source paisible',  rarity: 'epique' }
+      { id: 'bien_c1', name: 'Galet tiède',      rarity: 'commun', serie: 1 },
+      { id: 'bien_c2', name: 'Brin de lavande',  rarity: 'commun', serie: 1 },
+      { id: 'bien_c3', name: 'Tasse fumante',    rarity: 'commun', serie: 1 },
+      { id: 'bien_c4', name: 'Coussin moelleux', rarity: 'commun', serie: 1 },
+      { id: 'bien_c5', name: 'Feuille de menthe',rarity: 'commun', serie: 1 },
+      { id: 'bien_c6', name: 'Plume d’oreiller', rarity: 'commun', serie: 1 },
+      { id: 'bien_r1', name: 'Fleur de quiétude',rarity: 'rare', serie: 1 },
+      { id: 'bien_e1', name: 'Source paisible',  rarity: 'epique', serie: 1 }
     ]
   };
 
@@ -2457,10 +2565,34 @@ body {
     var arr = POOLS[dom];
     for (var i = 0; i < arr.length; i++) {
       var it = arr[i];
-      var card = { id: it.id, domain: dom, name: it.name, rarity: it.rarity };
+      var card = { id: it.id, domain: dom, name: it.name, rarity: it.rarity, serie: it.serie };
       byId[card.id] = card;
       (byRarityDom[dom][card.rarity] || (byRarityDom[dom][card.rarity] = [])).push(card);
     }
+  }
+
+  /* ------------------------------------------------ séries & reliques (Phase 3.2) */
+  // Arbitrage Leo (2026-09-28) : les reliques vont PAR SÉRIES. Chaque carte du catalogue porte
+  // sa `serie` ; les viviers actuels sont la Série 1 de leur domaine (l'esprit du GDD §5.4 :
+  // « les 12 cartes Lecture — année 1 »). Quand la 6.1 agrandira les viviers, ses cartes
+  // porteront `serie: 2` : la Série 1 reste ce qu'elle est, et une relique forgée ne se défait
+  // JAMAIS. Ici on ne DÉCLARE que le nom de chaque relique ; qu'elle soit forgée se DÉRIVE de
+  // l'inventaire (derive.relicOf) — rien n'est stocké. Les génératifs et les cartes-jalons
+  // n'ont pas de série : ils restent hors collection (arbitrage 3.1).
+  // Noms choisis par Leo (jeu « Emblèmes », 2026-09-28). L'objet dessiné viendra en 6.4.
+  var RELICS = {
+    physique:      [{ serie: 1, name: 'Le Laurier d’or' }],
+    mental:        [{ serie: 1, name: 'L’Astrolabe' }],
+    connaissances: [{ serie: 1, name: 'Le Codex' }],
+    creativite:    [{ serie: 1, name: 'Le Prisme' }],
+    bienetre:      [{ serie: 1, name: 'Le Lotus d’or' }]
+  };
+
+  // Les cartes d'UNE série d'un domaine, dans l'ordre du catalogue (copie défensive).
+  function serieCards(domain, serie) {
+    var arr = POOLS[domain] || [], out = [];
+    for (var i = 0; i < arr.length; i++) if (arr[i].serie === serie) out.push(byId[arr[i].id]);
+    return out;
   }
 
   // Décos génératives (déco quand le pool de communs d'un domaine est épuisé, §4.3).
@@ -2576,6 +2708,9 @@ body {
     milestones: MILESTONES,
     milestoneAt: milestoneAt,
     milestoneCardId: milestoneCardId,
+    // Séries & reliques (Phase 3.2) : les noms déclarés ; la forge, elle, se dérive.
+    relics: RELICS,
+    serieCards: serieCards,
     hash: hash
   };
 })();
@@ -2987,6 +3122,7 @@ body {
     return {
       domain: domain, level: level, unlocked: slots > 0, slots: slots,
       cases: cases, shelf: shelf, shown: shown,
+      relic: socleRelic(state, domain),     // 3.2 : le socle, à place propre (hors des 8 vitrines)
       nextAt: (slots > 0 && slots < ROOM_SLOTS_CAP) ? (level + 1) : 0
     };
   }
@@ -2997,7 +3133,8 @@ body {
     for (var i = 0; i < list.length; i++) {
       var r = roomInfo(state, list[i].id);
       out.push({ domain: list[i], level: r.level, unlocked: r.unlocked,
-                 slots: r.slots, shown: r.shown, waiting: r.shelf.length });
+                 slots: r.slots, shown: r.shown, waiting: r.shelf.length,
+                 relicForged: !!(r.relic && r.relic.forged) });
     }
     return out;
   }
@@ -3014,7 +3151,7 @@ body {
      daté qu'ainsi. Une save éditée à la main ne peut pas s'inventer un moment.
 
      Retourne [{day, events:[…]}, …], du jour le PLUS RÉCENT au plus ancien. */
-  var EVENT_WEIGHT = { level: 0, milestone: 1, item: 2, quest: 3 };
+  var EVENT_WEIGHT = { relic: 0, level: 1, milestone: 2, item: 3, quest: 4 };
   function byEventWeight(a, b) { return (EVENT_WEIGHT[a.kind] | 0) - (EVENT_WEIGHT[b.kind] | 0); }
 
   function timeline(state) {
@@ -3069,6 +3206,18 @@ body {
       }
     }
 
+    /* 4. Les reliques forgées (3.2), datées du jour de leur DERNIÈRE carte : le moment où la
+       série s'est complétée. Dérivées comme tout le reste — une vieille save déjà complète
+       trouve sa relique datée ici, sans avoir jamais vu de cérémonie. */
+    for (i = 0; i < domains.list.length; i++) {
+      var rl = relicsOf(state, domains.list[i].id);
+      for (var r = 0; r < rl.length; r++) {
+        if (!rl[r].forged || !rl[r].forgedDay) continue;
+        dayBucket(rl[r].forgedDay).events.push({ kind: 'relic', domain: rl[r].domain, day: rl[r].forgedDay,
+                                                  serie: rl[r].serie, name: rl[r].name });
+      }
+    }
+
     order.sort(function (a, b) { return a.day < b.day ? 1 : (a.day > b.day ? -1 : 0); });
     for (i = 0; i < order.length; i++) order[i].events.sort(byEventWeight);
     return order;
@@ -3077,16 +3226,84 @@ body {
   // Avancement de la COLLECTION d'un domaine (v0.26) : combien d'objets de son catalogue fixe
   // (`cards.pools`) sont dans l'inventaire. DÉRIVÉ, jamais stocké. Les décos génératives et les
   // cartes-jalons sont HORS catalogue : elles ne comptent pas dans le X/Y (arbitrage 3.1).
-  // Source UNIQUE du X/Y : le menu du domaine (island/07-domaine.js) et la cérémonie (app/03-ceremonie.js) la lisent.
-  function collectionCount(state, domain) {
-    var cat = (cards.pools && cards.pools[domain]) || [], inv = (state && state.inventory) || [];
-    var have = {}, got = 0;
+  // Source UNIQUE du X/Y : le menu du domaine (island/07-domaine.js), la cérémonie
+  // (app/03-ceremonie.js) et la relique (relicOf) la lisent.
+  // 3.2 — le X/Y est celui d'une SÉRIE : `serie` donnée (la cérémonie compte la série de la carte
+  // révélée), sinon la série EN COURS = la première incomplète, ou la dernière si toutes le sont.
+  // Avec la seule Série 1 d'aujourd'hui, le compte est exactement celui du catalogue entier.
+  function ownedEntries(state) {
+    var inv = inventoryOf(state), have = {};
     for (var i = 0; i < inv.length; i++) {
       var e = inv[i];
-      if (e && e.id && typeof e.itemId === 'string') have[e.itemId] = true;
+      if (e && e.id && typeof e.itemId === 'string' && !have[e.itemId]) have[e.itemId] = e;
     }
-    for (var j = 0; j < cat.length; j++) if (have[cat[j].id]) got++;
-    return { got: got, total: cat.length };
+    return have;
+  }
+  function seriesOf(domain) {
+    var rs = (cards.relics && cards.relics[domain]) || [], out = [];
+    for (var i = 0; i < rs.length; i++) out.push(rs[i].serie);
+    return out;
+  }
+  function serieTally(have, domain, serie) {
+    var list = cards.serieCards(domain, serie), got = 0;
+    for (var j = 0; j < list.length; j++) if (have[list[j].id]) got++;
+    return { got: got, total: list.length, serie: serie };
+  }
+  function collectionCount(state, domain, serie) {
+    var have = ownedEntries(state);
+    if (serie) return serieTally(have, domain, serie);
+    var ss = seriesOf(domain), c = { got: 0, total: 0, serie: 0 };
+    for (var i = 0; i < ss.length; i++) {
+      c = serieTally(have, domain, ss[i]);
+      if (c.got < c.total) break;
+    }
+    return c;
+  }
+
+  /* ------------------------------------------------------------ reliques (Phase 3.2)
+     GDD §5.4 : compléter une série forge une RELIQUE, « Je l'ai vraiment mérité ». Elle est
+     DÉRIVÉE de bout en bout : série complète dans l'inventaire = relique forgée. Rien n'est
+     stocké — ni drapeau, ni date. Sa date de forge est celle de la DERNIÈRE carte obtenue de la
+     série ; ce qui l'a forgée, ce sont ces cartes (avec leur souvenir) et les gestes réels du
+     domaine jusqu'à ce jour. Une save éditée à la main ne peut donc pas s'inventer une relique
+     sans s'inventer aussi chacune de ses cartes. */
+  function relicOf(state, domain, serie) {
+    var rs = (cards.relics && cards.relics[domain]) || [], name = '';
+    for (var i = 0; i < rs.length; i++) if (rs[i].serie === serie) name = rs[i].name;
+    var have = ownedEntries(state), count = serieTally(have, domain, serie);
+    var list = cards.serieCards(domain, serie), parts = [];
+    for (var j = 0; j < list.length; j++) if (have[list[j].id]) parts.push({ item: list[j], entry: have[list[j].id] });
+    parts.sort(function (a, b) {
+      var x = '' + (a.entry.day || ''), y = '' + (b.entry.day || '');
+      return x < y ? -1 : (x > y ? 1 : 0);
+    });
+    var forged = count.total > 0 && count.got >= count.total;
+    var out = { domain: domain, serie: serie, name: name, got: count.got, total: count.total,
+                forged: forged, parts: parts, firstDay: '', forgedDay: '', validations: 0, quests: 0 };
+    if (!forged) return out;
+    out.firstDay = parts[0].entry.day || '';
+    out.forgedDay = parts[parts.length - 1].entry.day || '';
+    var hist = historyOf(state);
+    for (var k = 0; k < hist.length; k++) {
+      var h = hist[k];
+      if (!h || h.domain !== domain || typeof h.day !== 'string' || h.day > out.forgedDay) continue;
+      if (h.kind === 'habit') out.validations++;
+      else if (h.kind === 'quest') out.quests++;
+    }
+    return out;
+  }
+  // Toutes les reliques d'un domaine, une par série déclarée.
+  function relicsOf(state, domain) {
+    var ss = seriesOf(domain), out = [];
+    for (var i = 0; i < ss.length; i++) out.push(relicOf(state, domain, ss[i]));
+    return out;
+  }
+  // La relique que porte le SOCLE de la salle : la dernière forgée — une relique ne quitte jamais
+  // son socle quand une série suivante commence —, sinon celle de la première série, qui attend.
+  function socleRelic(state, domain) {
+    var all = relicsOf(state, domain), pick = all[0] || null;
+    for (var i = 0; i < all.length; i++) if (all[i].forged) pick = all[i];
+    return pick;
   }
 
   // Récap « Depuis ta dernière visite » (v0.27) — ce qui a GRANDI depuis que history avait
@@ -3115,6 +3332,8 @@ body {
     habitCount: habitCount,
     recapSince: recapSince,
     collectionCount: collectionCount,
+    // Reliques (Phase 3.2) — dérivées de l'inventaire, jamais stockées.
+    relicOf: relicOf,
     nextMilestone: nextMilestone,
     isHabitValidatedOn: isHabitValidatedOn,
     drawForChest: drawForChest,
@@ -4078,6 +4297,7 @@ body {
   var roomView = 'scene';   // 'scene' | 'liste' — bascule LOCALE à la salle (arbitrage Leo)
   var pickedInvId = null;   // « choisir puis poser » : objet choisi, en attente d'une vitrine
   var roomNote = null;      // un mot doux après un geste (exposé, rangé, échangé)
+  var relicView = false;    // 3.2 : la salle montre le détail de sa relique (ce qui l'a forgée)
   // ACTIONS DEPUIS L'ÎLE (Phase 3.3) — état d'UI éphémère du « menu du domaine » quand il agit.
   var actNote = null;             // feedback doux après une action (validation d'habitude / quête accomplie)
   var menuConfirmAbandon = false; // confirmation d'arrêt d'une quête lancée depuis le menu
@@ -4113,11 +4333,12 @@ body {
         })}
       </svg>`;
   }
-  function sceneGlyph(name, cls, cy, s) {
+  // `rich` (3.2) : la relique du socle est le seul site de scène assez grand pour la variante riche.
+  function sceneGlyph(name, cls, cy, s, rich) {
     var t = 'translate(0,' + cy + ') scale(' + s + ') translate(-12,-12)';
     return html`
       <g class=${cls} transform=${t}>
-        ${glyphs.parts(name, 1).map(function (p) {
+        ${glyphs.parts(name, !rich).map(function (p) {
           return html`<path d=${p.d} class=${p.cls} style=${p.w ? '--w:' + p.w : null} />`;
         })}
       </g>`;
@@ -4196,7 +4417,7 @@ body {
   function backToGrid() { detailInvId = null; repaint(); }
   function openChestHub() { rememberFocus(); chestHubOpen = true; openDomainId = null; detailInvId = null; repaint(); }
   function closeChestHub() { chestHubOpen = false; repaint(); restoreFocus(); }
-  function resetRoom() { museumRoom = null; roomView = 'scene'; pickedInvId = null; roomNote = null; }
+  function resetRoom() { museumRoom = null; roomView = 'scene'; pickedInvId = null; roomNote = null; relicView = false; }
   function openMuseum() { rememberFocus(); museumOpen = true; openDomainId = null; detailInvId = null; chestHubOpen = false; resetRoom(); repaint(); }
   function closeMuseum() { museumOpen = false; resetRoom(); repaint(); restoreFocus(); }
   // SECONDE PORTE (arbitrage Leo, 3.3b) : on entre dans une salle par le monument (le hall)
@@ -4209,7 +4430,11 @@ body {
     museumOpen = true; chestHubOpen = false; resetRoom();
     museumRoom = dom; repaint();
   }
-  function enterRoom(dom) { museumRoom = dom; roomView = 'scene'; pickedInvId = null; roomNote = null; repaint(); }
+  function enterRoom(dom) { museumRoom = dom; roomView = 'scene'; pickedInvId = null; roomNote = null; relicView = false; repaint(); }
+  // Le socle (3.2) : on ouvre son détail depuis la scène OU le miroir Liste, et on en revient
+  // à la salle dans la vue d'où l'on venait (la bascule Scène/Liste n'est pas touchée).
+  function openRelic() { relicView = true; pickedInvId = null; repaint(); }
+  function closeRelic() { relicView = false; repaint(); focusPanel(document.querySelector('.museum .dm-panel')); }
   function backToHall() { resetRoom(); repaint(); }
   function setRoomView(v) { roomView = (v === 'liste') ? 'liste' : 'scene'; pickedInvId = null; repaint(); }
 
@@ -5749,9 +5974,13 @@ body {
   function eventNode(ev) {
     // Les MOMENTS (un niveau gagné, un jalon franchi) portent l'accent doré ; les objets
     // gardent l'encre. C'est la seule hiérarchie visuelle de la frise, et elle suffit.
-    var mark = (ev.kind === 'level' || ev.kind === 'milestone');
+    var mark = (ev.kind === 'level' || ev.kind === 'milestone' || ev.kind === 'relic');
     var gly, name, sub;
-    if (ev.kind === 'item') {
+    if (ev.kind === 'relic') {
+      gly = ev.domain;
+      name = ev.name;
+      sub = 'Relique forgée · Collection ' + labelOf(ev.domain) + ' complète';
+    } else if (ev.kind === 'item') {
       var it = cards.resolve(ev.itemId);
       gly = glyphName(it);
       name = it.name;
@@ -5849,6 +6078,33 @@ body {
   // voient pas). Cinq, aux milieux des cinq intervalles : le premier jet en avait quatre, et
   // laissait un trou de 176 unités au centre du mur.
   var PILASTERS = [26, 120, 215, 309, 403];
+
+  /* LE SOCLE DE LA RELIQUE (Phase 3.2). Arbitrage Leo : au CENTRE de la salle, à place PROPRE —
+     il ne prend aucune des 8 ancres et n'en déplace aucune. Il se pose dans l'allée centrale,
+     que les vitrines laissent libre à tous les niveaux (l'avant-plan s'arrête à 192 et reprend à
+     248 ; le fond à 193 et 247), au pied du mur : la relique couronne la salle qu'elle a remplie.
+     Sa boîte de tap est l'allée entière, dessinée APRÈS les vitrines : elle ne mord que sur leurs
+     marges de tap, jamais sur leurs corps, et chacune garde plus de 60 unités de cible. */
+  var SOCLE = { x: 220, y: 206, hit: { x: 190, y: 112, w: 60, h: 104 } };
+
+  // La relique, placeholder PROPRE et substituable (l'objet dessiné viendra en 6.4, sur l'ancre
+  // `data-relic`) : un socle géométrique doré et le glyphe du domaine en variante riche.
+  // Partagée par le musée et la cérémonie de forge (app/03-ceremonie.js) : un seul dessin.
+  function RelicArt(r) {
+    return html`
+      <span class="relic-art" data-relic=${r.domain + '-' + r.serie} aria-hidden="true">
+        ${r.forged ? Glyph(r.domain, 'relic-gly') : html`<span class="relic-wait"></span>`}
+        <span class="relic-plinth"></span>
+      </span>`;
+  }
+  function relicSub(r) { return 'Relique · Série ' + r.serie; }
+  // Ce qui l'a forgée, en une ligne (« 9 cartes · 47 validations · depuis le 12 août 2026 ») —
+  // la MÊME au musée et dans la forge, pour que les deux ne puissent pas se contredire.
+  function relicLine(r) {
+    var bits = [r.total + ' cartes', r.validations + ' validation' + (r.validations > 1 ? 's' : '')];
+    if (r.quests) bits.push(r.quests + ' quête' + (r.quests > 1 ? 's' : ''));
+    return bits.join(' · ') + ' · depuis le ' + fmtDay(r.firstDay);
+  }
 
   /* --------------------------------------------------- gestes de la salle (éphémères) */
   var dragFrom = null;   // glisser en cours : { invId, slot, x, y, moved } — jamais persisté
@@ -5994,16 +6250,45 @@ body {
       </g>`;
   }
 
+  // Le socle dans la scène : vide, il montre en pointillé doré la place qui attend la relique.
+  function socleNode(r) {
+    return html`
+      <g key="socle" class="rm-socle" transform=${'translate(' + SOCLE.x + ',' + SOCLE.y + ')'}
+         data-relic=${r.domain + '-' + r.serie}>
+        <ellipse class="rm-cast" cx="3" cy="2" rx="26" ry="5.5" />
+        <rect class="rm-plinth" x="-22" y="-7" width="44" height="7" rx="1.4" />
+        <rect class="rm-plinth" x="-15" y="-38" width="30" height="31" />
+        <rect class="rm-plinth-dim" x="-15" y="-38" width="30" height="31" />
+        <rect class="rm-base-sh" x="5" y="-38" width="10" height="31" />
+        <rect class="rm-plinth" x="-20" y="-44" width="40" height="6" rx="1.4" />
+        ${r.forged
+          ? sceneGlyph(r.domain, 'rm-relic-gly', -64, 1.45, true)
+          : html`<ellipse class="rm-relic-wait" cx="0" cy="-50" rx="13" ry="4" />`}
+      </g>`;
+  }
+  function socleLabel(r) {
+    return r.forged
+      ? (r.name + ', la relique de la salle. Touche pour voir ce qui l’a forgée.')
+      : ('Socle de la relique, encore vide : ' + r.got + ' cartes sur ' + r.total + ' de la Série ' + r.serie + '.');
+  }
+
   function RoomScene(room) {
     var free = !!pickedInvId;
-    // Rang du fond d'abord : la profondeur se joue à l'ordre de dessin, comme sur l'île.
-    var order = [], i;
-    for (i = 0; i < room.slots; i++) order.push(i);
-    order.sort(function (a, b) { return SHOWCASES[a].y - SHOWCASES[b].y; });
+    // Rang du fond d'abord : la profondeur se joue à l'ordre de dessin, comme sur l'île. Le socle
+    // se dessine entre les deux rangs (il est au pied du mur, devant le fond, derrière l'avant).
+    var back = [], front = [], i;
+    for (i = 0; i < room.slots; i++) (SHOWCASES[i].y < SOCLE.y ? back : front).push(i);
+    function cases(list) {
+      return list.map(function (slot) {
+        return showcaseNode(SHOWCASES[slot], slot, room.cases[slot], free && !room.cases[slot]);
+      });
+    }
+    var r = room.relic;
     return html`
       <svg class="rm-scene isl-musee" viewBox=${'0 0 ' + ROOM.w + ' ' + ROOM.h}
            preserveAspectRatio="xMidYMax meet" role="img"
-           aria-label=${'Vue de la salle : ' + showcaseLine(room.shown, room.slots) + '.'}>
+           aria-label=${'Vue de la salle : ' + showcaseLine(room.shown, room.slots) + '. ' +
+                        (r ? (r.forged ? 'Au centre, sur son socle : ' + r.name + '.' : 'Au centre, le socle de la relique attend.') : '')}>
         <rect class="rm-ground" x="0" y="0" width=${ROOM.w} height=${ROOM.h} />
         ${PILASTERS.map(function (x, k) {
           return html`<rect key=${'pi' + k} class="rm-pilaster" x=${x} y="8" width="11" height=${ROOM.wall - 26} />`;
@@ -6018,9 +6303,13 @@ body {
         ${FLOOR_BANDS.map(function (y, k) {
           return html`<path key=${'fb' + k} class="rm-tile" d=${'M 0 ' + y + ' H ' + ROOM.w} />`;
         })}
-        ${order.map(function (slot) {
-          return showcaseNode(SHOWCASES[slot], slot, room.cases[slot], free && !room.cases[slot]);
-        })}
+        ${cases(back)}
+        ${r ? socleNode(r) : null}
+        ${cases(front)}
+        ${r ? html`<rect class="rm-hit rm-socle-hit" x=${SOCLE.hit.x} y=${SOCLE.hit.y}
+                         width=${SOCLE.hit.w} height=${SOCLE.hit.h} onClick=${openRelic}>
+                     <title>${socleLabel(r)}</title>
+                   </rect>` : null}
       </svg>`;
   }
 
@@ -6041,12 +6330,57 @@ body {
       </li>`;
   }
 
+  /* LE DÉTAIL DE LA RELIQUE (3.2) — « avec la liste des accomplissements qui l'ont constituée »
+     (GDD §5.4). Forgée : chaque carte de la série, sa date, son souvenir, dans l'ordre où elle a
+     été gagnée ; et ce que ces cartes ont demandé de gestes réels. Pas encore : le socle attend,
+     et dit simplement ce qui le remplira — jamais un « il te manque ». */
+  function RelicDetail(r, dom) {
+    return html`
+      <div class="rl-detail">
+        <button class="dm-back" type="button" ref=${focusPanel} onClick=${closeRelic}
+                aria-label=${'Retour à la salle ' + dom.label}>← La salle</button>
+        <div class="rl-head">
+          ${RelicArt(r)}
+          <div class="rl-headmain">
+            <h3 class="rl-name">${r.name}</h3>
+            <p class="rl-sub">${relicSub(r)} · ${r.forged ? 'forgée le ' + fmtDay(r.forgedDay) : r.got + '/' + r.total + ' cartes'}</p>
+            ${r.forged ? html`<p class="rl-line">${relicLine(r)}</p>` : null}
+          </div>
+        </div>
+        ${r.forged
+          ? html`
+            <h3 class="dm-h rm-h">Ce qui l’a forgée</h3>
+            <p class="dm-note">Chaque carte de la série, dans l’ordre où tu l’as gagnée.</p>
+            <ol class="tl-events rl-parts">
+              ${r.parts.map(function (p) {
+                return html`
+                  <li class="tl-ev" key=${p.entry.id}>
+                    ${Glyph(glyphName(p.item), 'tl-gly')}
+                    <div class="tl-main">
+                      <p class="tl-name">${p.item.name}</p>
+                      <p class="tl-sub">${cards.rarityLabel(p.item.rarity) + ' · ' + fmtDay(p.entry.day) +
+                                          (p.entry.sourceLabel ? ' · ' + p.entry.sourceLabel : '')}</p>
+                    </div>
+                  </li>`;
+              })}
+            </ol>`
+          : html`<p class="empty-soft">La relique se forgera quand la collection sera complète.</p>`}
+      </div>`;
+  }
+
   function RoomList(room, dom) {
     var choices = room.shelf.slice();
+    var r = room.relic;
     return html`
       <div class="rm-list">
         <p class="dm-note">Miroir de la salle. Chaque vitrine se garnit ici au clavier : choisis
         un objet dans son menu, ou remets-la à vide pour ranger.</p>
+        ${r ? html`
+          <div class="rm-row rm-socle-row">
+            <span class="rm-row-n">Le socle</span>
+            <span class="rm-socle-t">${r.forged ? r.name : 'Vide · ' + r.got + '/' + r.total + ' cartes'}</span>
+            <button class="btn ghost rm-off" type="button" aria-label=${socleLabel(r)} onClick=${openRelic}>Voir</button>
+          </div>` : null}
         <ul class="rm-rows">
           ${room.cases.map(function (occ, i) {
             var opts = choices.slice();
@@ -6101,6 +6435,7 @@ body {
       ? html`<p class="note-soft rm-note">${Glyph(roomNote.gly, 'ns-gly')}<span>${roomNote.text}</span>
              <button class="lnk" type="button" onClick=${clearRoomNote}>OK</button></p>`
       : null;
+    if (relicView && room.relic) return html`<div class="dm-body rm-body">${RelicDetail(room.relic, dom)}</div>`;
     return html`
       <div class="dm-body rm-body">
         <div class="rm-top">
@@ -6150,12 +6485,13 @@ body {
     return html`
       <li class="rm-door" key=${r.domain.id}>
         <button type="button"
-                aria-label=${'Entrer dans la salle ' + r.domain.label + ' : ' + showcaseLine(r.shown, r.slots) + '.'}
+                aria-label=${'Entrer dans la salle ' + r.domain.label + ' : ' + showcaseLine(r.shown, r.slots) +
+                             (r.relicForged ? ', relique forgée' : '') + '.'}
                 onClick=${function () { enterRoom(r.domain.id); }}>
           ${Glyph(r.domain.id, 'rm-door-gly')}
           <span class="rm-door-m">
             <span class="rm-door-t">Salle ${r.domain.label}</span>
-            <span class="rm-door-s">${showcaseLine(r.shown, r.slots)}${r.waiting ? ' · ' + r.waiting + ' en réserve' : ''}</span>
+            <span class="rm-door-s">${showcaseLine(r.shown, r.slots)}${r.waiting ? ' · ' + r.waiting + ' en réserve' : ''}${r.relicForged ? ' · relique forgée' : ''}</span>
           </span>
           <span class="rm-door-go" aria-hidden="true">→</span>
         </button>
@@ -6195,7 +6531,7 @@ body {
       <div class="dom-menu museum" role="dialog" aria-modal="true"
            aria-label=${dom ? ('Musée, salle ' + dom.label) : 'Le musée, hall de la frise'}
            onKeyDown=${function (e) {
-             if (e.key === 'Escape') { if (museumRoom) backToHall(); else closeMuseum(); return; }
+             if (e.key === 'Escape') { if (relicView) closeRelic(); else if (museumRoom) backToHall(); else closeMuseum(); return; }
              trapTab(e);
            }}>
         <div class="dm-backdrop" onClick=${closeMuseum} aria-hidden="true"></div>
@@ -6237,7 +6573,9 @@ body {
       </main>`;
   }
 
-  window.AscendIsland = { Screen: Screen, arrive: arrive, leave: leave };
+  // 3.2 : la forge de la cérémonie (app/03-ceremonie.js) montre la MÊME relique et la MÊME ligne
+  // que le socle du musée — empruntées ici plutôt que redessinées.
+  window.AscendIsland = { Screen: Screen, arrive: arrive, leave: leave, RelicArt: RelicArt, relicLine: relicLine };
 })();
 
 /* ASCEND v2 — Racine de l'app.
@@ -6262,7 +6600,7 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.29';
+  var VER = '0.30';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
   // v0.26 — suspense GRADUÉ : plus le coffre est rare, plus il se fait attendre (et plus son halo
@@ -6293,7 +6631,7 @@ body {
     confirmDeleteId: null,
     milestoneDone: null,      // { threshold, chestLabel } — bandeau doux après un jalon franchi
     levelDone: null,          // { level, domainLabel, count } — bandeau doux après une montée de niveau (Phase 2.2)
-    ceremony: null,           // { phase:'suspense'|'open'|'reveal', chestType, item, sourceLabel } | null
+    ceremony: null,           // { phase:'suspense'|'open'|'reveal'|'forge', chestType, item, sourceLabel, coll, relic } | null
     // v0.24 — LE GESTE RÉEL. cheer = la dernière habitude validée (coche tracée, compteur qui
     // bondit, phrase « … part vers ton île ») ; flyer = le petit coffre qui s'envole du bouton
     // vers l'onglet Île ; land = l'onglet qui l'accueille. Tous éphémères, jamais persistés.
@@ -6391,10 +6729,16 @@ body {
     var ct = chestTypes.get(res.chestType);
     var rarity = ct ? ct.rarity : 'commun';
     var dur = SUSPENSE_MS[rarity] || SUSPENSE_MS.commun;
+    var st = store.get(), dom = res.item.domain;
+    // APRÈS l'ouverture : le X/Y inclut l'objet, et il compte la SÉRIE de la carte révélée (3.2).
+    var coll = derive.collectionCount(st, dom, res.item.serie);
+    // La carte qui COMPLÈTE sa série forge la relique (3.2). Elle est déjà DÉRIVÉE de l'inventaire
+    // à cet instant : la forge ne fait que la montrer, et la refermer avant ne perd rien.
+    var relic = (res.item.serie && coll.total && coll.got >= coll.total) ? derive.relicOf(st, dom, res.item.serie) : null;
     ui.ceremony = {
       phase: reduce ? 'reveal' : 'suspense', rarity: rarity, dur: dur,
-      chestType: res.chestType, item: res.item, sourceLabel: res.sourceLabel,
-      coll: derive.collectionCount(store.get(), res.item.domain)   // APRÈS l'ouverture : inclut l'objet
+      chestType: res.chestType, item: res.item, sourceLabel: res.sourceLabel, coll: coll,
+      relic: relic, roomOpen: relic ? derive.roomInfo(st, dom).unlocked : false
     };
     paint();
     if (!reduce) {
@@ -6412,6 +6756,11 @@ body {
   function skipCeremony() {
     if (ceremonyTimer) { clearTimeout(ceremonyTimer); ceremonyTimer = null; }
     if (ui.ceremony && ui.ceremony.phase !== 'reveal') { ui.ceremony.phase = 'reveal'; paint(); }
+  }
+  // « Forger la relique » (3.2) : la cérémonie CONTINUE dans une phase calme, sans minuteur —
+  // les cartes convergent, la relique se pose, on lit ce qui l'a forgée. Rien n'est écrit ici.
+  function forgeRelic() {
+    if (ui.ceremony && ui.ceremony.relic) { ui.ceremony.phase = 'forge'; paint(); }
   }
   function closeCeremony() {
     if (ceremonyTimer) { clearTimeout(ceremonyTimer); ceremonyTimer = null; }
@@ -6680,13 +7029,47 @@ body {
   // v0.29 — entre les deux, l'OUVERTURE : le couvercle bascule sur sa charnière, la lumière
   // jaillit et une carte sort du coffre. Cette lumière est déjà celle de l'OBJET : c'est le
   // premier instant de la révélation, donc la même honnêteté s'y applique.
+  // v0.30 (3.2) — LA FORGE, quand la carte révélée complète sa série : la même cérémonie continue
+  // (arbitrage Leo : enchaînée, sobre). Les cartes de la série convergent, la relique se pose sur
+  // son socle, on lit ce qui l'a forgée. Pas de rayons, pas d'éclat : `data-rarity="forge"` ne
+  // correspond à aucune rareté, donc la lumière retombe à l'or calme par défaut, rayons à 0.
+  // La relique et sa ligne sont celles du socle du musée (island.RelicArt / relicLine).
+  function focusOnMount(node) { if (node && node.focus) { try { node.focus(); } catch (e) {} } }
+  function ForgeStage(c) {
+    var r = c.relic, d = domains.get(r.domain), label = d ? d.label : '', n = r.parts.length;
+    return html`
+      <div class="cer-stage cer-forge" role="status">
+        <p class="cer-kicker">Relique forgée</p>
+        <div class="cer-card cer-relic">
+          <span class="cer-converge" aria-hidden="true">
+            ${r.parts.map(function (p, i) {
+              return html`<span key=${p.item.id} class="cer-shard"
+                                style=${'--a:' + Math.round(i * 360 / n) + 'deg;--i:' + i}>${Glyph(p.item.domain, 'cer-shard-gly', 1)}</span>`;
+            })}
+          </span>
+          <div class="reward-card relic-card">
+            ${island.RelicArt(r)}
+            <div class="rc-name">${r.name}</div>
+            <span class="relic-sub">Relique · Série ${r.serie}</span>
+          </div>
+        </div>
+        <p class="cer-coll cer-forged">${island.relicLine(r)}</p>
+        <p class="cer-src">${c.roomOpen
+          ? 'Elle t’attend sur son socle, au centre de la salle ' + label + ' du musée.'
+          : 'Elle t’attend dans la salle ' + label + ' du musée, qui ouvre au niveau ' + derive.ROOM_LEVEL + '.'}</p>
+        <button class="btn gold" type="button" ref=${focusOnMount} onClick=${closeCeremony}>Continuer</button>
+      </div>`;
+  }
+
   function Ceremony() {
     var c = ui.ceremony;
     if (!c) return null;
-    var waiting = c.phase !== 'reveal', opening = c.phase === 'open';
+    var waiting = c.phase === 'suspense' || c.phase === 'open', opening = c.phase === 'open';
+    var forging = c.phase === 'forge';
     return html`
-      <div class="ceremony" role="dialog" aria-modal="true" aria-label="Ouverture d’un coffre"
-           data-rarity=${c.phase === 'suspense' ? c.rarity : c.item.rarity} style=${'--cer-dur:' + c.dur + 'ms'}
+      <div class="ceremony" role="dialog" aria-modal="true"
+           aria-label=${forging ? 'Forge d’une relique' : 'Ouverture d’un coffre'}
+           data-rarity=${c.phase === 'suspense' ? c.rarity : (forging ? 'forge' : c.item.rarity)} style=${'--cer-dur:' + c.dur + 'ms'}
            onClick=${waiting ? skipCeremony : null}>
         ${waiting
           ? html`
@@ -6701,7 +7084,7 @@ body {
                         onClick=${function (e) { if (e && e.stopPropagation) e.stopPropagation(); skipCeremony(); }}>Passer</button>
               </p>
             </div>`
-          : html`
+          : forging ? ForgeStage(c) : html`
             <div class="cer-stage cer-reveal" role="status">
               <p class="cer-kicker">Tu as obtenu</p>
               <div class="cer-card">
@@ -6710,7 +7093,11 @@ body {
               </div>
               ${CollectionStep(c)}
               <p class="cer-src">${c.sourceLabel}</p>
-              <button class="btn gold" type="button" onClick=${closeCeremony}>Rejoindre ma collection</button>
+              ${c.relic
+                ? html`<button class="btn gold" type="button" onClick=${forgeRelic}>Forger la relique</button>
+                       <button class="cer-skip" type="button" onClick=${closeCeremony}
+                               aria-label="Plus tard : ta relique est déjà à toi, rien n’est perdu">Plus tard</button>`
+                : html`<button class="btn gold" type="button" onClick=${closeCeremony}>Rejoindre ma collection</button>`}
             </div>`}
       </div>`;
   }
