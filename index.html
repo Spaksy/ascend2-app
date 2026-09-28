@@ -1588,6 +1588,60 @@ body {
 .rl-line { font-size: 13px; margin-top: 6px; font-variant-numeric: tabular-nums; }
 .rl-parts { margin-top: 10px; }
 .rl-detail .empty-soft { margin-top: 14px; }
+
+/* ASCEND v2 — fragment styles/12-souvenir.css : photo-souvenir et note perso (Phase 3.4). Cascade : l’ordre des fichiers compte (ordre : build/build.ps1). */
+/* ==================== LA PHOTO-SOUVENIR & LA NOTE (Phase 3.4) ====================
+   Un don du joueur à son souvenir : rien ici n'appelle, ne clignote ni ne compte. Aucune
+   animation (donc rien à neutraliser en reduce-motion). */
+
+/* Le sélecteur de fichier : l'<input> reste focusable (masqué visuellement, pas `display:none`),
+   c'est le <label> qui porte le geste et l'anneau de focus. */
+.ph-pick { position: relative; cursor: pointer; }
+.ph-file {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+.ph-pick:focus-within { outline: none; box-shadow: 0 0 0 3px var(--accent-soft); border-color: var(--accent); }
+
+/* Dans la cérémonie : un LIEN, pas un bouton — l'encre de `.cer-src`, soulignée, sans cadre. */
+.cer-photo-add {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px;
+  color: #C9D0E0; font-size: 13px; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px; border-radius: var(--r-pill);
+}
+.cer-photo-add:hover { color: #EEF1FA; }
+.cer-photo-add:focus-within { box-shadow: 0 0 0 2px #EEF1FA; }
+.cer-photo {
+  display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px;
+  color: #C9D0E0; font-size: 13px; max-width: 40ch;
+}
+.cer-photo-gly { width: 18px; height: 18px; flex: 0 0 auto; color: #EEF1FA; }
+
+/* Dans le détail de la carte : la photo en grand, puis ses gestes. */
+.sv-photo {
+  margin: 0 0 12px; border-radius: var(--r-lg); overflow: hidden;
+  border: 1px solid var(--line); background: var(--surface-2);
+  box-shadow: 0 12px 32px -18px var(--shadow);
+}
+.sv-photo img { display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain; }
+.sv-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.sv-actions .btn { min-height: 44px; padding: 0 16px; font-size: 14px; }
+.sv-hint { font-size: 13px; color: var(--ink-2); margin-top: 8px; line-height: 1.45; }
+.sv-confirm { margin-top: 0; padding-top: 0; border-top: 0; }
+.sv-msg { margin: 12px 0 0; }
+.sv-notelab { display: block; margin-top: 14px; }
+.sv-note { display: block; width: 100%; margin-top: 6px; resize: vertical; min-height: 88px; line-height: 1.45; }
+.sv-noterow { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+.sv-noterow .btn { min-height: 44px; padding: 0 16px; font-size: 14px; }
+.sv-left { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+/* Dans la frise : la note en citation courte, sous le souvenir. */
+.tl-note { font-size: 13px; color: var(--ink); font-style: italic; margin-top: 4px; word-break: break-word; }
+
+/* Au musée : le liseré de la photo prend la couleur de rareté des cartes (--cd-edge, 05-domaine). */
+.rm-photo-edge { fill: none; stroke: var(--cd-edge, var(--roof-2)); stroke-width: 2; }
+.rm-row-ph { width: 44px; height: 44px; flex: 0 0 auto; object-fit: cover; border-radius: var(--r-sm); border: 1px solid var(--line); }
+.rm-sv { min-height: 44px; padding: 0 16px; font-size: 14px; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -1616,8 +1670,8 @@ body {
    - migrations NON destructives ; une save de version FUTURE → refus propre (repart du seed) ;
    - rien de punitif dans le moteur de dates : le changement de jour ne fait que ré-ancrer
      la date (l'historique est daté à la création ; aucune série n'existe, rien n'est retiré) ;
-   - export & suppression RÉELS (Blob téléchargé / localStorage vidé) ;
-   - 0 requête réseau (localStorage + Blob local uniquement). */
+   - export & suppression RÉELS (Blob téléchargé / localStorage vidé), photos comprises (3.4) ;
+   - 0 requête réseau (localStorage + IndexedDB + Blob local uniquement). */
 (function () {
   'use strict';
 
@@ -1717,6 +1771,17 @@ body {
   // — nombre, null, tableau imbriqué — est écartée, le reste survit).
   var RECORD_ARRAYS = ['habits', 'objectives', 'history', 'chests', 'inventory', 'placements'];
 
+  // Phase 3.4 — le souvenir d'un objet : `photoId` (id d'un blob IndexedDB) et `note`, présents
+  // depuis la 1.3 à null. Type-validés un par un : une valeur mal typée retombe à null, l'objet
+  // survit ; une note trop longue est coupée à NOTE_MAX. Aucun changement de schéma → pas de
+  // montée de SAVE_VERSION.
+  var NOTE_MAX = 280;
+  function _souvenirFields(e) {
+    if (!(typeof e.photoId === 'string' && e.photoId)) e.photoId = null;
+    if (typeof e.note !== 'string' || !e.note) e.note = null;
+    else if (e.note.length > NOTE_MAX) e.note = e.note.slice(0, NOTE_MAX);
+  }
+
   /* ---------------------------------------------------------------------- serialize */
   // Sérialise le sous-ensemble persisté (+ n° de version). Sert à l'écriture ET de
   // signature de dedup (on n'écrit pas si le blob n'a pas changé).
@@ -1766,6 +1831,7 @@ body {
         var rk = RECORD_ARRAYS[j];
         if (Array.isArray(out[rk])) out[rk] = out[rk].filter(_isPlainObj);
       }
+      if (Array.isArray(out.inventory)) out.inventory.forEach(_souvenirFields);
       return out;
     } catch (e) { return {}; }
   }
@@ -1837,11 +1903,23 @@ body {
       document.addEventListener('visibilitychange', function () { if (!document.hidden) self.dayRollover(); });
     },
 
-    /* --- export RÉEL (Blob JSON téléchargé, 0 réseau) --- */
+    /* --- export RÉEL (Blob JSON téléchargé, 0 réseau) ---
+       3.4 (arbitrage Leo) : UN seul fichier — la save, plus `photos` { id: data URL base64 }
+       quand il y en a. Asynchrone (lire les blobs l'est) : résout true/false, ne rejette jamais.
+       Sans IndexedDB, l'export est exactement celui d'avant. */
     exportJson: function () {
-      try {
-        var pretty = JSON.stringify(JSON.parse(serialize(this.state)), null, 2);
-        var blob = new Blob([pretty], { type: 'application/json' });
+      var self = this, P = window.AscendPhotos;
+      var gather = P ? P.all().then(function (list) {
+        return Promise.all(list.map(function (p) {
+          return P.dataUrl(p.blob).then(function (u) { return { id: p.id, url: u }; });
+        }));
+      }) : Promise.resolve([]);
+      return gather.then(function (photos) {
+        var o = JSON.parse(serialize(self.state));
+        var map = {}, n = 0;
+        photos.forEach(function (p) { if (p.url) { map[p.id] = p.url; n++; } });
+        if (n) o.photos = map;
+        var blob = new Blob([JSON.stringify(o, null, 2)], { type: 'application/json' });
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
         a.href = url;
@@ -1851,11 +1929,13 @@ body {
         a.parentNode && a.parentNode.removeChild(a);
         setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
         return true;
-      } catch (e) { return false; }
+      }).catch(function () { return false; });
     },
 
-    /* --- suppression RÉELLE (localStorage vidé, état ramené aux défauts) --- */
+    /* --- suppression RÉELLE (localStorage vidé, état ramené aux défauts) ---
+       3.4 : les photos partent avec la save (IndexedDB vidée, URLs révoquées). */
     wipe: function () {
+      if (window.AscendPhotos) window.AscendPhotos.clear();
       lsDel(SAVE_KEY);
       this.state = defaults();
       this._lastBlob = null;
@@ -1952,6 +2032,33 @@ body {
       location.reload();
       return 'série ' + domain + ' ' + (opts.complete ? 'complète' : 'à une carte (coffre au port)') + ' → reload…';
     },
+    // seedPhoto(invId?) — Phase 3.4 : dessine une image de test sur un canvas (dégradé + nom de
+    // l'objet) et l'attache à cet objet (le dernier obtenu par défaut) par le chemin RÉEL
+    // (actions.attachPhoto : réduction, IndexedDB, remplacement). Aucun fichier, aucun réseau.
+    // Résout le résultat de l'action ({ ok, reason }).
+    seedPhoto: function (invId) {
+      var st = store.get(), inv = st.inventory || [], e = null, i;
+      for (i = inv.length - 1; i >= 0; i--) if (inv[i] && (invId ? inv[i].id === invId : true)) { e = inv[i]; break; }
+      if (!e) return Promise.resolve({ ok: false, reason: 'aucun objet' });
+      var it = window.AscendCards ? window.AscendCards.resolve(e.itemId) : null;
+      var cv = document.createElement('canvas'); cv.width = 1600; cv.height = 1200;
+      var g = cv.getContext('2d'), gr = g.createLinearGradient(0, 0, 1600, 1200);
+      gr.addColorStop(0, '#F2B36B'); gr.addColorStop(.55, '#C4705A'); gr.addColorStop(1, '#2E4057');
+      g.fillStyle = gr; g.fillRect(0, 0, 1600, 1200);
+      g.fillStyle = '#FFF4DC'; g.beginPath(); g.arc(1150, 420, 170, 0, 6.2832); g.fill();
+      g.fillStyle = '#FFFFFF'; g.font = 'bold 96px sans-serif';
+      g.fillText(it ? it.name : 'Photo de test', 90, 1080);
+      return new Promise(function (resolve) {
+        cv.toBlob(function (b) { resolve(window.AscendActions.attachPhoto(e.id, b)); }, 'image/png');
+      });
+    },
+    // photosOff(true|false) — simule un navigateur SANS IndexedDB (navigation privée) pour cette
+    // session d'onglet, puis recharge : l'app doit booter et tourner exactement comme avant.
+    photosOff: function (on) {
+      try { if (on === false) sessionStorage.removeItem('ascend2.test.noidb'); else sessionStorage.setItem('ascend2.test.noidb', '1'); } catch (e) { }
+      location.reload();
+      return 'IndexedDB ' + (on === false ? 'rétablie' : 'simulée absente') + ' → reload…';
+    },
     reset: function () { store.wipe(); return 'save supprimée + défauts ré-écrits.'; },
     // Inspecteurs (sans reload).
     state: function () { return store.get(); },
@@ -1964,6 +2071,182 @@ body {
       var r = store.dayRollover();
       return { advanced: r.advanced, lastDay: store.state.lastDay, today: todayKey() };
     }
+  };
+})();
+
+/* ASCEND v2 — Photo-souvenirs : le coffre à photos local (Phase 3.4).
+   Les photos sont des BLOBS dans IndexedDB (localStorage est trop petit pour des images) ; la
+   save ne porte que leur id (`inventory[].photoId`). Aucune UI, aucune mutation de la save ici :
+   `actions.attachPhoto`/`removePhoto` orchestrent, ce module ne fait que ranger des blobs.
+
+   Invariants :
+   - JAMAIS BLOQUANT : IndexedDB absent, refusé (navigation privée), quota plein, blob manquant
+     → chaque appel se résout proprement (null / false), l'app fonctionne exactement comme avant ;
+   - 0 requête réseau : la réduction se fait sur un canvas, rien ne quitte l'appareil ;
+   - chaque `URL.createObjectURL` est RÉVOQUÉE quand sa photo est remplacée, retirée ou effacée ;
+   - on n'efface JAMAIS une photo d'office (pas de ménage des orphelines au boot : une save
+     abîmée ne doit pas emporter les photos avec elle). Seuls retirer, remplacer et la
+     suppression totale effacent. */
+(function () {
+  'use strict';
+
+  var DB_NAME = 'ascend2.photos', STORE = 'photos';
+  var MAX_SIDE = 1280, QUALITY = 0.8;   // arbitrage Leo (3.4) : ~150–400 Ko par photo
+
+  var dbp = null;          // Promise<IDBDatabase|null>, ouverte une seule fois
+  var ok = null;           // null = pas encore su · true / false = IndexedDB utilisable
+  var urls = {};           // id → objectURL (cache de la session)
+  var pending = {};        // id → true pendant le chargement (une seule lecture par photo)
+  var missing = {};        // id → true : absente de la base (la carte s'affiche sans elle)
+  var subs = [];
+
+  function notify() { for (var i = 0; i < subs.length; i++) { try { subs[i](); } catch (e) { } } }
+
+  // Test (harnais) : `__test.photosOff(true)` simule un navigateur sans IndexedDB, le temps
+  // d'une session d'onglet. Rien d'autre ne lit ce drapeau.
+  function forcedOff() { try { return sessionStorage.getItem('ascend2.test.noidb') === '1'; } catch (e) { return false; } }
+
+  function open() {
+    if (dbp) return dbp;
+    dbp = new Promise(function (resolve) {
+      try {
+        if (forcedOff() || typeof indexedDB === 'undefined' || !indexedDB) { resolve(null); return; }
+        var req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = function () {
+          try { if (!req.result.objectStoreNames.contains(STORE)) req.result.createObjectStore(STORE); } catch (e) { }
+        };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { resolve(null); };
+        req.onblocked = function () { resolve(null); };
+      } catch (e) { resolve(null); }
+    }).then(function (db) {
+      var was = ok; ok = !!db;
+      if (was !== ok) notify();
+      return db;
+    });
+    return dbp;
+  }
+
+  // Une transaction, réduite à une Promise qui ne rejette jamais (fallback = `fail`).
+  function tx(mode, work, fail) {
+    return open().then(function (db) {
+      if (!db) return fail;
+      return new Promise(function (resolve) {
+        try {
+          var t = db.transaction(STORE, mode), st = t.objectStore(STORE), out = { v: fail };
+          work(st, out);
+          t.oncomplete = function () { resolve(out.v); };
+          t.onerror = t.onabort = function () { resolve(fail); };
+        } catch (e) { resolve(fail); }
+      });
+    });
+  }
+
+  function uid() { return 'ph_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+  function put(blob) {
+    var id = uid();
+    return tx('readwrite', function (st, out) { st.put(blob, id); out.v = id; }, null);
+  }
+  function get(id) {
+    return tx('readonly', function (st, out) {
+      var r = st.get(id);
+      r.onsuccess = function () { out.v = (r.result instanceof Blob) ? r.result : null; };
+    }, null);
+  }
+  function revoke(id) {
+    if (urls[id]) { try { URL.revokeObjectURL(urls[id]); } catch (e) { } delete urls[id]; }
+  }
+  function del(id) {
+    if (typeof id !== 'string') return Promise.resolve(false);
+    revoke(id); delete missing[id];
+    return tx('readwrite', function (st, out) { st.delete(id); out.v = true; }, false)
+      .then(function (v) { notify(); return v; });
+  }
+  // Toutes les photos rangées (export) : [{ id, blob }].
+  function all() {
+    return tx('readonly', function (st, out) {
+      var list = [];
+      var r = st.openCursor();
+      r.onsuccess = function () {
+        var c = r.result;
+        if (c) { if (c.value instanceof Blob) list.push({ id: String(c.key), blob: c.value }); c.continue(); }
+        else out.v = list;
+      };
+    }, []);
+  }
+  // Suppression totale (avec la save) : la base est vidée et chaque URL révoquée.
+  function clear() {
+    for (var id in urls) if (urls.hasOwnProperty(id)) revoke(id);
+    missing = {};
+    return tx('readwrite', function (st, out) { st.clear(); out.v = true; }, false)
+      .then(function (v) { notify(); return v; });
+  }
+
+  // URL affichable d'une photo, SYNCHRONE pour le rendu : l'URL si elle est déjà chargée, sinon
+  // null — et la lecture part ; les abonnés sont prévenus quand elle arrive (l'app repeint).
+  function urlOf(id) {
+    if (typeof id !== 'string' || !id) return null;
+    if (urls[id]) return urls[id];
+    if (missing[id] || pending[id]) return null;
+    pending[id] = true;
+    get(id).then(function (blob) {
+      delete pending[id];
+      if (blob) { try { urls[id] = URL.createObjectURL(blob); } catch (e) { missing[id] = true; } }
+      else missing[id] = true;
+      notify();
+    });
+    return null;
+  }
+
+  /* Réduction à l'import : 1280 px de grand côté, JPEG 0,8, sur un canvas. L'orientation EXIF
+     est appliquée par le navigateur au décodage de l'<img> (image-orientation: from-image,
+     le défaut) : la photo arrive droite. Une image illisible → null, rien n'est rangé. */
+  function prepare(file) {
+    return new Promise(function (resolve) {
+      var src = null;
+      try {
+        src = URL.createObjectURL(file);
+        var img = new Image();
+        img.onload = function () {
+          try {
+            var w = img.naturalWidth, h = img.naturalHeight;
+            if (!w || !h) { URL.revokeObjectURL(src); resolve(null); return; }
+            var k = Math.min(1, MAX_SIDE / Math.max(w, h));
+            var cv = document.createElement('canvas');
+            cv.width = Math.max(1, Math.round(w * k)); cv.height = Math.max(1, Math.round(h * k));
+            var g = cv.getContext('2d');
+            g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, cv.width, cv.height);   // un PNG transparent ne vire pas au noir
+            g.drawImage(img, 0, 0, cv.width, cv.height);
+            URL.revokeObjectURL(src);
+            cv.toBlob(function (b) { resolve(b || null); }, 'image/jpeg', QUALITY);
+          } catch (e) { try { URL.revokeObjectURL(src); } catch (e2) { } resolve(null); }
+        };
+        img.onerror = function () { try { URL.revokeObjectURL(src); } catch (e) { } resolve(null); };
+        img.src = src;
+      } catch (e) { if (src) { try { URL.revokeObjectURL(src); } catch (e2) { } } resolve(null); }
+    });
+  }
+
+  // Blob → data URL (l'export embarque les photos en base64 dans le JSON).
+  function dataUrl(blob) {
+    return new Promise(function (resolve) {
+      try {
+        var fr = new FileReader();
+        fr.onload = function () { resolve(typeof fr.result === 'string' ? fr.result : null); };
+        fr.onerror = function () { resolve(null); };
+        fr.readAsDataURL(blob);
+      } catch (e) { resolve(null); }
+    });
+  }
+
+  open();   // ouverture douce au boot (locale, 0 réseau) : on saura vite s'il faut proposer la photo
+
+  window.AscendPhotos = {
+    available: function () { return ok === true; },
+    subscribe: function (fn) { if (typeof fn === 'function') subs.push(fn); },
+    put: put, del: del, all: all, clear: clear,
+    urlOf: urlOf, prepare: prepare, dataUrl: dataUrl
   };
 })();
 
@@ -2426,7 +2709,7 @@ body {
    | or            | epique            | quête longue 1.4 · jalon 1.5 |
    | cristal       | legendaire        | objectif · niveau de bâtiment (2.2/4.1) — DÉCLARÉ |
    | obsidienne    | exceptionnel      | (source à venir) — DÉCLARÉ |
-   | aube          | unique            | relique / collection complète — DÉCLARÉ |
+   | aube          | unique            | jalon des 100 (1.5) — une relique n’en donne pas (Leo, 3.4) |
 
    En Phase 1.4 seuls bois/fer/or sont PRODUITS (donc seuls eux ont une vignette CSS —
    zéro palette orpheline) ; cristal/obsidienne/aube sont déclarés pour la lisibilité du
@@ -2442,7 +2725,7 @@ body {
     { id: 'or',         label: 'Coffre d’or',          rarity: 'epique',       source: 'quête longue · jalon franchi' },
     { id: 'cristal',    label: 'Coffre de cristal',    rarity: 'legendaire',   source: 'objectif accompli · niveau de bâtiment' },
     { id: 'obsidienne', label: 'Coffre d’obsidienne',  rarity: 'exceptionnel', source: 'récompense d’exception (à venir)' },
-    { id: 'aube',       label: 'Coffre d’aube',        rarity: 'unique',       source: 'relique · collection complète (à venir)' }
+    { id: 'aube',       label: 'Coffre d’aube',        rarity: 'unique',       source: 'jalon des 100 validations' }
   ];
 
   var byId = {};
@@ -3169,7 +3452,8 @@ body {
       if (!it || typeof it.day !== 'string' || !it.day) continue;
       dayBucket(it.day).events.push({
         kind: 'item', invId: it.id, itemId: it.itemId, day: it.day,
-        sourceLabel: (typeof it.sourceLabel === 'string') ? it.sourceLabel : ''
+        sourceLabel: (typeof it.sourceLabel === 'string') ? it.sourceLabel : '',
+        note: (typeof it.note === 'string') ? it.note : ''    // 3.4 : la note perso, citée dans la frise
       });
       if (typeof it.itemId === 'string' && it.itemId.indexOf('mile_') === 0) {
         mileSameDay[it.itemId + '|' + it.day] = true;
@@ -3650,7 +3934,7 @@ body {
   // Ouvre un coffre : c'est ICI que le tirage (dérivé, idempotent tant que non ouvert) est
   // FIGÉ en une entrée d'inventory (GDD §4.3, TDD §4). Le coffre quitte la pile ; l'objet
   // rejoint la collection avec ses métadonnées-souvenir (§5.2) : date + source reprise du
-  // coffre, photo/note à venir (Phase 7). Une seule écriture (chests + inventory).
+  // coffre ; photo et note, à null, sont ceux que le joueur donnera (Phase 3.4). Une seule écriture (chests + inventory).
   // Idempotent/robuste : coffre introuvable (déjà ouvert, id bidon) → no-op propre.
   // Retourne { ok, reason:'ouvert'|'introuvable', item, entry, chestType, sourceLabel }.
   function openChest(chestId) {
@@ -3672,6 +3956,67 @@ body {
       inventory: st.inventory.concat([entry])
     });
     return { ok: true, reason: 'ouvert', item: item, entry: entry, chestType: chest.type, sourceLabel: chest.sourceLabel };
+  }
+
+  /* ------------------------------------------------ le souvenir d'un objet (Phase 3.4)
+     Le joueur DONNE à son souvenir une photo et une note : rien n'est réclamé, rien n'est compté,
+     rien ne rapporte quoi que ce soit (ni élan, ni coffre). Le blob vit dans IndexedDB
+     (AscendPhotos) ; la save ne porte que son id. Jamais bloquant : chaque échec se résout en
+     { ok:false, reason } et l'objet reste exactement ce qu'il était. */
+  var NOTE_MAX = 280;
+  function withEntry(st, invId, patch) {
+    var found = false;
+    var inv = (st.inventory || []).map(function (e) {
+      if (!e || e.id !== invId) return e;
+      found = true;
+      var o = {}, k;
+      for (k in e) if (e.hasOwnProperty(k)) o[k] = e[k];
+      for (k in patch) if (patch.hasOwnProperty(k)) o[k] = patch[k];
+      return o;
+    });
+    return found ? inv : null;
+  }
+  function entryOf(st, invId) {
+    var inv = st.inventory || [];
+    for (var i = 0; i < inv.length; i++) if (inv[i] && inv[i].id === invId) return inv[i];
+    return null;
+  }
+  // Attache (ou REMPLACE) la photo d'un objet : réduite (1280 px, JPEG 0,8), rangée, puis
+  // l'ancienne est effacée — une photo par objet. Résout { ok, reason:'ajoutee'|'remplacee'|
+  // 'introuvable'|'indisponible'|'illisible'|'stockage' }.
+  function attachPhoto(invId, file) {
+    var P = window.AscendPhotos;
+    if (!entryOf(store.get(), invId)) return Promise.resolve({ ok: false, reason: 'introuvable' });
+    if (!P || !P.available() || !file) return Promise.resolve({ ok: false, reason: 'indisponible' });
+    return P.prepare(file).then(function (blob) {
+      if (!blob) return { ok: false, reason: 'illisible' };
+      return P.put(blob).then(function (id) {
+        if (!id) return { ok: false, reason: 'stockage' };        // quota plein, base refusée
+        var st = store.get(), e = entryOf(st, invId);
+        if (!e) { P.del(id); return { ok: false, reason: 'introuvable' }; }
+        var old = e.photoId;
+        store.set({ inventory: withEntry(st, invId, { photoId: id }) });
+        if (old && old !== id) P.del(old);
+        return { ok: true, reason: old ? 'remplacee' : 'ajoutee' };
+      });
+    }).catch(function () { return { ok: false, reason: 'stockage' }; });
+  }
+  // Retire la photo : l'id quitte la save, le blob est effacé de l'appareil.
+  function removePhoto(invId) {
+    var st = store.get(), e = entryOf(st, invId);
+    if (!e || !e.photoId) return Promise.resolve({ ok: false, reason: 'introuvable' });
+    var old = e.photoId;
+    store.set({ inventory: withEntry(st, invId, { photoId: null }) });
+    return (window.AscendPhotos ? window.AscendPhotos.del(old) : Promise.resolve(true))
+      .then(function () { return { ok: true, reason: 'retiree' }; });
+  }
+  // La note perso (280 caractères, arbitrage Leo). Vide = pas de note (null).
+  function setNote(invId, text) {
+    var st = store.get();
+    if (!entryOf(st, invId)) return { ok: false, reason: 'introuvable' };
+    var t = trim(text).slice(0, NOTE_MAX);
+    store.set({ inventory: withEntry(st, invId, { note: t || null }) });
+    return { ok: true, reason: t ? 'notee' : 'effacee' };
   }
 
   /* ------------------------------------------------ quêtes minutées (Phase 1.4) */
@@ -3765,7 +4110,11 @@ body {
     // Exposition au musée (Phase 3.3b) — les seules mutations de `placements`.
     exposeInMuseum: exposeInMuseum,
     moveInMuseum: moveInMuseum,
-    takeFromShowcase: takeFromShowcase
+    takeFromShowcase: takeFromShowcase,
+    // Le souvenir d'un objet (Phase 3.4) — photo (asynchrone : résout, ne rejette jamais) et note.
+    attachPhoto: attachPhoto,
+    removePhoto: removePhoto,
+    setNote: setNote
   };
 })();
 
@@ -3808,6 +4157,7 @@ body {
   var cards = window.AscendCards;
   var chestTypes = window.AscendChests;
   var quests = window.AscendQuests;
+  var photos = window.AscendPhotos;   // 3.4 : les photos-souvenirs (blobs IndexedDB, lus en asynchrone)
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (quête perso) — GDD §13.
 
@@ -4298,6 +4648,11 @@ body {
   var pickedInvId = null;   // « choisir puis poser » : objet choisi, en attente d'une vitrine
   var roomNote = null;      // un mot doux après un geste (exposé, rangé, échangé)
   var relicView = false;    // 3.2 : la salle montre le détail de sa relique (ce qui l'a forgée)
+  var roomSouvenir = null;  // 3.4 : la salle montre le souvenir d'un objet (invId), ou null
+  // 3.4 — le SOUVENIR ouvert (détail d'une carte, au menu ou au musée) : brouillon de la note
+  // (null = rien de modifié), photo en cours de rangement, confirmation du retrait, un mot doux.
+  var sv = { draft: null, busy: false, confirm: false, msg: null };
+  function resetSouvenir() { sv = { draft: null, busy: false, confirm: false, msg: null }; }
   // ACTIONS DEPUIS L'ÎLE (Phase 3.3) — état d'UI éphémère du « menu du domaine » quand il agit.
   var actNote = null;             // feedback doux après une action (validation d'habitude / quête accomplie)
   var menuConfirmAbandon = false; // confirmation d'arrêt d'une quête lancée depuis le menu
@@ -4413,11 +4768,11 @@ body {
   function resetMenuAct() { actNote = null; menuConfirmAbandon = false; menuPerso = { title: '', minutes: 20 }; }
   function openDomain(dom) { rememberFocus(); openDomainId = dom; detailInvId = null; chestHubOpen = false; resetMenuAct(); repaint(); }
   function closeDomain() { openDomainId = null; detailInvId = null; resetMenuAct(); repaint(); restoreFocus(); }
-  function showDetail(invId) { detailInvId = invId; repaint(); }
-  function backToGrid() { detailInvId = null; repaint(); }
+  function showDetail(invId) { detailInvId = invId; resetSouvenir(); repaint(); }
+  function backToGrid() { detailInvId = null; resetSouvenir(); repaint(); }
   function openChestHub() { rememberFocus(); chestHubOpen = true; openDomainId = null; detailInvId = null; repaint(); }
   function closeChestHub() { chestHubOpen = false; repaint(); restoreFocus(); }
-  function resetRoom() { museumRoom = null; roomView = 'scene'; pickedInvId = null; roomNote = null; relicView = false; }
+  function resetRoom() { museumRoom = null; roomView = 'scene'; pickedInvId = null; roomNote = null; relicView = false; roomSouvenir = null; resetSouvenir(); }
   function openMuseum() { rememberFocus(); museumOpen = true; openDomainId = null; detailInvId = null; chestHubOpen = false; resetRoom(); repaint(); }
   function closeMuseum() { museumOpen = false; resetRoom(); repaint(); restoreFocus(); }
   // SECONDE PORTE (arbitrage Leo, 3.3b) : on entre dans une salle par le monument (le hall)
@@ -4430,11 +4785,14 @@ body {
     museumOpen = true; chestHubOpen = false; resetRoom();
     museumRoom = dom; repaint();
   }
-  function enterRoom(dom) { museumRoom = dom; roomView = 'scene'; pickedInvId = null; roomNote = null; relicView = false; repaint(); }
+  function enterRoom(dom) { museumRoom = dom; roomView = 'scene'; pickedInvId = null; roomNote = null; relicView = false; roomSouvenir = null; repaint(); }
   // Le socle (3.2) : on ouvre son détail depuis la scène OU le miroir Liste, et on en revient
   // à la salle dans la vue d'où l'on venait (la bascule Scène/Liste n'est pas touchée).
   function openRelic() { relicView = true; pickedInvId = null; repaint(); }
   function closeRelic() { relicView = false; repaint(); focusPanel(document.querySelector('.museum .dm-panel')); }
+  // 3.4 : le souvenir d'un objet exposé s'ouvre DANS la salle (même détail qu'au menu du domaine).
+  function openSouvenir(invId) { roomSouvenir = invId; pickedInvId = null; resetSouvenir(); repaint(); }
+  function closeSouvenir() { roomSouvenir = null; resetSouvenir(); repaint(); focusPanel(document.querySelector('.museum .dm-panel')); }
   function backToHall() { resetRoom(); repaint(); }
   function setRoomView(v) { roomView = (v === 'liste') ? 'liste' : 'scene'; pickedInvId = null; repaint(); }
 
@@ -5824,28 +6182,144 @@ body {
         ${CollectionSection(st, coll || domainCollection(st, dom.id), dom)}
       </div>`;
   }
-  function DetailView(st) {
-    var e = invEntry(st, detailInvId);
-    if (!e) { detailInvId = null; return GridBody(st, domains.get(openDomainId)); }
+  /* ------------------------------------------ LA PHOTO-SOUVENIR & LA NOTE (Phase 3.4)
+     Un DON du joueur à son propre souvenir : proposé, jamais réclamé, jamais compté. La photo
+     (1280 px, JPEG 0,8, une par objet) vit dans IndexedDB, la note (280 caractères) dans la save.
+     Sans IndexedDB, le bloc photo se tait et tout le reste est inchangé ; une photo introuvable
+     laisse simplement la carte sans elle. */
+  function photoUrl(e) { return (e && e.photoId && photos) ? photos.urlOf(e.photoId) : null; }
+  function photosOn() { return !!(photos && photos.available()); }
+  // Le sélecteur de fichier : un <label> qui porte l'<input> (visuellement masqué, mais
+  // focusable) — c'est la forme qui ouvre l'appareil photo ou la galerie sur tous les téléphones.
+  // Partagé avec la cérémonie (app/03-ceremonie.js) : un seul geste pour choisir une photo.
+  function PhotoPicker(label, cls, onFile, aria) {
+    return html`
+      <label class=${'ph-pick' + (cls ? ' ' + cls : '')}>
+        <input class="ph-file" type="file" accept="image/*" aria-label=${aria || label}
+               onChange=${function (ev) {
+                 var f = ev.target.files && ev.target.files[0];
+                 ev.target.value = '';                  // re-choisir la même photo redéclenche
+                 if (f) onFile(f);
+               }} />
+        <span>${label}</span>
+      </label>`;
+  }
+  function svPhoto(invId, file) {
+    if (sv.busy) return;
+    var mine = sv; mine.busy = true; mine.msg = null; mine.confirm = false; repaint();
+    actions.attachPhoto(invId, file).then(function (res) {
+      if (sv !== mine) return;                          // on a quitté ce souvenir entre-temps
+      mine.busy = false;
+      var ok = !!(res && res.ok);
+      mine.msg = { ok: ok, text: ok
+        ? (res.reason === 'remplacee' ? 'Ta nouvelle photo remplace l’ancienne.' : 'Ta photo accompagne ce souvenir.')
+        : (res && res.reason === 'illisible'
+          ? 'Cette image n’a pas pu être lue. Essaie une autre photo.'
+          : 'La photo n’a pas pu être gardée sur cet appareil. Rien n’est perdu.') };
+      repaint();
+    });
+  }
+  function svRemove(invId) {
+    var mine = sv; mine.confirm = false; mine.busy = true; repaint();
+    actions.removePhoto(invId).then(function () {
+      if (sv !== mine) return;
+      mine.busy = false; mine.msg = { ok: true, text: 'La photo est retirée. Le souvenir, lui, reste.' }; repaint();
+    });
+  }
+  function svSaveNote(invId) {
+    var res = actions.setNote(invId, sv.draft || '');
+    sv.draft = null;
+    sv.msg = res && res.ok ? { ok: true, text: res.reason === 'notee' ? 'Ta note est gardée.' : 'La note est effacée.' } : null;
+    repaint();
+  }
+  function PhotoBlock(e, item) {
+    var url = photoUrl(e);
+    if (!photosOn()) {
+      return html`<p class="sv-hint">Les photos ne peuvent pas être gardées dans ce navigateur
+        (navigation privée ?). Le reste du souvenir, si.</p>`;
+    }
+    var controls = sv.busy
+      ? html`<p class="sv-hint" role="status">Ta photo se range…</p>`
+      : sv.confirm
+        ? html`
+          <div class="del-confirm sv-confirm" role="group" aria-label="Confirmer le retrait de la photo">
+            <span class="msg">Retirer cette photo ? Elle sera effacée de cet appareil.</span>
+            <button class="btn ghost" type="button" onClick=${function () { svRemove(e.id); }}>Oui, retirer</button>
+            <button class="btn" type="button" onClick=${function () { sv.confirm = false; repaint(); }}>La garder</button>
+          </div>`
+        : url
+          ? html`
+            <div class="sv-actions">
+              ${PhotoPicker('Remplacer la photo', 'btn ghost', function (f) { svPhoto(e.id, f); },
+                            'Remplacer la photo de ' + item.name)}
+              <button class="btn ghost" type="button" aria-label=${'Retirer la photo de ' + item.name}
+                      onClick=${function () { sv.confirm = true; sv.msg = null; repaint(); }}>Retirer</button>
+            </div>`
+          : html`
+            <div class="sv-actions">
+              ${PhotoPicker('Ajouter une photo', 'btn ghost', function (f) { svPhoto(e.id, f); },
+                            'Ajouter une photo à ce souvenir : ' + item.name)}
+            </div>
+            <p class="sv-hint">Une photo de ce moment, si tu en as une. Elle reste sur cet appareil.</p>`;
+    return html`
+      ${url
+        ? html`<figure class="sv-photo"><img src=${url} alt=${'Ta photo-souvenir : ' + item.name} /></figure>`
+        : null}
+      ${controls}`;
+  }
+  function NoteBlock(e, item) {
+    var saved = e.note || '';
+    var val = sv.draft !== null ? sv.draft : saved;
+    var left = 280 - val.length;
+    var dirty = sv.draft !== null && sv.draft.trim() !== saved;
+    return html`
+      <label class="dmd-h sv-notelab" for="sv-note">Ta note</label>
+      <textarea id="sv-note" class="in sv-note" rows="3" maxlength="280" value=${val}
+                placeholder="Un mot pour ce souvenir, si tu veux."
+                onInput=${function (ev) { sv.draft = ev.target.value; sv.msg = null; repaint(); }}></textarea>
+      ${(dirty || left <= 40)
+        ? html`
+          <div class="sv-noterow">
+            ${left <= 40 ? html`<span class="sv-left">Reste ${left} caractère${left > 1 ? 's' : ''}</span>` : null}
+            ${dirty
+              ? html`<button class="btn" type="button" onClick=${function () { svSaveNote(e.id); }}>Garder la note</button>`
+              : null}
+          </div>`
+        : null}`;
+  }
+
+  // Le détail-souvenir d'un objet : PARTAGÉ par le menu du domaine et la salle du musée (3.4),
+  // pour que la photo et la note s'ajoutent au même endroit, quel que soit le chemin.
+  // `back` = { label, aria, onClick, focus } — `focus` pose le focus sur « Retour » à l'ouverture.
+  function CardDetail(st, e, back) {
     var item = cards.resolve(e.itemId);
     var d = domains.get(item.domain);
     var meta = (d ? d.label : (item.domain || 'Domaine')) + ' · ' + cards.rarityLabel(item.rarity) + ' · obtenu le ' + fmtDay(e.day);
     return html`
       <div class="dm-body dm-detail">
-        <button class="dm-back" type="button" onClick=${backToGrid} aria-label="Retour à la collection">← Retour</button>
+        <button class="dm-back" type="button" ref=${back.focus ? focusPanel : null}
+                onClick=${back.onClick} aria-label=${back.aria}>${back.label}</button>
         <div class=${'dm-detail-card dm-card--' + item.rarity}>
           ${Glyph(glyphName(item), 'dmd-gly')}
           <div class="dmd-name">${item.name}</div>
           <span class="rc-rarity rc-rarity--${item.rarity}">${cards.rarityLabel(item.rarity)}</span>
         </div>
         <div class="dm-detail-info">
+          ${PhotoBlock(e, item)}
+          ${sv.msg ? html`<p class="note-soft sv-msg" role="status">${sv.msg.ok ? Glyph('coche', 'ns-gly', 1) : null}<span>${sv.msg.text}</span></p>` : null}
           <h4 class="dmd-h">Son histoire</h4>
           <p class="dmd-story">${storyFor(item)}</p>
           <h4 class="dmd-h">Souvenir</h4>
           <p class="dmd-meta">${meta}</p>
           <p class="dmd-src">${e.sourceLabel || 'Dans ta collection'}</p>
+          ${NoteBlock(e, item)}
         </div>
       </div>`;
+  }
+  function DetailView(st) {
+    var e = invEntry(st, detailInvId);
+    if (!e) { detailInvId = null; return GridBody(st, domains.get(openDomainId)); }
+    return CardDetail(st, e, { label: '← Retour', aria: 'Retour à la collection', onClick: backToGrid });
   }
 
   /* BANDEAU DU DOMAINE (4.2b, arbitrage Leo : « bandeau illustré + barre de niveau »).
@@ -6006,9 +6480,13 @@ body {
         <div class="tl-main">
           <p class="tl-name">${name}</p>
           <p class="tl-sub">${sub}</p>
+          ${ev.note ? html`<p class="tl-note">« ${noteQuote(ev.note)} »</p>` : null}
         </div>
       </li>`;
   }
+
+  // 3.4 — la note perso se lit dans la frise en citation courte (entière au détail de la carte).
+  function noteQuote(t) { return t.length > 90 ? t.slice(0, 88).replace(/\s+\S*$/, '') + '…' : t; }
 
   function dayNode(d) {
     return html`
@@ -6196,7 +6674,7 @@ body {
     // Et on NE TOUCHE PAS à la note ici : la retirer changeait la hauteur du panneau au moment
     // exact où le doigt se pose, et la scène glissait sous lui — mesuré, le glisser atterrissait
     // alors une vitrine plus loin. La note vit désormais SOUS la scène, qui ne bouge plus.
-    if (!pickedInvId) { pickedInvId = occ.entry.id; repaint(); }
+    if (!pickedInvId) { pickedInvId = occ.entry.id; dragFrom.pickedNow = true; repaint(); }
   }
   function caseMove(e) {
     if (!dragFrom) return;
@@ -6209,6 +6687,9 @@ body {
       if (t !== null && t !== d.slot) { dropOn(d.invId, t); return; }
       pickedInvId = null; repaint(); return;   // lâché dans le vide : rien ne bouge
     }
+    // 3.4 — un tap qui vient de CHOISIR l'objet (au pointerdown) le laisse choisi : sans ce garde,
+    // tapCase le déchoisissait aussitôt et le tap sur une vitrine occupée ne faisait rien (3.3b).
+    if (d && d.pickedNow) { repaint(); return; }
     tapCase(slot, occ);
   }
 
@@ -6223,16 +6704,25 @@ body {
     // Fond de vitrine OPAQUE, puis le voile du verre par-dessus. Translucide de bout en bout,
     // la vitrine laissait voir les joints du dallage qui la traversaient de part en part.
     body.push(html`<rect key="pa" class="rm-pane" x="-21" y="-92" width="42" height="58" rx="2" />`);
+    // 3.4 (arbitrage Leo) : TA photo prend la place du glyphe, derrière le verre, cernée d'un liseré
+    // à la couleur de la rareté (la variable des cartes, --cd-edge). Recadrée au centre (slice).
+    var purl = occ ? photoUrl(occ.entry) : null;
+    if (purl) {
+      body.push(html`<g key="ph" class=${'dm-card--' + occ.item.rarity}>
+        <image href=${purl} x="-18" y="-89" width="36" height="52" preserveAspectRatio="xMidYMid slice" />
+        <rect class="rm-photo-edge" x="-18" y="-89" width="36" height="52" />
+      </g>`);
+    }
     body.push(html`<rect key="gl" class="rm-glass" x="-21" y="-92" width="42" height="58" rx="2" />`);
     body.push(html`<rect key="fr" class="rm-frame" x="-21" y="-92" width="42" height="58" rx="2" />`);
     body.push(html`<rect key="to" class="rm-cap" x="-24" y="-97" width="48" height="6" rx="1.5" />`);
-    if (occ) body.push(sceneGlyph(glyphName(occ.item), 'rm-gly', -62, 1.5));
+    if (occ && !purl) body.push(sceneGlyph(glyphName(occ.item), 'rm-gly', -62, 1.5));
     if (free) body.push(html`<rect key="fe" class="rm-free" x="-25" y="-96" width="50" height="66" rx="3" />`);
     if (occ && pickedInvId === occ.entry.id) {
       body.push(html`<rect key="se" class="rm-sel" x="-25" y="-96" width="50" height="66" rx="3" />`);
     }
     var label = occ
-      ? (occ.item.name + ', vitrine ' + (slot + 1))
+      ? (occ.item.name + (purl ? ', avec ta photo' : '') + ', vitrine ' + (slot + 1))
       : ('Vitrine ' + (slot + 1) + ', libre');
     /* La boîte de tap n'est PAS mise à l'échelle avec la vitrine : au rang du fond (0,78) une
        cible suivant l'échelle tomberait sous 44 pt sur un téléphone étroit. Elle est donc posée
@@ -6368,6 +6858,14 @@ body {
       </div>`;
   }
 
+  // 3.4 — le miroir Liste ouvre le même souvenir que la scène (photo en grand, note).
+  function SouvenirBtn(x) {
+    var ph = !!photoUrl(x.entry);
+    return html`<button class="btn ghost rm-off" type="button"
+                        aria-label=${'Souvenir de ' + x.item.name + (ph ? ', avec ta photo' : '') + ' : voir sa photo et sa note'}
+                        onClick=${function () { openSouvenir(x.entry.id); }}>Souvenir</button>`;
+  }
+
   function RoomList(room, dom) {
     var choices = room.shelf.slice();
     var r = room.relic;
@@ -6390,7 +6888,7 @@ body {
                 <span class="rm-row-n">Vitrine ${i + 1}</span>
                 <select class="in rm-sel-in" value=${occ ? occ.entry.id : ''}
                         aria-label=${'Vitrine ' + (i + 1) + ' de la salle ' + dom.label + '. ' +
-                                     (occ ? ('Elle expose ' + occ.item.name + '.') : 'Elle est vide.')}
+                                     (occ ? ('Elle expose ' + occ.item.name + (photoUrl(occ.entry) ? ', avec ta photo' : '') + '.') : 'Elle est vide.')}
                         onChange=${function (e) {
                           var v = e.target.value;
                           if (!v) { if (occ) takeOff(occ.entry.id); return; }
@@ -6401,10 +6899,14 @@ body {
                     return html`<option key=${o.entry.id} value=${o.entry.id}>${o.item.name}</option>`;
                   })}
                 </select>
+                ${occ && photoUrl(occ.entry)
+                  ? html`<img class="rm-row-ph" src=${photoUrl(occ.entry)} alt="" />`
+                  : null}
                 ${occ
                   ? html`<button class="btn ghost rm-off" type="button"
                                  aria-label=${'Ranger ' + occ.item.name + ' : il retourne dans ta réserve.'}
-                                 onClick=${function () { takeOff(occ.entry.id); }}>Ranger</button>`
+                                 onClick=${function () { takeOff(occ.entry.id); }}>Ranger</button>
+                         ${SouvenirBtn(occ)}`
                   : null}
               </li>`;
           })}
@@ -6419,6 +6921,7 @@ body {
                     ${Glyph(glyphName(x.item), 'rm-res-gly')}
                     <span class="rm-res-n">${x.item.name}</span>
                     <span class="rm-res-d">${fmtDay(x.entry.day)}</span>
+                    ${SouvenirBtn(x)}
                   </li>`;
               })}
             </ul>`
@@ -6436,6 +6939,12 @@ body {
              <button class="lnk" type="button" onClick=${clearRoomNote}>OK</button></p>`
       : null;
     if (relicView && room.relic) return html`<div class="dm-body rm-body">${RelicDetail(room.relic, dom)}</div>`;
+    // 3.4 : le souvenir d'un objet de la salle — le MÊME détail qu'au menu du domaine (photo, note).
+    var svEntry = roomSouvenir ? invEntry(store.get(), roomSouvenir) : null;
+    if (svEntry) {
+      return CardDetail(store.get(), svEntry, { label: '← La salle', aria: 'Retour à la salle ' + dom.label,
+                                                onClick: closeSouvenir, focus: true });
+    }
     return html`
       <div class="dm-body rm-body">
         <div class="rm-top">
@@ -6459,6 +6968,11 @@ body {
               <p class="dm-note rm-hint">${pickedInvId
                 ? html`Choisi : <strong>${roomItemName(store.get(), pickedInvId)}</strong>. Touche une vitrine.`
                 : 'Touche un objet, puis sa vitrine ; glisse-le pour le déplacer.'}</p>
+              ${pickedInvId
+                ? html`<button class="btn ghost rm-sv" type="button"
+                               aria-label=${'Voir le souvenir de ' + roomItemName(store.get(), pickedInvId) + ' : sa photo, sa note'}
+                               onClick=${function () { openSouvenir(pickedInvId); }}>Voir le souvenir</button>`
+                : null}
               ${room.shelf.length
                 ? html`<ul class="rm-shelf-l">${room.shelf.map(ShelfCard)}</ul>`
                 : html`<p class="empty-soft">${nothing
@@ -6531,7 +7045,11 @@ body {
       <div class="dom-menu museum" role="dialog" aria-modal="true"
            aria-label=${dom ? ('Musée, salle ' + dom.label) : 'Le musée, hall de la frise'}
            onKeyDown=${function (e) {
-             if (e.key === 'Escape') { if (relicView) closeRelic(); else if (museumRoom) backToHall(); else closeMuseum(); return; }
+             if (e.key === 'Escape') {
+               if (relicView) closeRelic(); else if (roomSouvenir) closeSouvenir();
+               else if (museumRoom) backToHall(); else closeMuseum();
+               return;
+             }
              trapTab(e);
            }}>
         <div class="dm-backdrop" onClick=${closeMuseum} aria-hidden="true"></div>
@@ -6574,8 +7092,9 @@ body {
   }
 
   // 3.2 : la forge de la cérémonie (app/03-ceremonie.js) montre la MÊME relique et la MÊME ligne
-  // que le socle du musée — empruntées ici plutôt que redessinées.
-  window.AscendIsland = { Screen: Screen, arrive: arrive, leave: leave, RelicArt: RelicArt, relicLine: relicLine };
+  // que le socle du musée — empruntées ici plutôt que redessinées. 3.4 : même sélecteur de photo.
+  window.AscendIsland = { Screen: Screen, arrive: arrive, leave: leave, RelicArt: RelicArt, relicLine: relicLine,
+                          PhotoPicker: PhotoPicker };
 })();
 
 /* ASCEND v2 — Racine de l'app.
@@ -6600,7 +7119,7 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.30';
+  var VER = '0.31';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
   // v0.26 — suspense GRADUÉ : plus le coffre est rare, plus il se fait attendre (et plus son halo
@@ -6631,7 +7150,7 @@ body {
     confirmDeleteId: null,
     milestoneDone: null,      // { threshold, chestLabel } — bandeau doux après un jalon franchi
     levelDone: null,          // { level, domainLabel, count } — bandeau doux après une montée de niveau (Phase 2.2)
-    ceremony: null,           // { phase:'suspense'|'open'|'reveal'|'forge', chestType, item, sourceLabel, coll, relic } | null
+    ceremony: null,           // { phase:'suspense'|'open'|'reveal'|'forge', chestType, item, invId, sourceLabel, coll, relic, photo } | null
     // v0.24 — LE GESTE RÉEL. cheer = la dernière habitude validée (coche tracée, compteur qui
     // bondit, phrase « … part vers ton île ») ; flyer = le petit coffre qui s'envole du bouton
     // vers l'onglet Île ; land = l'onglet qui l'accueille. Tous éphémères, jamais persistés.
@@ -6737,7 +7256,8 @@ body {
     var relic = (res.item.serie && coll.total && coll.got >= coll.total) ? derive.relicOf(st, dom, res.item.serie) : null;
     ui.ceremony = {
       phase: reduce ? 'reveal' : 'suspense', rarity: rarity, dur: dur,
-      chestType: res.chestType, item: res.item, sourceLabel: res.sourceLabel, coll: coll,
+      chestType: res.chestType, item: res.item, invId: res.entry.id, sourceLabel: res.sourceLabel, coll: coll,
+      photo: null,              // 3.4 : null | 'busy' | 'ok' | 'err' — la photo proposée une fois, sous la carte
       relic: relic, roomOpen: relic ? derive.roomInfo(st, dom).unlocked : false
     };
     paint();
@@ -6761,6 +7281,16 @@ body {
   // les cartes convergent, la relique se pose, on lit ce qui l'a forgée. Rien n'est écrit ici.
   function forgeRelic() {
     if (ui.ceremony && ui.ceremony.relic) { ui.ceremony.phase = 'forge'; paint(); }
+  }
+  // 3.4 — « Ajouter une photo », sous la carte révélée : proposé UNE fois, jamais redemandé.
+  // La photo rejoint le souvenir par le chemin réel ; un échec le dit doucement, rien n'est perdu.
+  function addCeremonyPhoto(file) {
+    var c = ui.ceremony;
+    if (!c || c.photo === 'busy') return;
+    c.photo = 'busy'; paint();
+    actions.attachPhoto(c.invId, file).then(function (res) {
+      if (ui.ceremony === c) { c.photo = (res && res.ok) ? 'ok' : 'err'; paint(); }
+    });
   }
   function closeCeremony() {
     if (ceremonyTimer) { clearTimeout(ceremonyTimer); ceremonyTimer = null; }
@@ -7061,6 +7591,22 @@ body {
       </div>`;
   }
 
+  /* 3.4 (arbitrage Leo) — la photo-souvenir est proposée ICI, une fois, par un lien discret sous
+     la carte : c'est l'instant où l'on a la photo du moment sous la main. Ni relief ni couleur
+     d'appel, aucun rappel ensuite (le détail de la carte la garde disponible). Sans IndexedDB
+     (navigation privée), rien ne s'affiche : la cérémonie est exactement celle d'avant. */
+  function CeremonyPhoto(c) {
+    if (!window.AscendPhotos || !window.AscendPhotos.available()) return null;
+    if (c.photo === 'ok') return html`<p class="cer-photo" role="status">${Glyph('coche', 'cer-photo-gly', 1)}Ta photo accompagne ce souvenir.</p>`;
+    if (c.photo === 'busy') return html`<p class="cer-photo" role="status">Ta photo se range…</p>`;
+    return html`
+      ${c.photo === 'err'
+        ? html`<p class="cer-photo" role="status">La photo n’a pas pu être gardée. Tu pourras réessayer depuis la carte.</p>`
+        : null}
+      ${island.PhotoPicker('Ajouter une photo', 'cer-photo-add', addCeremonyPhoto,
+                           'Ajouter une photo de ce moment à ton souvenir, si tu veux')}`;
+  }
+
   function Ceremony() {
     var c = ui.ceremony;
     if (!c) return null;
@@ -7093,6 +7639,7 @@ body {
               </div>
               ${CollectionStep(c)}
               <p class="cer-src">${c.sourceLabel}</p>
+              ${CeremonyPhoto(c)}
               ${c.relic
                 ? html`<button class="btn gold" type="button" onClick=${forgeRelic}>Forger la relique</button>
                        <button class="cer-skip" type="button" onClick=${closeCeremony}
@@ -7343,6 +7890,8 @@ body {
   var mount = document.getElementById('app');
   function paint() { render(h(App), mount); syncQuestTick(); }
   store.subscribe(function () { paint(); });
+  // 3.4 : une photo-souvenir se lit en asynchrone (IndexedDB) ; elle se peint quand elle arrive.
+  if (window.AscendPhotos) window.AscendPhotos.subscribe(function () { paint(); });
   if (ui.tab === 'ile') island.arrive();   // v0.27 : l'app s'ouvre sur l'île → même arrivée
   paint();
   var splash = document.getElementById('splash');
