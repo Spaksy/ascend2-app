@@ -53,6 +53,8 @@
   --gly-gold: #7E6226;               /* accent des glyphes : 5.73:1 / surface · 5.18:1 / bg */
   --on-gold: #2A2410;                /* 6.1:1 sur --gold */
   --gold-soft: rgba(201, 162, 75, .16);
+  --danger: #B23B2C;                 /* Tout effacer (3.5) */
+  --on-danger: #FFFFFF;
   --shadow: rgba(30, 42, 46, .10);
   --sky-top: #BFE3EC; --sky-mid: #DCEFF0; --sky-bottom: #F0F4F5;
   --star: transparent;              /* pas d'étoiles en journée */
@@ -88,6 +90,8 @@
   --gly-gold: #875D25;              /* accent des glyphes : 5.51:1 / surface · 5.15:1 / surface-2 */
   --on-gold: #2A2410;               /* 5.5:1 sur --gold */
   --gold-soft: rgba(201, 154, 62, .16);
+  --danger: #A8382B;
+  --on-danger: #FFFFFF;
   --shadow: rgba(74, 52, 40, .12);
   --sky-top: #F3B9A0; --sky-mid: #F7D3C0; --sky-bottom: #FBF3EC;
   --star: transparent;
@@ -119,6 +123,8 @@
   --gly-gold: #E8C06A;              /* accent des glyphes : 9.34:1 / surface (l'or clair tient de nuit) */
   --on-gold: #241C08;               /* 10.6:1 sur --gold */
   --gold-soft: rgba(232, 192, 106, .16);
+  --danger: #F08A7A;
+  --on-danger: #2A0D08;
   --shadow: rgba(0, 0, 0, .45);
   --sky-top: #0A0E1C; --sky-mid: #12182B; --sky-bottom: #0E1220;
   --star: rgba(255, 255, 255, .85);
@@ -445,7 +451,8 @@ body {
 }
 /* La version, qui encombrait les deux en-têtes (une info de développeur, pas de joueur),
    descend en pied de l'écran Habitudes : Leo la lit pour contrôler un déploiement. */
-.app-ver { margin-top: 32px; text-align: center; font-size: 11px; color: var(--ink-2); }
+.app-foot { margin-top: 32px; text-align: center; }
+.app-ver { margin-top: 4px; font-size: 11px; color: var(--ink-2); }
 
 .h-actions { display: flex; gap: 2px; margin-left: auto; }
 .lnk {
@@ -1642,6 +1649,29 @@ body {
 .rm-photo-edge { fill: none; stroke: var(--cd-edge, var(--roof-2)); stroke-width: 2; }
 .rm-row-ph { width: 44px; height: 44px; flex: 0 0 auto; object-fit: cover; border-radius: var(--r-sm); border: 1px solid var(--line); }
 .rm-sv { min-height: 44px; padding: 0 16px; font-size: 14px; margin-top: 8px; }
+
+/* ASCEND v2 — fragment styles/13-donnees.css : panneau « Mes données » (Phase 3.5). Cascade : l’ordre des fichiers compte (ordre : build/build.ps1). */
+/* ==================== MES DONNÉES : sauvegarder · restaurer · effacer (Phase 3.5) ====================
+   Le dialog est celui des menus de l'île (.dom-menu / .dm-panel, 05-domaine) ; ses boutons et
+   messages, ceux du souvenir (.sv-actions / .sv-hint, 12-souvenir). Aucune animation propre. */
+
+/* Le lien du pied d'Habitudes : discret (l'encre secondaire de .lnk), souligné pour se lire lien. */
+.dd-link { text-decoration: underline; text-underline-offset: 3px; }
+
+.dd-h { margin-top: 22px; }
+.dd-h:first-child { margin-top: 0; }
+.dd-line { font-size: 14px; color: var(--ink); line-height: 1.45; margin: 0 0 10px; max-width: 46ch; }
+.dd-err { color: var(--ink); }
+.dd-after { margin-top: 10px; }
+
+/* L'aperçu d'un fichier choisi, et l'encart qui précède l'effacement : un cadre, rien de criard. */
+.dd-preview, .dd-wipe {
+  padding: 14px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface);
+}
+.dd-sum { font-size: 15px; font-weight: 700; color: var(--ink); margin: 0 0 6px; }
+
+/* Le seul bouton rouge de l'app : le second temps de « Tout effacer ». */
+.btn.danger { background: var(--danger); color: var(--on-danger); }
 </style>
 </head>
 <body>
@@ -1671,6 +1701,7 @@ body {
    - rien de punitif dans le moteur de dates : le changement de jour ne fait que ré-ancrer
      la date (l'historique est daté à la création ; aucune série n'existe, rien n'est retiré) ;
    - export & suppression RÉELS (Blob téléchargé / localStorage vidé), photos comprises (3.4) ;
+     restauration d'un fichier (3.5) par la MÊME migration et la MÊME hydratation que le boot ;
    - 0 requête réseau (localStorage + IndexedDB + Blob local uniquement). */
 (function () {
   'use strict';
@@ -1814,26 +1845,68 @@ body {
   }
 
   /* ------------------------------------------------------------------------ loadSave */
+  // Hydratation d'une save DÉJÀ migrée : chaque champ est TYPE-VALIDÉ, les tableaux de records
+  // sont filtrés. UNE seule règle pour le boot ET la restauration d'un fichier (3.5).
+  function hydrate(data) {
+    var out = {};
+    for (var i = 0; i < PERSIST_KEYS.length; i++) {
+      var k = PERSIST_KEYS[i];
+      if ((k in data) && _okType(data[k], PERSIST_TYPES[k])) out[k] = data[k];
+    }
+    for (var j = 0; j < RECORD_ARRAYS.length; j++) {
+      var rk = RECORD_ARRAYS[j];
+      if (Array.isArray(out[rk])) out[rk] = out[rk].filter(_isPlainObj);
+    }
+    if (Array.isArray(out.inventory)) out.inventory.forEach(_souvenirFields);
+    return out;
+  }
+
   // Lecture au boot : {} si absente/illisible/version future (repart du seed, jamais de crash).
-  // Chaque champ est TYPE-VALIDÉ avant hydratation ; les tableaux de records sont filtrés.
   function loadSave() {
     try {
       var raw = lsGet(SAVE_KEY); if (!raw) return {};
       var data = null; try { data = JSON.parse(raw); } catch (e) { data = null; }
       data = migrateSave(data);
       if (!data) return {};
-      var out = {};
-      for (var i = 0; i < PERSIST_KEYS.length; i++) {
-        var k = PERSIST_KEYS[i];
-        if ((k in data) && _okType(data[k], PERSIST_TYPES[k])) out[k] = data[k];
-      }
-      for (var j = 0; j < RECORD_ARRAYS.length; j++) {
-        var rk = RECORD_ARRAYS[j];
-        if (Array.isArray(out[rk])) out[rk] = out[rk].filter(_isPlainObj);
-      }
-      if (Array.isArray(out.inventory)) out.inventory.forEach(_souvenirFields);
-      return out;
+      return hydrate(data);
     } catch (e) { return {}; }
+  }
+
+  /* Phase 3.5 — lecture d'un fichier de sauvegarde (arbitrage Leo : restaurer REMPLACE tout,
+     après aperçu). PURE : rien n'est touché ici. Le fichier passe par la MÊME migration et la
+     MÊME hydratation que le boot ; il doit porter un n° de version (tout export en a un) et des
+     tableaux `history`/`habits` — sinon ce n'est pas une sauvegarde d'ASCEND. Les photos ne
+     sont gardées que si ce sont des images en base64 et qu'un objet y renvoie.
+     → { ok:true, save, photos:{id:dataURL}, summary } | { ok:false, reason } avec reason =
+     'illisible' | 'pas-ascend' | 'futur'. */
+  var PHOTO_URL = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/;
+  function readBackup(text) {
+    var data = null;
+    try { data = JSON.parse(text); } catch (e) { return { ok: false, reason: 'illisible' }; }
+    if (!_isPlainObj(data) || typeof data.v !== 'number' ||
+        !Array.isArray(data.history) || !Array.isArray(data.habits)) return { ok: false, reason: 'pas-ascend' };
+    var rawPhotos = data.photos;
+    if (data.v > SAVE_VERSION) return { ok: false, reason: 'futur' };
+    var save = hydrate(migrateSave(data));
+    var photos = {}, n = 0, wanted = {};
+    (save.inventory || []).forEach(function (e) { if (e.photoId) wanted[e.photoId] = true; });
+    if (_isPlainObj(rawPhotos)) {
+      for (var id in rawPhotos) {
+        if (rawPhotos.hasOwnProperty(id) && wanted[id] && typeof rawPhotos[id] === 'string' &&
+            PHOTO_URL.test(rawPhotos[id])) { photos[id] = rawPhotos[id]; n++; }
+      }
+    }
+    return {
+      ok: true, save: save, photos: photos,
+      summary: {
+        habits: (save.habits || []).length,
+        items: (save.inventory || []).length,
+        actions: (save.history || []).length,
+        photos: n,
+        since: typeof save.createdAt === 'string' ? save.createdAt : null,
+        last: typeof save.lastDay === 'string' ? save.lastDay : null
+      }
+    };
   }
 
   /* --------------------------------------------------------------------------- store */
@@ -1944,6 +2017,33 @@ body {
       return this.state;
     },
 
+    /* --- restauration RÉELLE (3.5) : `parsed` = le résultat ok de readBackup. REMPLACE tout :
+       les photos d'avant partent, celles du fichier sont rangées sous LEUR id (la save y
+       renvoie), puis la save du fichier devient l'état — sur les défauts, comme au boot.
+       Sans IndexedDB, la save est restaurée seule (une photo introuvable = la carte sans elle).
+       Résout { ok, photos: nombre rangé } ; ne rejette jamais. */
+    restore: function (parsed) {
+      var self = this, P = window.AscendPhotos;
+      if (!parsed || !parsed.ok || !parsed.save) return Promise.resolve({ ok: false, photos: 0 });
+      var ids = Object.keys(parsed.photos || {});
+      var put = (P && P.available()) ? P.clear().then(function () {
+        return Promise.all(ids.map(function (id) {
+          var b = P.fromDataUrl(parsed.photos[id]);
+          return b ? P.put(b, id) : null;
+        }));
+      }).then(function (res) { return res.filter(Boolean).length; }) : Promise.resolve(0);
+      return put.catch(function () { return 0; }).then(function (n) {
+        var st = defaults();
+        for (var k in parsed.save) if (parsed.save.hasOwnProperty(k)) st[k] = parsed.save[k];
+        self.state = st;
+        self._lastBlob = null;
+        self.dayRollover();
+        self.save();
+        self._notify();
+        return { ok: true, photos: n };
+      });
+    },
+
     /* --- boot --- */
     boot: function () {
       var loaded = loadSave();
@@ -1960,6 +2060,7 @@ body {
     // Exposés pour l'UI et les tests.
     SAVE_VERSION: SAVE_VERSION,
     SAVE_KEY: SAVE_KEY,
+    readBackup: readBackup,
     todayKey: todayKey,
     dayIndex: dayIndex
   };
@@ -2085,8 +2186,8 @@ body {
    - 0 requête réseau : la réduction se fait sur un canvas, rien ne quitte l'appareil ;
    - chaque `URL.createObjectURL` est RÉVOQUÉE quand sa photo est remplacée, retirée ou effacée ;
    - on n'efface JAMAIS une photo d'office (pas de ménage des orphelines au boot : une save
-     abîmée ne doit pas emporter les photos avec elle). Seuls retirer, remplacer et la
-     suppression totale effacent. */
+     abîmée ne doit pas emporter les photos avec elle). Seuls retirer, remplacer, la
+     suppression totale et la restauration d'une sauvegarde (3.5, qui remplace tout) effacent. */
 (function () {
   'use strict';
 
@@ -2144,8 +2245,10 @@ body {
 
   function uid() { return 'ph_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
-  function put(blob) {
-    var id = uid();
+  // `keepId` : la restauration d'une sauvegarde (3.5) range chaque photo sous SON id, celui
+  // auquel la save renvoie ; sinon un id neuf.
+  function put(blob, keepId) {
+    var id = (typeof keepId === 'string' && keepId) ? keepId : uid();
     return tx('readwrite', function (st, out) { st.put(blob, id); out.v = id; }, null);
   }
   function get(id) {
@@ -2240,13 +2343,25 @@ body {
     });
   }
 
+  // Data URL base64 → Blob, décodée sur place (3.5, restauration) : pas de fetch(), donc pas
+  // même une requête locale. Illisible → null.
+  function fromDataUrl(u) {
+    try {
+      var m = /^data:([^;,]+);base64,(.*)$/.exec(u || '');
+      if (!m) return null;
+      var bin = atob(m[2]), n = bin.length, bytes = new Uint8Array(n);
+      for (var i = 0; i < n; i++) bytes[i] = bin.charCodeAt(i);
+      return new Blob([bytes], { type: m[1] });
+    } catch (e) { return null; }
+  }
+
   open();   // ouverture douce au boot (locale, 0 réseau) : on saura vite s'il faut proposer la photo
 
   window.AscendPhotos = {
     available: function () { return ok === true; },
     subscribe: function (fn) { if (typeof fn === 'function') subs.push(fn); },
     put: put, del: del, all: all, clear: clear,
-    urlOf: urlOf, prepare: prepare, dataUrl: dataUrl
+    urlOf: urlOf, prepare: prepare, dataUrl: dataUrl, fromDataUrl: fromDataUrl
   };
 })();
 
@@ -6192,10 +6307,11 @@ body {
   // Le sélecteur de fichier : un <label> qui porte l'<input> (visuellement masqué, mais
   // focusable) — c'est la forme qui ouvre l'appareil photo ou la galerie sur tous les téléphones.
   // Partagé avec la cérémonie (app/03-ceremonie.js) : un seul geste pour choisir une photo.
-  function PhotoPicker(label, cls, onFile, aria) {
+  // 3.5 : `accept` (image/* par défaut) — le même sélecteur choisit aussi un fichier de sauvegarde.
+  function PhotoPicker(label, cls, onFile, aria, accept) {
     return html`
       <label class=${'ph-pick' + (cls ? ' ' + cls : '')}>
-        <input class="ph-file" type="file" accept="image/*" aria-label=${aria || label}
+        <input class="ph-file" type="file" accept=${accept || 'image/*'} aria-label=${aria || label}
                onChange=${function (ev) {
                  var f = ev.target.files && ev.target.files[0];
                  ev.target.value = '';                  // re-choisir la même photo redéclenche
@@ -7093,8 +7209,9 @@ body {
 
   // 3.2 : la forge de la cérémonie (app/03-ceremonie.js) montre la MÊME relique et la MÊME ligne
   // que le socle du musée — empruntées ici plutôt que redessinées. 3.4 : même sélecteur de photo.
+  // 3.5 : le panneau « Mes données » (app/05-donnees.js) reprend le sélecteur et le piège à focus.
   window.AscendIsland = { Screen: Screen, arrive: arrive, leave: leave, RelicArt: RelicArt, relicLine: relicLine,
-                          PhotoPicker: PhotoPicker };
+                          PhotoPicker: PhotoPicker, trapTab: trapTab, fmtDay: fmtDay };
 })();
 
 /* ASCEND v2 — Racine de l'app.
@@ -7119,7 +7236,7 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.31';
+  var VER = '0.32';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
   // v0.26 — suspense GRADUÉ : plus le coffre est rare, plus il se fait attendre (et plus son halo
@@ -7786,7 +7903,199 @@ body {
      C'est ce qui permet à l'écran de s'ouvrir sur TA LISTE plutôt que sur un formulaire,
      sans rien retirer de ce qu'on pouvait y faire. `aria-expanded` + `aria-controls` :
      un lecteur d'écran annonce l'état et sait ce que le bouton commande. */
-/* ASCEND v2 — fragment app/05-ecran.js : écran Habitudes, onglets, App, montage. Même IIFE que les autres fragments de app/ (ordre : build/build.ps1). */
+/* ASCEND v2 — fragment app/05-donnees.js : panneau « Mes données » (Phase 3.5). Même IIFE que les autres fragments de app/ (ordre : build/build.ps1). */
+  /* ------------------------------------------- Mes données : sauvegarder · restaurer · effacer
+     Arbitrages Leo (2026-09-28) : un lien DISCRET en bas d'Habitudes ouvre ce panneau (l'île
+     reste un lobby, la barre garde deux onglets). Sauvegarder = l'export 3.4 (un seul JSON,
+     photos comprises). Restaurer REMPLACE tout, après un aperçu : le fichier est lu par
+     `store.readBackup` (la migration et l'hydratation du boot), rien ne bouge tant que le joueur
+     n'a pas confirmé. Tout effacer en deux temps, avec « Sauvegarder d'abord ». Tout l'état
+     ci-dessous est ÉPHÉMÈRE (jamais persisté) ; le panneau réutilise le dialog des menus de
+     l'île (`.dom-menu`), son piège à focus et son sélecteur de fichier. */
+  var BACKUP_MAX = 200 * 1024 * 1024;   // au-delà, ce n'est pas une sauvegarde (et la lire gèlerait)
+  var dp = null;                        // null = fermé · { busy, msg, pending, wipe, done }
+  var dpReturn = null;                  // à qui rendre le focus à la fermeture
+
+  function openData() {
+    try { dpReturn = document.activeElement; } catch (e) { dpReturn = null; }
+    dp = { busy: false, msg: null, pending: null, wipe: false, done: null };
+    paint();
+  }
+  function closeData() {
+    dp = null; paint();
+    var el = dpReturn; dpReturn = null;
+    if (el && el.focus && document.contains(el)) { try { el.focus(); } catch (e) { } }
+  }
+  function dpSay(at, ok, text) { if (dp) { dp.busy = false; dp.msg = { at: at, ok: ok, text: text }; paint(); } }
+
+  function dpExport() {
+    if (!dp || dp.busy) return;
+    dp.busy = true; dp.msg = null; paint();
+    store.exportJson().then(function (ok) {
+      dpSay(dp.wipe ? 'wipe' : 'save', ok, ok ? 'Ta sauvegarde est téléchargée. Range-la en lieu sûr.'
+                   : 'La sauvegarde n’a pas pu être créée. Rien n’a changé.');
+    });
+  }
+
+  var BACKUP_ERR = {
+    illisible: 'Ce fichier n’a pas pu être lu. Choisis un fichier de sauvegarde ASCEND (.json).',
+    'pas-ascend': 'Ce fichier n’est pas une sauvegarde d’ASCEND. Rien n’a changé.',
+    futur: 'Cette sauvegarde vient d’une version plus récente d’ASCEND. Mets l’app à jour, puis réessaie.',
+    lourd: 'Ce fichier est bien trop lourd pour être une sauvegarde d’ASCEND.'
+  };
+  function dpPick(file) {
+    if (!dp || dp.busy) return;
+    dp.pending = null; dp.wipe = false; dp.done = null;
+    if (file.size > BACKUP_MAX) { dpSay('restore', false, BACKUP_ERR.lourd); return; }
+    dp.busy = true; dp.msg = null; paint();
+    var fr = new FileReader();
+    fr.onload = function () {
+      if (!dp) return;
+      var res = store.readBackup(typeof fr.result === 'string' ? fr.result : '');
+      if (!res.ok) { dpSay('restore', false, BACKUP_ERR[res.reason] || BACKUP_ERR.illisible); return; }
+      dp.busy = false; dp.pending = res; paint();
+    };
+    fr.onerror = function () { dpSay('restore', false, BACKUP_ERR.illisible); };
+    try { fr.readAsText(file); } catch (e) { dpSay('restore', false, BACKUP_ERR.illisible); }
+  }
+  function dpRestore() {
+    if (!dp || dp.busy || !dp.pending) return;
+    var parsed = dp.pending;
+    dp.busy = true; paint();
+    store.restore(parsed).then(function (r) {
+      if (!dp) return;
+      dp.pending = null; dp.busy = false;
+      var lost = Object.keys(parsed.photos).length - (r.photos || 0);
+      dp.done = r.ok ? 'restauree' : null;
+      dp.msg = r.ok
+        ? { at: 'restore', ok: true, text: 'Ton île est restaurée.' + (lost > 0
+            ? ' ' + lost + (lost > 1 ? ' photos n’ont' : ' photo n’a') + ' pas pu être rangée' + (lost > 1 ? 's' : '') + ' sur cet appareil.'
+            : '') }
+        : { at: 'restore', ok: false, text: 'La restauration a échoué. Rien n’a changé.' };
+      ui.cheer = null; ui.editingId = null; ui.confirmDeleteId = null;
+      ui.milestoneDone = null; ui.levelDone = null; ui.quest.done = null;
+      paint();
+    });
+  }
+  function dpWipe() {
+    if (!dp || dp.busy) return;
+    store.wipe();
+    ui.cheer = null; ui.editingId = null; ui.confirmDeleteId = null;
+    ui.milestoneDone = null; ui.levelDone = null; ui.quest.done = null;
+    dp.wipe = false; dp.pending = null; dp.done = 'efface';
+    dp.msg = { at: 'wipe', ok: true, text: 'Tout est effacé. Une île neuve t’attend.' };
+    paint();
+  }
+
+  function plural(n, one, many) { return n + ' ' + (n > 1 ? many : one); }
+  // L'aperçu d'un fichier choisi : ce qu'il contient, ce qu'il remplacera. Rien n'est encore fait.
+  function BackupPreview(res) {
+    var s = res.summary, cur = store.get();
+    var curItems = (cur.inventory || []).length, curHabits = (cur.habits || []).length;
+    var parts = [plural(s.habits, 'habitude', 'habitudes'), plural(s.items, 'objet', 'objets')];
+    if (s.photos) parts.push(plural(s.photos, 'photo', 'photos'));
+    var photosLost = s.photos && !(window.AscendPhotos && window.AscendPhotos.available());
+    return html`
+      <div class="dd-preview" role="group" aria-label="Aperçu de la sauvegarde">
+        <p class="dd-sum">${parts.join(' · ')}</p>
+        ${s.since ? html`<p class="dd-line">Île commencée le ${island.fmtDay(s.since)}${s.last
+          ? ', dernière visite le ' + island.fmtDay(s.last) : ''}.</p>` : null}
+        <p class="dd-line">${curHabits || curItems
+          ? 'Elle remplacera ce qu’il y a sur cet appareil (' + plural(curHabits, 'habitude', 'habitudes') + ', '
+            + plural(curItems, 'objet', 'objets') + ').'
+          : 'Il n’y a encore rien sur cet appareil : elle s’installera telle quelle.'}</p>
+        ${photosLost ? html`<p class="sv-hint">Ce navigateur ne peut pas garder de photos : l’île sera
+          restaurée sans elles.</p>` : null}
+        <div class="sv-actions">
+          <button class="btn" type="button" disabled=${dp.busy} onClick=${dpRestore}>Remplacer mon île actuelle</button>
+          <button class="btn ghost" type="button" onClick=${function () { dp.pending = null; paint(); }}>Annuler</button>
+        </div>
+      </div>`;
+  }
+
+  function WipeBlock() {
+    if (!dp.wipe) {
+      return html`
+        <div class="sv-actions">
+          <button class="btn ghost" type="button" onClick=${function () { dp.wipe = true; dp.msg = null; dp.pending = null; paint(); }}>Tout effacer…</button>
+        </div>`;
+    }
+    return html`
+      <div class="dd-wipe" role="group" aria-label="Confirmer l’effacement total">
+        <p class="dd-line"><strong>Tout effacer ?</strong> Ton île, tes habitudes, tes objets, tes notes et tes
+          photos partiront définitivement de cet appareil. Pour pouvoir les retrouver, sauvegarde d’abord.</p>
+        <div class="sv-actions">
+          <button class="btn ghost" type="button" disabled=${dp.busy} onClick=${dpExport}>Sauvegarder d’abord</button>
+          <button class="btn danger" type="button" disabled=${dp.busy} onClick=${dpWipe}>Oui, tout effacer</button>
+          <button class="btn ghost" type="button" onClick=${function () { dp.wipe = false; paint(); }}>Annuler</button>
+        </div>
+      </div>`;
+  }
+
+  function DataPanel() {
+    if (!dp) return null;
+    // Chaque message se lit SOUS la section qui l'a produit (sinon, depuis « Tout effacer », on ne
+    // verrait pas que la sauvegarde est partie).
+    function msg(at) {
+      var m = dp.msg;
+      return m && m.at === at
+        ? html`<p class=${'sv-hint sv-msg' + (m.ok ? '' : ' dd-err')} role="status">${m.text}</p>` : null;
+    }
+    return html`
+      <div class="dom-menu data-panel" role="dialog" aria-modal="true" aria-label="Mes données"
+           onKeyDown=${function (e) { if (e.key === 'Escape') { closeData(); return; } island.trapTab(e); }}>
+        <div class="dm-backdrop" onClick=${closeData} aria-hidden="true"></div>
+        <div class="dm-panel" tabindex="-1" ref=${function (n) { if (n && !n.contains(document.activeElement)) { try { n.focus(); } catch (e) { } } }}>
+          <header class="dm-head">
+            ${Glyph('musee', 'dm-gly')}
+            <div class="dm-headmain">
+              <h2 class="dm-title">Mes données</h2>
+              <p class="dm-state">Tout reste sur cet appareil</p>
+            </div>
+            <button class="dm-close" type="button" aria-label="Fermer" onClick=${closeData}>✕</button>
+          </header>
+          <div class="dm-body">
+            <h3 class="dm-h dd-h">Sauvegarder mes souvenirs</h3>
+            <p class="dm-note">Un seul fichier : ton île, tes objets, tes notes et tes photos. C’est lui qui te
+              permettra de tout retrouver, sur ce téléphone ou sur un autre.</p>
+            <div class="sv-actions">
+              <button class="btn" type="button" disabled=${dp.busy} onClick=${dpExport}>Sauvegarder</button>
+            </div>
+            ${msg('save')}
+
+            <h3 class="dm-h dd-h">Restaurer une sauvegarde</h3>
+            <p class="dm-note">Remplace ce qu’il y a sur cet appareil par le contenu d’un fichier de sauvegarde.
+              Tu verras d’abord ce qu’il contient.</p>
+            ${dp.pending
+              ? BackupPreview(dp.pending)
+              : dp.busy
+                ? html`<p class="sv-hint" role="status">Lecture en cours…</p>`
+                : html`<div class="sv-actions">
+                    ${island.PhotoPicker('Choisir un fichier', 'btn ghost', dpPick,
+                                         'Choisir un fichier de sauvegarde à restaurer', '.json,application/json')}
+                  </div>`}
+            ${msg('restore')}
+            ${dp.done === 'restauree' ? html`
+              <div class="sv-actions dd-after">
+                <button class="btn" type="button" onClick=${function () { closeData(); goTab('ile'); }}>Voir mon île</button>
+              </div>` : null}
+
+            <h3 class="dm-h dd-h">Tout effacer</h3>
+            <p class="dm-note">Efface de cet appareil ton île et tout ce qu’elle contient.</p>
+            ${WipeBlock()}
+            ${msg('wipe')}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Le lien discret du pied d'Habitudes (au-dessus de la version).
+  function DataLink() {
+    return html`
+      <button class="lnk dd-link" type="button" aria-haspopup="dialog" onClick=${openData}>Mes données · sauvegarde</button>`;
+  }
+
+/* ASCEND v2 — fragment app/06-ecran.js : écran Habitudes, onglets, App, montage. Même IIFE que les autres fragments de app/ (ordre : build/build.ps1). */
   function Disclose(id, open, gly, label, onToggle, body) {
     return html`
       <div class="disclose">
@@ -7833,7 +8142,10 @@ body {
         </section>
 
         ${QuestSection()}
-        <p class="app-ver">ASCEND v${VER}</p>
+        <footer class="app-foot">
+          ${DataLink()}
+          <p class="app-ver">ASCEND v${VER}</p>
+        </footer>
       </main>`;
   }
 
@@ -7881,6 +8193,7 @@ body {
             onOpenChest: openChest  // Phase 3.2 : le hub des coffres (ponton) lance la cérémonie 1.3
           })
         : HabitScreen()}
+      ${onIsland ? null : DataPanel()}
       ${TabBar()}
       ${Flyer()}
       ${Ceremony()}`;
