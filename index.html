@@ -721,8 +721,12 @@ body {
 .ceremony {
   position: fixed; inset: 0; z-index: 80;
   display: flex; align-items: center; justify-content: center;
-  padding: 24px; background: rgba(10, 14, 22, .74);
+  /* v0.26 : .74 laissait lire la vue Liste SOUS la carte (vu au rendu) → voile plus dense + flou :
+     l'attention reste sur l'objet, et le texte clair y gagne en contraste. */
+  padding: 24px; background: rgba(10, 14, 22, .84);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   animation: cer-fade var(--dur-ui) ease;
+  overflow-x: hidden; overflow-y: auto;   /* v0.26 : les rayons (460 px) ne débordent jamais */
 }
 .cer-stage { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; }
 .cer-hint { color: #EEF1FA; font-size: 14px; display: flex; align-items: center; gap: 10px; }
@@ -737,9 +741,23 @@ body {
    reduce-motion via la règle globale ; on affiche alors directement la révélation). */
 .cer-chest {
   transform: scale(2.3);
-  animation: cer-tremble .55s ease-in-out infinite;
-  filter: drop-shadow(0 0 14px var(--gold));
+  animation: cer-tremble .55s ease-in-out infinite, cer-charge var(--cer-dur, 1.5s) ease-in forwards;
+  filter: drop-shadow(0 0 14px var(--cer-glow));
 }
+/* v0.26 — la RARETÉ a une lumière. Décorative (la rareté s'écrit en toutes lettres sur la carte) :
+   teintes claires fixes sur le voile sombre, aucune n'écrit de texte. Le halo du suspense se
+   CHARGE sur toute sa durée (plus longue pour un coffre plus rare) ; les rayons de la révélation
+   n'apparaissent qu'à partir de « rare » et s'intensifient avec elle — le bois reste simple. */
+.ceremony { --cer-glow: #E7C173; --cer-rays: 0; }
+.ceremony[data-rarity="rare"]         { --cer-glow: #8FD8E4; --cer-rays: .34; }
+.ceremony[data-rarity="epique"]       { --cer-glow: #F4C95D; --cer-rays: .55; }
+.ceremony[data-rarity="legendaire"],
+.ceremony[data-rarity="exceptionnel"] { --cer-glow: #B79CFF; --cer-rays: .75; }
+.ceremony[data-rarity="unique"]       { --cer-glow: #FF8FC0; --cer-rays: .85; }
+.ceremony[data-rarity="epique"] .cer-chest,
+.ceremony[data-rarity="legendaire"] .cer-chest,
+.ceremony[data-rarity="exceptionnel"] .cer-chest,
+.ceremony[data-rarity="unique"] .cer-chest { animation-duration: .36s, var(--cer-dur, 1.5s); }
 
 /* Révélation */
 .cer-reveal { animation: cer-pop .32s ease; }
@@ -749,6 +767,32 @@ body {
 }
 .cer-src { color: #C9D0E0; font-size: 13px; max-width: 40ch; }
 .cer-reveal .btn.gold { margin-top: 4px; }
+.cer-card { position: relative; isolation: isolate; }
+.cer-card .reward-card { border-color: var(--cer-glow); }
+/* Les rayons : un MASQUE elliptique FIXE (230 × 100 px de rayon) porté par le parent, et le motif
+   qui TOURNE dans son ::before. Une forme qui tournerait avec eux passerait sous « Tu as obtenu »
+   et sous la ligne de collection (mesurées à 103 px du centre de la carte) : le masque s'éteint
+   avant, donc les textes restent sur le voile sombre, où leur contraste est connu. */
+.cer-rays {
+  position: absolute; left: 50%; top: 50%; width: 460px; height: 200px; margin: -100px 0 0 -230px;
+  z-index: -1; pointer-events: none; overflow: hidden; opacity: var(--cer-rays);
+  background: radial-gradient(closest-side, var(--cer-glow), transparent 75%);
+  -webkit-mask: radial-gradient(closest-side, #000 40%, transparent 100%);
+          mask: radial-gradient(closest-side, #000 40%, transparent 100%);
+  animation: cer-rays-in .5s ease both;
+}
+.cer-rays::before {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 520px; height: 520px; margin: -260px 0 0 -260px;
+  background: repeating-conic-gradient(from 0deg, var(--cer-glow) 0deg 7deg, transparent 7deg 22deg);
+  animation: cer-spin 16s linear infinite;
+}
+.cer-coll { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #EEF1FA; font-size: 14px; }
+.cer-coll strong { color: #FFFFFF; font-variant-numeric: tabular-nums; }
+.cer-bar { width: 180px; height: 6px; border-radius: var(--r-pill); background: rgba(255, 255, 255, .22); overflow: hidden; }
+.cer-fill {
+  display: block; height: 100%; border-radius: inherit; background: var(--cer-glow);
+  animation: cer-fill .9s .35s cubic-bezier(.3, .8, .3, 1) both;
+}
 
 /* Carte-récompense (placeholder géométrique ; SVG Claude Design plus tard) */
 .reward-card {
@@ -776,6 +820,13 @@ body {
 
 @keyframes cer-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes cer-pop { from { transform: scale(.86); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes cer-charge {
+  from { filter: drop-shadow(0 0 6px var(--cer-glow)); }
+  to   { filter: drop-shadow(0 0 26px var(--cer-glow)) drop-shadow(0 0 8px var(--cer-glow)); }
+}
+@keyframes cer-spin { to { transform: rotate(360deg); } }
+@keyframes cer-rays-in { from { opacity: 0; } }   /* sans `to` : on finit sur l'intensité graduée */
+@keyframes cer-fill { from { width: var(--from); } to { width: var(--to); } }
 @keyframes cer-tremble {
   0%, 100% { transform: scale(2.3) translateX(0) rotate(0); }
   25%      { transform: scale(2.3) translateX(-2px) rotate(-2.2deg); }
@@ -2922,8 +2973,24 @@ body {
     return order;
   }
 
+  // Avancement de la COLLECTION d'un domaine (v0.26) : combien d'objets de son catalogue fixe
+  // (`cards.pools`) sont dans l'inventaire. DÉRIVÉ, jamais stocké. Les décos génératives et les
+  // cartes-jalons sont HORS catalogue : elles ne comptent pas dans le X/Y (arbitrage 3.1).
+  // Source UNIQUE du X/Y : le menu du domaine (island.js) et la cérémonie (app.js) la lisent.
+  function collectionCount(state, domain) {
+    var cat = (cards.pools && cards.pools[domain]) || [], inv = (state && state.inventory) || [];
+    var have = {}, got = 0;
+    for (var i = 0; i < inv.length; i++) {
+      var e = inv[i];
+      if (e && e.id && typeof e.itemId === 'string') have[e.itemId] = true;
+    }
+    for (var j = 0; j < cat.length; j++) if (have[cat[j].id]) got++;
+    return { got: got, total: cat.length };
+  }
+
   window.AscendDerive = {
     habitCount: habitCount,
+    collectionCount: collectionCount,
     nextMilestone: nextMilestone,
     isHabitValidatedOn: isHabitValidatedOn,
     drawForChest: drawForChest,
@@ -3902,11 +3969,10 @@ body {
   }
   function domainCollection(st, domain) {
     var cat = (cards.pools && cards.pools[domain]) ? cards.pools[domain] : [];
-    var byItem = invByItemId(st), catIds = {}, items = [], got = 0;
+    var byItem = invByItemId(st), catIds = {}, items = [];
     for (var i = 0; i < cat.length; i++) {
       var it = cat[i]; catIds[it.id] = true;
       var e = byItem[it.id] || null;
-      if (e) got++;
       items.push({ id: it.id, name: it.name, rarity: it.rarity, obtained: !!e, entry: e });
     }
     var extra = [], inv = st.inventory || [];
@@ -3916,7 +3982,8 @@ body {
       var it2 = cards.resolve(e2.itemId);
       if (it2 && it2.domain === domain) extra.push({ item: it2, entry: e2 });
     }
-    return { catalogue: items, extra: extra, got: got, total: items.length };
+    var count = derive.collectionCount(st, domain);   // v0.26 : le X/Y a une source unique
+    return { catalogue: items, extra: extra, got: count.got, total: count.total };
   }
   // Histoire d'un objet — placeholder v0 honnête (les histoires complètes = Phase 6.1).
   function storyFor(item) {
@@ -6006,9 +6073,12 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.25';
+  var VER = '0.26';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
+  // v0.26 — suspense GRADUÉ : plus le coffre est rare, plus il se fait attendre (et plus son halo
+  // monte). Le bois reste vif ; le plus long tient sous les 6 s du GDD, et tout se passe au tap.
+  var SUSPENSE_MS = { commun: 1100, rare: 1500, epique: 1900, legendaire: 2400, exceptionnel: 2400, unique: 2400 };
 
   /* ------------------------------------------------------------ état d'UI éphémère */
   var ui = {
@@ -6125,16 +6195,20 @@ body {
     if (!res || !res.ok) { paint(); return; }       // introuvable (déjà ouvert) → no-op propre
     if (ceremonyTimer) { clearTimeout(ceremonyTimer); ceremonyTimer = null; }
     var reduce = prefersReduced();
+    var ct = chestTypes.get(res.chestType);
+    var rarity = ct ? ct.rarity : 'commun';
+    var dur = SUSPENSE_MS[rarity] || SUSPENSE_MS.commun;
     ui.ceremony = {
-      phase: reduce ? 'reveal' : 'suspense',
-      chestType: res.chestType, item: res.item, sourceLabel: res.sourceLabel
+      phase: reduce ? 'reveal' : 'suspense', rarity: rarity, dur: dur,
+      chestType: res.chestType, item: res.item, sourceLabel: res.sourceLabel,
+      coll: derive.collectionCount(store.get(), res.item.domain)   // APRÈS l'ouverture : inclut l'objet
     };
     paint();
     if (!reduce) {
       ceremonyTimer = setTimeout(function () {
         if (ui.ceremony && ui.ceremony.phase === 'suspense') { ui.ceremony.phase = 'reveal'; paint(); }
         ceremonyTimer = null;
-      }, 1500);
+      }, dur);
     }
   }
   function skipCeremony() {
@@ -6377,14 +6451,39 @@ body {
       </div>`;
   }
 
-  // La cérémonie (< 6 s, skippable, instantanée en reduce-motion) : suspense doux →
-  // révélation « Tu as obtenu … » → la carte rejoint la collection (bouton doré).
+  // Ce que la carte FAIT à ta collection (v0.26) : le X/Y du domaine qui avance d'un cran, ou,
+  // hors catalogue, ce qu'elle est. L'envie de compléter est le moteur sain du jeu (GDD §9) :
+  // on la montre au moment exact où elle naît.
+  function CollectionStep(c) {
+    var it = c.item, d = domains.get(it.domain), label = d ? d.label : '';
+    if (it.milestone) return html`<p class="cer-coll">Carte-jalon · elle ne s’obtient qu’une fois</p>`;
+    if (it.generative || it.unknown || !c.coll.total) return html`<p class="cer-coll">Trouvaille hors collection</p>`;
+    var full = c.coll.got >= c.coll.total;
+    return html`
+      <div class="cer-coll">
+        <p>${full ? html`Collection ${label} <strong>complète</strong>`
+                   : html`${label} · <strong>${c.coll.got}/${c.coll.total}</strong> dans ta collection`}</p>
+        <span class="cer-bar" aria-hidden="true"
+              style=${'--from:' + ((c.coll.got - 1) / c.coll.total * 100) + '%;--to:' + (c.coll.got / c.coll.total * 100) + '%'}>
+          <span class="cer-fill"></span>
+        </span>
+      </div>`;
+  }
+
+  // La cérémonie (< 6 s, skippable, instantanée en reduce-motion). v0.26 : GRADUÉE par rareté —
+  // suspense plus long et halo qui monte à la couleur de la rareté, puis révélation sur des rayons
+  // (dès « rare ») et la collection qui avance. Rien de tout ça ne se déclenche sans coffre, et
+  // un coffre ne naît que d'un acte réel : c'est le plaisir que la VISION autorise.
+  // HONNÊTETÉ : le suspense suit la rareté du COFFRE (on sait ce qu'on ouvre), la révélation
+  // celle de l'OBJET — un coffre rare qui retombe sur une trouvaille commune (vivier encore
+  // incomplet, 6.1) ne se déguise pas en légendaire.
   function Ceremony() {
     var c = ui.ceremony;
     if (!c) return null;
     var suspense = c.phase === 'suspense';
     return html`
       <div class="ceremony" role="dialog" aria-modal="true" aria-label="Ouverture d’un coffre"
+           data-rarity=${suspense ? c.rarity : c.item.rarity} style=${'--cer-dur:' + c.dur + 'ms'}
            onClick=${suspense ? skipCeremony : null}>
         ${suspense
           ? html`
@@ -6398,7 +6497,11 @@ body {
           : html`
             <div class="cer-stage cer-reveal" role="status">
               <p class="cer-kicker">Tu as obtenu</p>
-              ${RewardCard(c.item)}
+              <div class="cer-card">
+                <span class="cer-rays" aria-hidden="true"></span>
+                ${RewardCard(c.item)}
+              </div>
+              ${CollectionStep(c)}
               <p class="cer-src">${c.sourceLabel}</p>
               <button class="btn gold" type="button" onClick=${closeCeremony}>Rejoindre ma collection</button>
             </div>`}
