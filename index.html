@@ -774,8 +774,41 @@ body {
 .ceremony[data-rarity="exceptionnel"] .cer-chest,
 .ceremony[data-rarity="unique"] .cer-chest { animation-duration: .36s, var(--cer-dur, 1.5s); }
 
+/* v0.29 — L'OUVERTURE (grief de Leo : le coffre « explose » au lieu de s'ouvrir). La boîte porte
+   le coffre et ce qui en sort, centrés sur lui. Le couvercle (::before) bascule vers l'ARRIÈRE sur
+   son bord haut, la charnière, et montre son dessous sombre ; le fermoir (::after) saute ; la
+   lumière jaillit de la bouche du coffre (≈ 12 px au-dessus de son centre à l'échelle 2,3) ; une
+   carte, dos tourné, en sort en grandissant, puis la révélation la retourne. */
+/* Marges = le débord VISUEL de l'échelle 2,3 (qui ne compte pas dans la mise en page) + la carte
+   qui monte : « Ouverture… » ne touche plus le coffre. */
+.cer-box { position: relative; display: block; isolation: isolate; margin: 64px 0 26px; }
+.cer-box .cer-chest { display: block; }   /* un span hors du flex n'a plus de largeur */
+.cer-chest.is-open {
+  animation: cer-jolt .3s ease-out both;
+  filter: drop-shadow(0 0 26px var(--cer-glow)) drop-shadow(0 0 8px var(--cer-glow));
+}
+.cer-chest.is-open::before {
+  transform-origin: 50% 0;
+  animation: cer-lid .34s cubic-bezier(.3, 1.35, .5, 1) both;
+}
+.cer-chest.is-open::after { opacity: 0; transition: opacity .12s ease; }
+.cer-burst {
+  position: absolute; left: 50%; top: 50%; width: 240px; height: 240px; margin: -132px 0 0 -120px;
+  z-index: -1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, var(--cer-glow), transparent 72%);
+  animation: cer-burst .75s ease-out both;
+}
+.cer-rise {
+  position: absolute; left: 50%; top: 50%; width: 64px; height: 86px; margin: -55px 0 0 -32px;
+  border-radius: 9px; pointer-events: none;
+  background: var(--surface); border: 2px solid var(--cer-glow);
+  box-shadow: 0 0 22px var(--cer-glow), inset 0 0 18px -6px var(--cer-glow);
+  animation: cer-rise .5s .22s cubic-bezier(.2, .8, .3, 1) both;
+}
+
 /* Révélation */
 .cer-reveal { animation: cer-pop .32s ease; }
+.cer-reveal .cer-card { animation: cer-emerge .42s cubic-bezier(.2, .8, .3, 1); }
 .cer-kicker {
   color: #EEF1FA; font-size: 13px; font-weight: 700;
   letter-spacing: .14em; text-transform: uppercase;
@@ -840,6 +873,26 @@ body {
   to   { filter: drop-shadow(0 0 26px var(--cer-glow)) drop-shadow(0 0 8px var(--cer-glow)); }
 }
 @keyframes cer-spin { to { transform: rotate(360deg); } }
+@keyframes cer-jolt {
+  0%   { transform: scale(2.3); }
+  35%  { transform: scale(2.46) translateY(-2px); }
+  100% { transform: scale(2.3); }
+}
+@keyframes cer-lid {
+  from { transform: perspective(90px) rotateX(0); }
+  to   { transform: perspective(90px) rotateX(-158deg); background: var(--chest-edge); }
+}
+@keyframes cer-burst {
+  0%   { opacity: 0; transform: scale(.15); }
+  40%  { opacity: .95; }
+  100% { opacity: .6; transform: scale(1.5); }
+}
+@keyframes cer-rise {
+  0%   { opacity: 0; transform: translateY(0) scale(.25); }
+  30%  { opacity: 1; }
+  100% { opacity: 1; transform: translateY(-96px) scale(1); }
+}
+@keyframes cer-emerge { from { transform: scale(.5); } }   /* sans `to` : finit sur l'état posé */
 @keyframes cer-rays-in { from { opacity: 0; } }   /* sans `to` : on finit sur l'intensité graduée */
 @keyframes cer-fill { from { width: var(--from); } to { width: var(--to); } }
 @keyframes cer-tremble {
@@ -6209,12 +6262,16 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.28';
+  var VER = '0.29';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
   // v0.26 — suspense GRADUÉ : plus le coffre est rare, plus il se fait attendre (et plus son halo
   // monte). Le bois reste vif ; le plus long tient sous les 6 s du GDD, et tout se passe au tap.
   var SUSPENSE_MS = { commun: 1100, rare: 1500, epique: 1900, legendaire: 2400, exceptionnel: 2400, unique: 2400 };
+  // v0.29 (grief de Leo : « il explose limite ») — entre le suspense et la révélation, le coffre
+  // S'OUVRE : le couvercle bascule, la lumière jaillit, la carte sort. Même durée pour tous : c'est
+  // le suspense qui porte la gradation, l'ouverture est un geste.
+  var OPEN_MS = 750;
 
   /* ------------------------------------------------------------ état d'UI éphémère */
   var ui = {
@@ -6236,7 +6293,7 @@ body {
     confirmDeleteId: null,
     milestoneDone: null,      // { threshold, chestLabel } — bandeau doux après un jalon franchi
     levelDone: null,          // { level, domainLabel, count } — bandeau doux après une montée de niveau (Phase 2.2)
-    ceremony: null,           // { phase:'suspense'|'reveal', chestType, item, sourceLabel } | null
+    ceremony: null,           // { phase:'suspense'|'open'|'reveal', chestType, item, sourceLabel } | null
     // v0.24 — LE GESTE RÉEL. cheer = la dernière habitude validée (coche tracée, compteur qui
     // bondit, phrase « … part vers ton île ») ; flyer = le petit coffre qui s'envole du bouton
     // vers l'onglet Île ; land = l'onglet qui l'accueille. Tous éphémères, jamais persistés.
@@ -6325,7 +6382,7 @@ body {
   /* --- ouverture de coffre : la cérémonie (Phase 1.3) --- */
   // On MUTE d'abord (openChest fige le tirage en inventory) puis on JOUE la présentation :
   // ainsi la récompense est en sûreté même si l'utilisateur ferme au milieu. Suspense doux
-  // (~1,5 s) → révélation ; skippable ; instantané en reduce-motion.
+  // (~1,5 s) → ouverture (v0.29) → révélation ; skippable ; instantané en reduce-motion.
   function openChest(chestId) {
     var res = actions.openChest(chestId);
     if (!res || !res.ok) { paint(); return; }       // introuvable (déjà ouvert) → no-op propre
@@ -6342,14 +6399,19 @@ body {
     paint();
     if (!reduce) {
       ceremonyTimer = setTimeout(function () {
-        if (ui.ceremony && ui.ceremony.phase === 'suspense') { ui.ceremony.phase = 'reveal'; paint(); }
-        ceremonyTimer = null;
+        if (!ui.ceremony || ui.ceremony.phase !== 'suspense') { ceremonyTimer = null; return; }
+        ui.ceremony.phase = 'open'; paint();
+        ceremonyTimer = setTimeout(function () {
+          if (ui.ceremony && ui.ceremony.phase === 'open') { ui.ceremony.phase = 'reveal'; paint(); }
+          ceremonyTimer = null;
+        }, OPEN_MS);
       }, dur);
     }
   }
+  // « Passer » saute ce qui reste (suspense OU ouverture) jusqu'à la révélation.
   function skipCeremony() {
     if (ceremonyTimer) { clearTimeout(ceremonyTimer); ceremonyTimer = null; }
-    if (ui.ceremony && ui.ceremony.phase === 'suspense') { ui.ceremony.phase = 'reveal'; paint(); }
+    if (ui.ceremony && ui.ceremony.phase !== 'reveal') { ui.ceremony.phase = 'reveal'; paint(); }
   }
   function closeCeremony() {
     if (ceremonyTimer) { clearTimeout(ceremonyTimer); ceremonyTimer = null; }
@@ -6615,18 +6677,25 @@ body {
   // HONNÊTETÉ : le suspense suit la rareté du COFFRE (on sait ce qu'on ouvre), la révélation
   // celle de l'OBJET — un coffre rare qui retombe sur une trouvaille commune (vivier encore
   // incomplet, 6.1) ne se déguise pas en légendaire.
+  // v0.29 — entre les deux, l'OUVERTURE : le couvercle bascule sur sa charnière, la lumière
+  // jaillit et une carte sort du coffre. Cette lumière est déjà celle de l'OBJET : c'est le
+  // premier instant de la révélation, donc la même honnêteté s'y applique.
   function Ceremony() {
     var c = ui.ceremony;
     if (!c) return null;
-    var suspense = c.phase === 'suspense';
+    var waiting = c.phase !== 'reveal', opening = c.phase === 'open';
     return html`
       <div class="ceremony" role="dialog" aria-modal="true" aria-label="Ouverture d’un coffre"
-           data-rarity=${suspense ? c.rarity : c.item.rarity} style=${'--cer-dur:' + c.dur + 'ms'}
-           onClick=${suspense ? skipCeremony : null}>
-        ${suspense
+           data-rarity=${c.phase === 'suspense' ? c.rarity : c.item.rarity} style=${'--cer-dur:' + c.dur + 'ms'}
+           onClick=${waiting ? skipCeremony : null}>
+        ${waiting
           ? html`
             <div class="cer-stage">
-              <span class="cer-chest chest-vig chest-vig--${c.chestType}" aria-hidden="true"></span>
+              <span class="cer-box" aria-hidden="true">
+                ${opening ? html`<span class="cer-burst"></span>` : null}
+                <span class=${'cer-chest chest-vig chest-vig--' + c.chestType + (opening ? ' is-open' : '')}></span>
+                ${opening ? html`<span class="cer-rise"></span>` : null}
+              </span>
               <p class="cer-hint">Ouverture…
                 <button class="cer-skip" type="button"
                         onClick=${function (e) { if (e && e.stopPropagation) e.stopPropagation(); skipCeremony(); }}>Passer</button>
