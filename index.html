@@ -295,6 +295,16 @@ body {
 }
 .habit-head { display: flex; align-items: flex-start; gap: 12px; }
 .habit .h-gly { width: 26px; height: 26px; flex: 0 0 auto; color: var(--ink-2); }
+/* v0.27 — LA COULEUR RELIE. Chaque carte d'habitude porte la teinte du TOIT de son bâtiment
+   (les mêmes variables que la scène, par `:is(.isl-parcelle, .dom-tint)` : une seule source, dans
+   les 3 ambiances) : on voit d'un coup d'œil quelle habitude construit quel bâtiment. Liseré à
+   gauche + pastille du glyphe ; aucun TEXTE ne passe sur la teinte (l'encre et le bouton gardent
+   leurs couleurs AA), donc rien à remesurer côté texte. */
+.habit.dom-tint { box-shadow: inset 4px 0 0 var(--roof), 0 6px 20px -12px var(--shadow); }
+.habit.dom-tint .h-gly {
+  box-sizing: content-box; padding: 7px; margin: -5px 0 0 -3px; border-radius: 12px;
+  background: color-mix(in srgb, var(--roof) 20%, var(--surface)); color: var(--ink);
+}
 .habit .h-main { flex: 1; min-width: 0; }
 .habit .h-title { font-weight: 700; font-size: 16px; word-break: break-word; }
 .habit .h-sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
@@ -1062,23 +1072,23 @@ body {
    la couleur, en surchargeant --roof/--roof-2 SUR la parcelle. Rien d'écrit ne passe sur ces
    teintes → l'AA n'est pas en jeu. Les valeurs de :root restent le repli d'un domaine sans
    teinte (les 5 autres domaines de lancement), comme ARCH_DEFAULT l'est pour la géométrie. */
-.isl-parcelle[data-domain="physique"]      { --roof: #C0664E; --roof-2: #96452F; }
-.isl-parcelle[data-domain="mental"]        { --roof: #7C82AE; --roof-2: #565C87; }
-.isl-parcelle[data-domain="connaissances"] { --roof: #8E8C58; --roof-2: #666437; }
-.isl-parcelle[data-domain="creativite"]    { --roof: #D19148; --roof-2: #A2681F; }
+:is(.isl-parcelle, .dom-tint)[data-domain="physique"]      { --roof: #C0664E; --roof-2: #96452F; }
+:is(.isl-parcelle, .dom-tint)[data-domain="mental"]        { --roof: #7C82AE; --roof-2: #565C87; }
+:is(.isl-parcelle, .dom-tint)[data-domain="connaissances"] { --roof: #8E8C58; --roof-2: #666437; }
+:is(.isl-parcelle, .dom-tint)[data-domain="creativite"]    { --roof: #D19148; --roof-2: #A2681F; }
 /* Le pavillon de bien-être a d'abord reçu un toit vert d'eau : posé sur l'herbe, il s'y
    FONDAIT (vu à la rastérisation). Poussé vers le bleu, il se détache du gazon. */
-.isl-parcelle[data-domain="bienetre"]      { --roof: #5C9DAE; --roof-2: #3A7686; }
-[data-ambiance="crepuscule"] .isl-parcelle[data-domain="physique"]      { --roof: #C77E6C; --roof-2: #9B5546; }
-[data-ambiance="crepuscule"] .isl-parcelle[data-domain="mental"]        { --roof: #8A85A8; --roof-2: #625C82; }
-[data-ambiance="crepuscule"] .isl-parcelle[data-domain="connaissances"] { --roof: #A08F5E; --roof-2: #74663C; }
-[data-ambiance="crepuscule"] .isl-parcelle[data-domain="creativite"]    { --roof: #D89A55; --roof-2: #A66C2C; }
-[data-ambiance="crepuscule"] .isl-parcelle[data-domain="bienetre"]      { --roof: #7CA79B; --roof-2: #537D71; }
-[data-ambiance="nuit"] .isl-parcelle[data-domain="physique"]      { --roof: #5A3B58; --roof-2: #402940; }
-[data-ambiance="nuit"] .isl-parcelle[data-domain="mental"]        { --roof: #3F4478; --roof-2: #2C3055; }
-[data-ambiance="nuit"] .isl-parcelle[data-domain="connaissances"] { --roof: #4B4A62; --roof-2: #353445; }
-[data-ambiance="nuit"] .isl-parcelle[data-domain="creativite"]    { --roof: #6B4A4E; --roof-2: #4C3338; }
-[data-ambiance="nuit"] .isl-parcelle[data-domain="bienetre"]      { --roof: #3B5566; --roof-2: #293C49; }
+:is(.isl-parcelle, .dom-tint)[data-domain="bienetre"]      { --roof: #5C9DAE; --roof-2: #3A7686; }
+[data-ambiance="crepuscule"] :is(.isl-parcelle, .dom-tint)[data-domain="physique"]      { --roof: #C77E6C; --roof-2: #9B5546; }
+[data-ambiance="crepuscule"] :is(.isl-parcelle, .dom-tint)[data-domain="mental"]        { --roof: #8A85A8; --roof-2: #625C82; }
+[data-ambiance="crepuscule"] :is(.isl-parcelle, .dom-tint)[data-domain="connaissances"] { --roof: #A08F5E; --roof-2: #74663C; }
+[data-ambiance="crepuscule"] :is(.isl-parcelle, .dom-tint)[data-domain="creativite"]    { --roof: #D89A55; --roof-2: #A66C2C; }
+[data-ambiance="crepuscule"] :is(.isl-parcelle, .dom-tint)[data-domain="bienetre"]      { --roof: #7CA79B; --roof-2: #537D71; }
+[data-ambiance="nuit"] :is(.isl-parcelle, .dom-tint)[data-domain="physique"]      { --roof: #5A3B58; --roof-2: #402940; }
+[data-ambiance="nuit"] :is(.isl-parcelle, .dom-tint)[data-domain="mental"]        { --roof: #3F4478; --roof-2: #2C3055; }
+[data-ambiance="nuit"] :is(.isl-parcelle, .dom-tint)[data-domain="connaissances"] { --roof: #4B4A62; --roof-2: #353445; }
+[data-ambiance="nuit"] :is(.isl-parcelle, .dom-tint)[data-domain="creativite"]    { --roof: #6B4A4E; --roof-2: #4C3338; }
+[data-ambiance="nuit"] :is(.isl-parcelle, .dom-tint)[data-domain="bienetre"]      { --roof: #3B5566; --roof-2: #293C49; }
 
 /* Ruine dormante : pierres usées, éboulis, mousse — elle a vécu, elle attend. */
 .isl-ruin { fill: var(--ruin); opacity: .85; }
@@ -1210,6 +1220,29 @@ body {
   border: 1px solid var(--line); box-shadow: 0 10px 28px -16px var(--shadow);
 }
 .isl-wake .iw-gly { width: 26px; height: 26px; flex: 0 0 auto; color: var(--accent); }
+
+/* v0.27 — LE RÉCAP « Depuis ta dernière visite ». Même matière que la note d'éveil (verre de
+   surface, liseré, ombre) posée au même endroit ; en vue Liste il s'insère dans le flux. Il se
+   ferme d'un « OK » et ne revient qu'avec de nouveaux progrès réels. */
+.isl-recap {
+  position: absolute; left: 16px; right: 16px; margin: 0 auto; max-width: 420px; z-index: 3;
+  bottom: calc(var(--nav-h) + 18px + env(safe-area-inset-bottom));
+  padding: 12px 16px 14px; border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  border: 1px solid var(--gold); box-shadow: 0 10px 28px -16px var(--shadow);
+  animation: dm-rise .45s ease-out both;
+}
+.isl-list .isl-recap { position: static; margin: 0 0 18px; max-width: none; }
+.ir-head { display: flex; align-items: center; gap: 10px; }
+.ir-gly { width: 22px; height: 22px; flex: 0 0 auto; color: var(--ink); }
+.ir-title { font-size: 15px; font-weight: 700; color: var(--ink); margin: 0; flex: 1; }
+.ir-list { list-style: none; margin: 4px 0 0 32px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--ink-2); }
+.ir-list strong { color: var(--ink); }
+.ir-port { margin: 12px 0 0 32px; min-height: 44px; font-size: 14px; }
+/* Le bâtiment qui a pris un étage S'ILLUMINE à l'arrivée : son halo (4.2a) bat trois fois puis
+   revient à sa valeur. Décoratif (le récap l'écrit) ; absent en reduce-motion. */
+.isl-parcelle.grew .isl-glow { animation: grew-glow 1.4s ease-in-out 3; }
+@keyframes grew-glow { 50% { opacity: 1; } }
 .isl-wake p { font-size: 13px; color: var(--ink-2); margin: 0; }
 
 /* Vue LISTE — miroir sémantique de la scène (accessibilité non négociable) */
@@ -1508,6 +1541,11 @@ body {
                                     // l'hydrate toujours → les positions d'un joueur survivent.
       buildings: {},                // {<domain>:{placed:bool}} — le NIVEAU est DÉRIVÉ, jamais stocké
       pity: { ironSinceRare: 0 },
+      // v0.27 — repère du récap « Depuis ta dernière visite » : la LONGUEUR de history à la
+      // dernière visite de l'île. Ce n'est PAS de la progression (tout le récap est rejoué
+      // depuis history) : un repère faux ne peut que fausser un affichage, jamais un niveau.
+      // null = inconnu (save d'avant v0.27) → aucun récap, le repère est simplement posé.
+      seen: { hist: null },
       settings: { reducedMotion: 'auto', theme: null }
     };
   }
@@ -1516,7 +1554,7 @@ body {
   // Allowlist EXPLICITE des champs persistés (= données de jeu). Toute clé d'UI éphémère
   // (onglet, overlay, sélection…) reste hors de cette liste → jamais sérialisée.
   var PERSIST_KEYS = ['name', 'onboarded', 'createdAt', 'lastDay', 'habits', 'objectives',
-    'activeQuest', 'history', 'chests', 'inventory', 'placements', 'buildings', 'pity', 'settings'];
+    'activeQuest', 'history', 'chests', 'inventory', 'placements', 'buildings', 'pity', 'seen', 'settings'];
 
   // Schéma de TYPE par clé. Une valeur du mauvais type est LARGUÉE au chargement (le défaut
   // reprend) → une save corrompue (history:'x', buildings:42) ne peut plus atteindre le rendu.
@@ -1524,7 +1562,7 @@ body {
     name: 'str', onboarded: 'bool', createdAt: 'str', lastDay: 'str?',
     habits: 'arr', objectives: 'arr', activeQuest: 'obj?', history: 'arr',
     chests: 'arr', inventory: 'arr', placements: 'arr', buildings: 'obj',
-    pity: 'obj', settings: 'obj'
+    pity: 'obj', seen: 'obj', settings: 'obj'
   };
 
   function _okType(v, kind) {
@@ -2988,8 +3026,31 @@ body {
     return { got: got, total: cat.length };
   }
 
+  // Récap « Depuis ta dernière visite » (v0.27) — ce qui a GRANDI depuis que history avait
+  // `seenLen` entrées. Entièrement REJOUÉ : les niveaux d'avant se calculent sur l'historique
+  // tronqué (history est en ajout seul : rien ne s'y efface), jamais lus d'un stockage. Parle
+  // de ce que tu as FAIT (actions réelles par domaine), jamais de ton absence. null si rien.
+  function recapSince(state, seenLen) {
+    var hist = historyOf(state);
+    if (typeof seenLen !== 'number' || !(seenLen >= 0) || seenLen >= hist.length) return null;
+    var before = { history: hist.slice(0, seenLen) }, list = domains.list, out = [];
+    for (var i = 0; i < list.length; i++) {
+      var d = list[i].id, acts = 0;
+      for (var j = seenLen; j < hist.length; j++) {
+        var e = hist[j];
+        if (e && e.domain === d && (e.kind === 'habit' || e.kind === 'quest')) acts++;
+      }
+      if (!acts) continue;
+      out.push({ domain: d, actions: acts,
+                 levelFrom: buildingLevel(before, d), levelTo: buildingLevel(state, d) });
+    }
+    if (!out.length) return null;
+    return { domains: out, fogLifted: totalBuildingLevels(before) < totalBuildingLevels(state) };
+  }
+
   window.AscendDerive = {
     habitCount: habitCount,
+    recapSince: recapSince,
     collectionCount: collectionCount,
     nextMilestone: nextMilestone,
     isHabitValidatedOn: isHabitValidatedOn,
@@ -3891,6 +3952,60 @@ body {
   var openDomainId = null;  // domaine dont le « menu du domaine » est ouvert (éphémère, jamais persisté)
   var detailInvId = null;   // objet (invId) dont le détail-souvenir est affiché dans le menu, ou null
   var chestHubOpen = false; // hub des coffres (ponton) ouvert (éphémère, jamais persisté)
+  var recap = null;         // v0.27 — récap « Depuis ta dernière visite » (dérivé à l'arrivée, éphémère)
+
+  /* ----------------------------------------- v0.27 — LE RETOUR SUR L'ÎLE
+     Revenir sur l'île RACONTE ce qui a grandi depuis la dernière visite : les domaines où tu as
+     agi, les bâtiments qui ont pris un étage (ils s'illuminent), la brume qui a reculé, les coffres
+     qui attendent. C'est le « récit » du GDD §9, le moteur sain du retour : on revient parce qu'on
+     a avancé. Jamais un mot sur l'absence, jamais de compteur de jours. Le repère persisté n'est
+     que la longueur de history ; tout le reste est rejoué (derive.recapSince).
+     app.js appelle arrive() en entrant sur l'onglet et leave() en le quittant : ce que tu fais
+     DEPUIS l'île (menu du domaine, 3.3) tu l'as vu naître, il n'a pas à t'être raconté. */
+  function markSeen() {
+    var st = store.get(), len = (st.history || []).length;
+    if (!st.seen || st.seen.hist !== len) store.set({ seen: { hist: len } });
+  }
+  function arrive() {
+    var st = store.get(), seen = st.seen && typeof st.seen.hist === 'number' ? st.seen.hist : null;
+    recap = seen === null ? null : derive.recapSince(st, seen);
+    markSeen();
+  }
+  function leave() { recap = null; markSeen(); }
+  function grewSet() {
+    var out = {};
+    if (recap) recap.domains.forEach(function (r) { if (r.levelTo > r.levelFrom) out[r.domain] = true; });
+    return out;
+  }
+  function recapLine(r) {
+    var d = domains.get(r.domain), label = d ? d.label : r.domain;
+    if (r.levelTo > r.levelFrom) {
+      return r.levelFrom === 0
+        ? html`<li>Les fondations de <strong>${label}</strong> sont posées</li>`
+        : html`<li><strong>${label}</strong> a grandi : niveau ${r.levelTo}</li>`;
+    }
+    return html`<li>Tu as agi <strong>${r.actions} fois</strong> en ${label}</li>`;
+  }
+  function RecapCard() {
+    if (!recap) return null;
+    var waiting = chestList(store.get()).length;
+    return html`
+      <section class="isl-recap" role="status" aria-label="Depuis ta dernière visite">
+        <div class="ir-head">
+          ${Glyph('etincelle', 'ir-gly', 1)}
+          <h2 class="ir-title">Depuis ta dernière visite</h2>
+          <button class="lnk" type="button" onClick=${function () { recap = null; repaint(); }}>OK</button>
+        </div>
+        <ul class="ir-list">
+          ${recap.domains.map(recapLine)}
+          ${recap.fogLifted ? html`<li>La brume a reculé</li>` : null}
+        </ul>
+        ${waiting
+          ? html`<button class="btn ir-port" type="button" onClick=${function () { recap = null; openChestHub(); }}>
+                   ${waiting > 1 ? waiting + ' coffres t’attendent au port' : 'Un coffre t’attend au port'}</button>`
+          : null}
+      </section>`;
+  }
   var museumOpen = false;   // musée (Hall Timeline) ouvert (éphémère, jamais persisté)
   // SALLES DU MUSÉE (Phase 3.3b) — navigation et geste, tous ÉPHÉMÈRES : la save ne connaît
   // que les positions de vitrine. `picked` = l'objet choisi dont on cherche la vitrine.
@@ -4335,14 +4450,14 @@ body {
 
   /* --------------------------------------------------------------- rendu SVG (calques) */
   function parcelles() {
-    var list = domains.list, st = store.get(), out = [];
+    var list = domains.list, st = store.get(), out = [], grew = grewSet();
     for (var i = 0; i < list.length && i < ARC.length; i++) {
       var d = list[i];
       var info = derive.buildingInfo(st, d.id);
       var coll = domainCollection(st, d.id);
       out.push({ domain: d, x: ARC[i].x, y: ARC[i].y, s: ARC[i].s, id: 'parcelle-' + d.id,
                  level: info.level, elan: info.elan, remaining: info.remaining,
-                 collGot: coll.got, collTotal: coll.total });
+                 collGot: coll.got, collTotal: coll.total, grew: !!grew[d.id] });
     }
     return out;
   }
@@ -4704,7 +4819,7 @@ body {
         ${signNode(d, m.signY)}
       </g>`;
     return html`
-      <g id=${hero ? null : p.id} class="isl-parcelle isl-built" transform=${plotTransform(p)}
+      <g id=${hero ? null : p.id} class=${'isl-parcelle isl-built' + (!hero && p.grew ? ' grew' : '')} transform=${plotTransform(p)}
          data-domain=${d.id} data-level=${p.level} data-arch=${A.roof}>
         <ellipse class="isl-glow" cx="0" cy=${topY + m.bodyH * 0.35} rx=${34 + L * 9} ry=${(34 + L * 9) * 0.7}
                  style=${'opacity:' + glowOp} />
@@ -5059,13 +5174,14 @@ body {
           <rect class="isl-brume" x=${-EXT} y=${-EXT} width=${WORLD.w + 2 * EXT} height=${WORLD.h + 2 * EXT} fill="url(#isl-fog)" />
         </svg>
 
-        ${totalLv > 0
+        ${recap ? RecapCard() : null}
+        ${totalLv > 0 && !recap
           ? html`<div class="isl-hint" aria-hidden="true">Touche un lieu · glisse pour explorer</div>`
           : null}
 
         <button class="isl-recenter" type="button" onClick=${recenter} aria-label="Recentrer la vue de l’île">Recentrer</button>
 
-        ${totalLv === 0
+        ${totalLv === 0 && !recap
           ? html`
             <div class="isl-wake" role="note">
               ${Glyph('pousse', 'iw-gly')}
@@ -5088,6 +5204,7 @@ body {
       <div class="isl-list">
         <p class="isl-list-lead">Vue liste de ton île, équivalent complet de la scène. Chaque
         domaine s’ouvre ici comme en le touchant sur la carte.</p>
+        ${RecapCard()}
 
         <h3 class="isl-list-h">Parcelles de domaine (5)</h3>
         <ul class="isl-items">
@@ -6048,7 +6165,7 @@ body {
       </main>`;
   }
 
-  window.AscendIsland = { Screen: Screen };
+  window.AscendIsland = { Screen: Screen, arrive: arrive, leave: leave };
 })();
 
 /* ASCEND v2 — Racine de l'app.
@@ -6073,7 +6190,7 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.26';
+  var VER = '0.27';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
   // v0.26 — suspense GRADUÉ : plus le coffre est rare, plus il se fait attendre (et plus son halo
@@ -6344,7 +6461,7 @@ body {
     var d = domains.get(hb.domain);
     var sub = (d ? d.label : hb.domain) + (hb.freq ? ' · ' + hb.freq : '');
     return html`
-      <div class="habit">
+      <div class="habit dom-tint" data-domain=${hb.domain}>
         <div class="habit-head">
           ${Glyph(hb.domain, 'h-gly')}
           <div class="h-main">
@@ -6694,6 +6811,16 @@ body {
       </main>`;
   }
 
+  // v0.27 : l'île est PRÉVENUE quand on y entre (elle prépare le récap « Depuis ta dernière
+  // visite ») et quand on la quitte (ce qui s'y est fait a été vu, il ne sera pas raconté).
+  function goTab(id) {
+    if (ui.tab === id) return;
+    if (ui.tab === 'ile') island.leave();
+    ui.tab = id; ui.cheer = null;
+    if (id === 'ile') island.arrive();
+    paint();
+  }
+
   // Barre d'onglets (bas) : bascule Île ↔ Habitudes. Fixe, sûre pour l'encoche (safe-area).
   function TabBar() {
     var tabs = [
@@ -6708,7 +6835,7 @@ body {
             <button type="button" class=${'tab' + (on ? ' on' : '') + (t.id === 'ile' && ui.land ? ' land' : '')}
                     role="tab" aria-selected=${on ? 'true' : 'false'}
                     onAnimationEnd=${t.id === 'ile' ? function () { ui.land = false; } : null}
-                    onClick=${function () { if (ui.tab !== t.id) { ui.tab = t.id; ui.cheer = null; paint(); } }}>
+                    onClick=${function () { goTab(t.id); }}>
               ${Glyph(t.gly, 'tab-gly')}
               <span class="tab-label">${t.label}</span>
             </button>`;
@@ -6737,6 +6864,7 @@ body {
   var mount = document.getElementById('app');
   function paint() { render(h(App), mount); syncQuestTick(); }
   store.subscribe(function () { paint(); });
+  if (ui.tab === 'ile') island.arrive();   // v0.27 : l'app s'ouvre sur l'île → même arrivée
   paint();
   var splash = document.getElementById('splash');
   if (splash) splash.classList.add('hidden');
