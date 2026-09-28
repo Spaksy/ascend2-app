@@ -905,6 +905,16 @@ body {
   padding: max(14px, env(safe-area-inset-top)) 18px 12px;
 }
 .island-top .eyebrow { min-width: 0; }
+/* v0.25 — en SCÈNE, l'en-tête flotte sur le ciel : la scène occupe tout l'écran, de l'encoche à
+   la barre d'onglets. Il laissait sinon une bande de ciel CSS au-dessus du ciel dessiné. Seuls
+   ses contrôles captent le doigt ; le reste laisse passer le pan. */
+.island-screen.is-scene .island-top {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 2; pointer-events: none;
+}
+.island-screen.is-scene .island-top > * { pointer-events: auto; }
+/* Sur le ciel DESSINÉ, voilé de brume, --ink-2 ne tenait que 4,40:1 au crépuscule (il tenait 5,08
+   sur le ciel CSS) : l'eyebrow prend l'encre pleine en scène. */
+.island-screen.is-scene .island-top .eyebrow { color: var(--ink); }
 
 /* Segmenteur Scène / Liste */
 .seg {
@@ -1122,15 +1132,18 @@ body {
    l'état vide partagé (.empty-soft.big). Zéro règle propre : zéro doublon. */
 
 /* Habillages posés sur la scène */
+/* v0.25 — l'indice passe EN BAS, au-dessus de la barre d'onglets : en haut il glissait sous
+   « Recentrer » et se faisait couper. Absent tant que l'île dort (la note d'éveil dit déjà quoi faire). */
 .isl-hint {
-  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  position: absolute; bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));
+  left: 50%; transform: translateX(-50%);
   padding: 6px 12px; border-radius: var(--r-pill);
   background: color-mix(in srgb, var(--surface) 82%, transparent);
   border: 1px solid var(--line); color: var(--ink-2); font-size: 12px; font-weight: 600;
   pointer-events: none; white-space: nowrap; max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis;
 }
 .isl-recenter {
-  position: absolute; top: 10px; right: 12px;
+  position: absolute; top: calc(max(14px, env(safe-area-inset-top)) + 58px); right: 12px;
   min-height: 44px; padding: 0 16px; border-radius: var(--r-pill);   /* 44 pt (CLAUDE.md) */
   background: color-mix(in srgb, var(--surface) 90%, transparent);
   border: 1px solid var(--line); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700;
@@ -3545,6 +3558,7 @@ body {
      scène (voir SHADOW), et il éclairait jusqu'ici à contresens des ombres. Nuages et îlots
      ont été redistribués autour de sa nouvelle place, à écarts volontairement inégaux. */
   var HORIZON = 104;
+  var EXT = 900;         // v0.25 : prolongement du ciel et de la mer hors du monde (écrans portrait)
   var CLOUDS = [
     { x: 372, y: 26, s: .94 }, { x: 596, y: 62, s: .68 },
     { x: 852, y: 30, s: .88 }, { x: 118, y: 88, s: .54 }, { x: 712, y: 12, s: .46 }
@@ -4079,16 +4093,34 @@ body {
      Manipule le viewBox du <svg> (coordonnées MONDE naturelles, focal-point exact).
      Un seul pointeur = pan ; deux = pinch ; molette = zoom au curseur (desktop).
      Bornes DOUCES ; détection tap-vs-pan (un tap ouvre un hub, un glisser ne fait que paner). */
-  var AR = WORLD.h / WORLD.w;
-  var MINW = WORLD.w / 3.2;     // zoom max (~3,2×)
-  var MAXW = WORLD.w;           // dézoom max = île entière (fit)
+  /* v0.25 — PLEIN ÉCRAN MOBILE. Le monde est en paysage (1000×700) et la vue gardait CE ratio :
+     sur un téléphone en portrait, `meet` réduisait toute l'île à 262 px de haut au milieu de
+     deux bandes vides (40 % de l'écran utilisé). La vue prend désormais le ratio RÉEL de la
+     scène (plus aucune bande : `meet` tombe juste) et son cadrage par défaut encadre FOCUS —
+     la zone UTILE mesurée (5 parcelles, port, musée), pas le monde entier. Ciel et mer sont
+     prolongés hors du monde pour remplir la hauteur d'un écran portrait (les aplats de prolongement
+     CHEVAUCHENT leur dégradé de 2 unités : bord à bord, l'anticrénelage traçait un liseré clair). */
+  var FOCUS = { x: 124, y: 0, w: 776, h: 680 };
+  var MINW = WORLD.w / 4;       // zoom max (~4×)
   var MARGIN = 46;              // overscroll doux (unités monde)
   var savedView = null;         // { x, y, w, h } — persiste entre visites de l'onglet
+  var lastAR = WORLD.h / WORLD.w;   // ratio h/w de la scène au dernier cadrage (1er rendu)
+
+  // Cadrage « tout voir » pour un ratio donné : FOCUS en entier (meet), centré.
+  function fitView(ar) {
+    var w = Math.max(FOCUS.w, FOCUS.h / ar), h = w * ar;
+    return { x: FOCUS.x + FOCUS.w / 2 - w / 2, y: FOCUS.y + FOCUS.h / 2 - h / 2, w: w, h: h };
+  }
 
   function makeController(svg) {
+    function stageAR() {
+      var r = svg.getBoundingClientRect();
+      return r.width && r.height ? r.height / r.width : lastAR;   // panneau masqué : on garde l'acquis
+    }
+    var AR = stageAR();
     var view = savedView
-      ? { x: savedView.x, y: savedView.y, w: savedView.w, h: savedView.h }
-      : { x: (WORLD.w - MAXW) / 2, y: (WORLD.h - MAXW * AR) / 2, w: MAXW, h: MAXW * AR };
+      ? { x: savedView.x, y: savedView.y + (savedView.h - savedView.w * AR) / 2, w: savedView.w, h: savedView.w * AR }
+      : fitView(AR);
     var pointers = {};
     var panAnchor = null;
     var pinch = null;
@@ -4096,18 +4128,32 @@ body {
 
     function count() { return Object.keys(pointers).length; }
 
+    // Bornes : le zoom va de MINW au cadrage « tout voir » ; sur chaque axe, si la vue est plus
+    // large que le monde (+ marge douce) elle se CENTRE sur FOCUS, sinon elle se borne au monde.
     function clamp() {
-      view.w = Math.max(MINW, Math.min(MAXW, view.w));
+      var maxW = fitView(AR).w;
+      view.w = Math.max(MINW, Math.min(maxW, view.w));
       view.h = view.w * AR;
-      if (view.w >= WORLD.w) view.x = (WORLD.w - view.w) / 2;
+      if (view.w >= WORLD.w + 2 * MARGIN) view.x = FOCUS.x + FOCUS.w / 2 - view.w / 2;
       else view.x = Math.max(-MARGIN, Math.min(WORLD.w - view.w + MARGIN, view.x));
-      if (view.h >= WORLD.h) view.y = (WORLD.h - view.h) / 2;
+      if (view.h >= WORLD.h + 2 * MARGIN) view.y = FOCUS.y + FOCUS.h / 2 - view.h / 2;
       else view.y = Math.max(-MARGIN, Math.min(WORLD.h - view.h + MARGIN, view.y));
     }
     function apply() {
       clamp();
       svg.setAttribute('viewBox', view.x + ' ' + view.y + ' ' + view.w + ' ' + view.h);
       savedView = { x: view.x, y: view.y, w: view.w, h: view.h };
+      lastAR = AR;
+    }
+    // Rotation, clavier virtuel, barre d'adresse : le ratio change, le CENTRE et le zoom restent.
+    // On observe la SCÈNE elle-même (ResizeObserver) : sa taille peut changer sans que `window`
+    // émette `resize` — c'était le cas à l'essai, la vue gardait le ratio portrait en paysage.
+    function onResize() {
+      var ar = stageAR();
+      if (Math.abs(ar - AR) < 1e-3) return;
+      var cy = view.y + view.h / 2;
+      AR = ar; view.h = view.w * AR; view.y = cy - view.h / 2;
+      apply();
     }
     function toWorld(cx, cy) {
       var r = svg.getBoundingClientRect();
@@ -4143,6 +4189,7 @@ body {
     }
 
     function onDown(e) {
+      onResize();          // filet : le ratio est resynchronisé AVANT tout geste, observateur ou non
       pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
       try { svg.setPointerCapture(e.pointerId); } catch (err) {}
       if (count() === 1) { tapOk = true; tapDown = { x: e.clientX, y: e.clientY }; }
@@ -4163,7 +4210,7 @@ body {
         var m = midClient();
         var midWorld = toWorld(m.x, m.y);
         var nd = dist();
-        if (nd > 0) { view.w = Math.max(MINW, Math.min(MAXW, pinch.baseW * (pinch.dist / nd))); view.h = view.w * AR; }
+        if (nd > 0) { view.w = pinch.baseW * (pinch.dist / nd); clamp(); }
         anchorAt(midWorld, m.x, m.y);
         apply();
       }
@@ -4181,8 +4228,7 @@ body {
       tapOk = false;
       var w = toWorld(e.clientX, e.clientY);
       var f = e.deltaY > 0 ? 1.12 : 1 / 1.12;
-      view.w = Math.max(MINW, Math.min(MAXW, view.w * f));
-      view.h = view.w * AR;
+      view.w = view.w * f; clamp();
       anchorAt(w, e.clientX, e.clientY);
       apply();
     }
@@ -4192,19 +4238,19 @@ body {
     svg.addEventListener('pointerup', onUp);
     svg.addEventListener('pointercancel', onUp);
     svg.addEventListener('wheel', onWheel, { passive: false });
+    var ro = window.ResizeObserver ? new ResizeObserver(onResize) : null;
+    if (ro) ro.observe(svg); else window.addEventListener('resize', onResize);
     apply();
 
     return {
-      reset: function () {
-        view.x = (WORLD.w - MAXW) / 2; view.y = (WORLD.h - MAXW * AR) / 2;
-        view.w = MAXW; view.h = MAXW * AR; apply();
-      },
+      reset: function () { AR = stageAR(); view = fitView(AR); apply(); },
       destroy: function () {
         svg.removeEventListener('pointerdown', onDown);
         svg.removeEventListener('pointermove', onMove);
         svg.removeEventListener('pointerup', onUp);
         svg.removeEventListener('pointercancel', onUp);
         svg.removeEventListener('wheel', onWheel);
+        if (ro) ro.disconnect(); else window.removeEventListener('resize', onResize);
       }
     };
   }
@@ -4738,13 +4784,17 @@ body {
   function skyNode() {
     return html`
       <g class="isl-skylayer" aria-hidden="true">
-        <rect x="-80" y="-80" width=${WORLD.w + 160} height=${HORIZON + 80} fill="url(#isl-sky-g)" />
+        <!-- v0.25 : le haut du ciel se PROLONGE en aplat de --sky-top (la couleur du premier arrêt
+             de son dégradé) : un écran portrait voit bien plus haut que le monde. Élargir le rect
+             du dégradé ne change rien (il est vertical) ; l'allonger l'étirerait. -->
+        <rect x=${-EXT} y=${-EXT} width=${WORLD.w + 2 * EXT} height=${EXT - 78} fill="var(--sky-top)" />
+        <rect x=${-EXT} y="-80" width=${WORLD.w + 2 * EXT} height=${HORIZON + 80} fill="url(#isl-sky-g)" />
         ${STARS.map(starNode)}
         <circle class="isl-astre-glow" cx=${ASTRE.x} cy=${ASTRE.y} r=${ASTRE.r * 2.6} />
         <circle class="isl-astre" cx=${ASTRE.x} cy=${ASTRE.y} r=${ASTRE.r} />
         ${CLOUDS.map(cloudNode)}
         ${FAR_ISLES.map(farIsleNode)}
-        <rect class="isl-horizon" x="-80" y=${HORIZON - 2} width=${WORLD.w + 160} height="4" />
+        <rect class="isl-horizon" x=${-EXT} y=${HORIZON - 2} width=${WORLD.w + 2 * EXT} height="4" />
         <!-- 4.2d — reflets : chaque îlot se prolonge d'une tache sous la ligne d'horizon.
              C'est ce qui empêche l'horizon de se lire comme un simple bord de papier. -->
         ${FAR_ISLES.map(function (f, i) {
@@ -4838,8 +4888,8 @@ body {
     // 29 % sur le cap) et sa levée ralentit (terre dégagée vers 10 niveaux cumulés).
     var clear = Math.min(0.94, 0.44 + totalLv * 0.026).toFixed(3);
     var fogOut = Math.max(0.4, 0.92 - totalLv * 0.03).toFixed(3);
-    var fit = ((WORLD.w - MAXW) / 2) + ' ' + ((WORLD.h - MAXW * AR) / 2) + ' ' + MAXW + ' ' + (MAXW * AR);
-    var initBox = savedView ? (savedView.x + ' ' + savedView.y + ' ' + savedView.w + ' ' + savedView.h) : fit;
+    var v0 = savedView || fitView(lastAR);
+    var initBox = v0.x + ' ' + v0.y + ' ' + v0.w + ' ' + v0.h;
 
     return html`
       <div class="isl-stage">
@@ -4884,7 +4934,12 @@ body {
               <stop offset="0.5" stop-color="var(--gold)" stop-opacity=".18" />
               <stop offset="1" stop-color="var(--gold)" stop-opacity="0" />
             </radialGradient>
-            <radialGradient id="isl-fog" cx="0.5" cy="0.5" r="0.62">
+            <!-- v0.25 : en unités MONDE, pour que la brume couvre le ciel et la mer prolongés sans se
+                 déformer. Ellipse IDENTIQUE à l'ancienne (boîte −80,−80 · 1160×860, r .62) : centre
+                 (500, 350), rayon 719,2 en x, écrasé à 860/1160 en y ; au-delà, le dernier arrêt
+                 (pad) — la brume la plus dense, là où elle l'était déjà au bord de l'ancien cadre. -->
+            <radialGradient id="isl-fog" gradientUnits="userSpaceOnUse" cx="500" cy="350" r="719.2"
+                            gradientTransform="translate(0 350) scale(1 0.741379) translate(0 -350)">
               <stop offset="0" stop-color="var(--fog)" stop-opacity="0" />
               <stop offset=${clear} stop-color="var(--fog)" stop-opacity="0" />
               <stop offset="1" stop-color="var(--fog)" stop-opacity=${fogOut} />
@@ -4896,7 +4951,8 @@ body {
                les voile légèrement et se lève avec la progression : perspective aérienne offerte. -->
           ${skyNode()}
 
-          <rect class="isl-mer" x="-80" y=${HORIZON} width=${WORLD.w + 160} height=${WORLD.h + 80 - HORIZON} fill="url(#isl-sea)" />
+          <rect class="isl-mer" x=${-EXT} y=${HORIZON} width=${WORLD.w + 2 * EXT} height=${WORLD.h + 80 - HORIZON} fill="url(#isl-sea)" />
+          <rect class="isl-mer" x=${-EXT} y=${WORLD.h + 78} width=${WORLD.w + 2 * EXT} height=${EXT} fill="var(--sea-2)" />
           ${glintNode()}
           <!-- vaguelettes du large : quelques traits fixes (aucune animation → reduce-motion d'office) -->
           <g class="isl-waves" aria-hidden="true">${WAVES.map(waveNode)}</g>
@@ -4933,10 +4989,12 @@ body {
           <!-- CALQUE ponton des coffres (Phase 3.2 : tap → hub des coffres → cérémonie 1.3) -->
           <g class="isl-pontons">${pontonNode()}</g>
 
-          <rect class="isl-brume" x="-80" y="-80" width=${WORLD.w + 160} height=${WORLD.h + 160} fill="url(#isl-fog)" />
+          <rect class="isl-brume" x=${-EXT} y=${-EXT} width=${WORLD.w + 2 * EXT} height=${WORLD.h + 2 * EXT} fill="url(#isl-fog)" />
         </svg>
 
-        <div class="isl-hint" aria-hidden="true">Touche un bâtiment, le musée ou le port · glisse pour explorer</div>
+        ${totalLv > 0
+          ? html`<div class="isl-hint" aria-hidden="true">Touche un lieu · glisse pour explorer</div>`
+          : null}
 
         <button class="isl-recenter" type="button" onClick=${recenter} aria-label="Recentrer la vue de l’île">Recentrer</button>
 
@@ -5906,7 +5964,7 @@ body {
     onOpenChest = (ctx && typeof ctx.onOpenChest === 'function') ? ctx.onOpenChest : function () {};
     var view = ctx.view === 'liste' ? 'liste' : 'scene';
     return html`
-      <main class="island-screen">
+      <main class=${'island-screen' + (view === 'scene' ? ' is-scene' : '')}>
         <header class="island-top">
           <div class="eyebrow">ASCEND · Ton île</div>
           <div class="seg" role="group" aria-label="Affichage de l’île">
@@ -5948,7 +6006,7 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.24';
+  var VER = '0.25';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
