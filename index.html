@@ -382,6 +382,59 @@ body {
   border-radius: var(--r-pill); font-weight: 700; font-size: 15px;
   background: var(--accent-soft); color: var(--ink); border: 1px solid var(--accent);
 }
+/* LE GESTE RÉEL (v0.24, arbitrage Leo : « expressive mais brève »). Le seul instant où la VISION
+   autorise pleinement le plaisir : il récompense un acte de la vraie vie, jamais le temps passé
+   ici. En ~0,9 s : la coche se TRACE, la pastille s'illumine d'un éclat doré, le compteur BONDIT,
+   la jauge du jalon avance, et le coffre gagné s'envole vers l'onglet Île. Rien ne bloque, rien
+   ne sonne ; en reduce-motion tout est instantané et le coffre ne vole pas (la phrase suffit). */
+.done-gly { width: 20px; height: 20px; }
+.done.cheer { animation: cheer-burst .75s ease-out; }
+.done.cheer .done-gly path {
+  stroke-dasharray: 24; stroke-dashoffset: 24;
+  animation: draw-check .42s .08s cubic-bezier(.3, .7, .3, 1) forwards;
+}
+.habit .h-count.pop { animation: count-pop .55s cubic-bezier(.3, 1.6, .5, 1); transform-origin: 100% 60%; }
+.habit .h-goal .hg-bar {
+  flex: 1 1 56px; max-width: 110px; height: 6px; margin-left: auto;
+  border-radius: var(--r-pill); background: var(--line); overflow: hidden;
+}
+.habit .h-goal .hg-fill {
+  display: block; height: 100%; border-radius: inherit; background: var(--gly-gold);
+  transition: width .7s cubic-bezier(.3, .8, .3, 1);
+}
+.habit .h-sent {
+  margin-top: 10px; font-size: 13px; color: var(--ink-2);
+  animation: dm-pop .4s .25s ease-out both;
+}
+.chest-vig.flyer {
+  position: fixed; z-index: 45; width: 34px; height: 30px; margin: -15px 0 0 -17px;
+  pointer-events: none; animation: chest-fly .9s cubic-bezier(.45, 0, .3, 1) forwards;
+}
+.chest-vig.flyer::before { height: 12px; }
+.chest-vig.flyer::after { top: 8px; width: 6px; height: 10px; }
+.tab.land { animation: tab-land .6s ease-out; }
+@keyframes draw-check { to { stroke-dashoffset: 0; } }
+@keyframes cheer-burst {
+  0%   { transform: scale(.94); box-shadow: 0 0 0 0 var(--gold); }
+  35%  { transform: scale(1.03); }
+  100% { transform: none; box-shadow: 0 0 0 14px transparent; }
+}
+@keyframes count-pop { 0% { transform: scale(1); } 40% { transform: scale(1.5); } 100% { transform: scale(1); } }
+@keyframes chest-fly {
+  0%   { transform: translate(0, 0) scale(.4); opacity: 0; }
+  20%  { transform: translate(0, -38px) scale(1.12); opacity: 1; }
+  32%  { transform: translate(0, -44px) scale(1); }
+  100% { transform: translate(var(--dx), var(--dy)) scale(.45); opacity: .85; }
+}
+@keyframes tab-land {
+  0%   { transform: scale(1); box-shadow: inset 0 0 0 2px var(--gold); }
+  30%  { transform: scale(1.07); }
+  100% { transform: none; box-shadow: inset 0 0 0 2px transparent; }
+}
+/* La version, qui encombrait les deux en-têtes (une info de développeur, pas de joueur),
+   descend en pied de l'écran Habitudes : Leo la lit pour contrôler un déploiement. */
+.app-ver { margin-top: 32px; text-align: center; font-size: 11px; color: var(--ink-2); }
+
 .h-actions { display: flex; gap: 2px; margin-left: auto; }
 .lnk {
   min-height: 44px; padding: 0 10px; background: transparent; border: 0;
@@ -594,7 +647,11 @@ body {
    « À découvrir » et sa rareté en toutes lettres. */
 .dmc-sil path { fill: var(--ink); opacity: .42; }
 .dm-card.locked .dmc-name { color: var(--ink-2); font-weight: 600; }
-.rc-rarity.dim { opacity: .5; }
+/* v0.24 (arbitrage Leo) : la SILHOUETTE reste pâle, mais son étiquette de rareté ne l'est plus.
+   Elle était à opacity .5 sur sa teinte pleine (1,66–3,98:1, sous AA) : elle passe en encre
+   neutre pleine sur un liseré tireté — le « pas encore à toi » se dit par la forme, pas par
+   un texte illisible. */
+.rc-rarity.dim { background: var(--surface); color: var(--ink-2); border: 1px dashed var(--ink-2); }
 
 /* Détail-souvenir d'un objet (dans le menu) — histoire (placeholder v0, 6.1) + métadonnées. */
 .dm-back {
@@ -645,6 +702,7 @@ body {
 .dmh-goal strong { color: var(--ink); font-variant-numeric: tabular-nums; }
 .dmh-goal .hg-gly { width: 15px; height: 15px; }
 .dmh-val { flex: 0 0 auto; min-width: 130px; min-height: 44px; padding: 0 18px; font-size: 14px; }
+.dmh-done .done-gly { width: 18px; height: 18px; }
 .dmh-done {
   flex: 0 0 auto; min-height: 44px; display: inline-flex; align-items: center; gap: 6px;
   padding: 0 16px; border-radius: var(--r-pill); font-weight: 700; font-size: 14px;
@@ -2029,6 +2087,16 @@ body {
         { d: 'M5.2 12h13.6', w: 2.2 }
       ]
     },
+    // Coche : « Fait » (v0.24, remplace le caractère ✓). Pas d'or : un état, pas un trésor.
+    // Un seul trait par variante : l'animation de tracé du geste réel le dessine d'un coup.
+    coche: {
+      rich: [
+        { d: 'M4.6 12.6l4.6 4.6L19.4 7', w: 2.6 }
+      ],
+      plain: [
+        { d: 'M4.6 12.6l4.6 4.6L19.4 7', w: 2.4 }
+      ]
+    },
     // Chronomètre : lancer une quête minutée (4.2e). Pas d'or : un bouton.
     chrono: {
       rich: [
@@ -2464,12 +2532,16 @@ body {
 
   // Prochain jalon d'habitude à partir d'un compteur cumulatif (Phase 1.5). DÉRIVÉ, jamais
   // stocké, jamais punitif : c'est une INVITATION (« Plus que N avant le jalon des S »), pas
-  // une menace. Retourne { threshold, remaining } pour le plus petit seuil encore devant, ou
-  // null si tous les jalons déclarés sont franchis (au-delà de 100 : aucune pression).
+  // une menace. Retourne { threshold, remaining, progress } pour le plus petit seuil encore
+  // devant, ou null si tous les jalons déclarés sont franchis (au-delà de 100 : aucune pression).
+  // v0.24 : `progress` (0..1) = chemin parcouru DEPUIS le jalon précédent (0 avant le premier),
+  // pour la jauge de la carte d'habitude — une barre qui se remplit, jamais une qui se vide.
   function nextMilestone(count) {
-    var ms = cards.milestones;
+    var ms = cards.milestones, prev = 0;
     for (var i = 0; i < ms.length; i++) {
-      if (ms[i].threshold > count) return { threshold: ms[i].threshold, remaining: ms[i].threshold - count };
+      var t = ms[i].threshold;
+      if (t > count) return { threshold: t, remaining: t - count, progress: (count - prev) / (t - prev) };
+      prev = t;
     }
     return null;
   }
@@ -3300,7 +3372,7 @@ body {
    Placeholders géométriques ; les SVG Claude Design viendront en 2.4 sur les mêmes ancres.
 
    API : window.AscendIsland = { Screen(ctx) } où
-   ctx = { view:'scene'|'liste', onView, ver, repaint, onOpenChest }. */
+   ctx = { view:'scene'|'liste', onView, repaint, onOpenChest }. */
 (function () {
   'use strict';
   var h = window.preact.h;
@@ -5087,7 +5159,7 @@ body {
             : null}
         </div>
         ${done
-          ? html`<span class="dmh-done" role="status">Fait ✓</span>`
+          ? html`<span class="dmh-done" role="status">${Glyph('coche', 'done-gly', 1)}Fait</span>`
           : html`<button class="btn val dmh-val" type="button" aria-label=${'Valider « ' + hb.title + ' » aujourd’hui'}
                     onClick=${function () { validateHere(hb.id); }}>Je l’ai fait</button>`}
       </li>`;
@@ -5836,7 +5908,7 @@ body {
     return html`
       <main class="island-screen">
         <header class="island-top">
-          <div class="eyebrow">ASCEND · v${ctx.ver} · Ton île</div>
+          <div class="eyebrow">ASCEND · Ton île</div>
           <div class="seg" role="group" aria-label="Affichage de l’île">
             <button type="button" class="seg-btn" aria-pressed=${view === 'scene' ? 'true' : 'false'}
                     onClick=${function () { ctx.onView('scene'); }}>Scène</button>
@@ -5876,13 +5948,16 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.23';
+  var VER = '0.24';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
 
   /* ------------------------------------------------------------ état d'UI éphémère */
   var ui = {
-    tab: 'habitudes',           // 'habitudes' | 'ile' — onglet courant (jamais persisté)
+    // v0.24 (arbitrage Leo) : l'app s'ouvre sur l'ÎLE, le lobby (cap du 2026-07-23). Sans
+    // aucune habitude l'île n'est que ruines et n'offre rien à faire : on ouvre alors sur
+    // l'état vide d'Habitudes, qui dit quoi faire en premier.
+    tab: (store.get().habits || []).length ? 'ile' : 'habitudes',   // jamais persisté
     islandView: 'scene',        // 'scene' | 'liste' — bascule de la scène île (Phase 2.1)
     form: { title: '', domain: domains.list[0].id, freq: '' },
     // 4.2e — l'écran M1 s'ouvrait sur un FORMULAIRE déplié, avant même la liste, et
@@ -5898,6 +5973,12 @@ body {
     milestoneDone: null,      // { threshold, chestLabel } — bandeau doux après un jalon franchi
     levelDone: null,          // { level, domainLabel, count } — bandeau doux après une montée de niveau (Phase 2.2)
     ceremony: null,           // { phase:'suspense'|'reveal', chestType, item, sourceLabel } | null
+    // v0.24 — LE GESTE RÉEL. cheer = la dernière habitude validée (coche tracée, compteur qui
+    // bondit, phrase « … part vers ton île ») ; flyer = le petit coffre qui s'envole du bouton
+    // vers l'onglet Île ; land = l'onglet qui l'accueille. Tous éphémères, jamais persistés.
+    cheer: null,              // { id, sentence }
+    flyer: null,              // { key, type, x, y, dx, dy }
+    land: false,
     quest: {
       domain: domains.list[0].id,                                   // filtre du catalogue
       perso: { title: '', domain: domains.list[0].id, minutes: 20 },// quête personnalisée
@@ -5939,8 +6020,26 @@ body {
   }
   // Valider une habitude. Si la validation FRANCHIT un jalon (Phase 1.5), on lève le bandeau
   // doux qui guide vers la pile (le coffre de jalon y attend, à côté du Coffre de bois).
-  function validate(id) {
+  // v0.24 — le geste « Je l'ai fait » se VOIT : c'est le seul instant où la VISION autorise
+  // pleinement le plaisir, puisqu'il récompense un acte réel. `ev` sert à savoir d'où
+  // décolle le coffre ; en reduce-motion, rien ne vole (la phrase suffit).
+  function validate(id, ev) {
+    var btn = ev && ev.currentTarget;
+    var from = btn && btn.getBoundingClientRect ? btn.getBoundingClientRect() : null;
     var res = actions.validateHabit(id);
+    if (res && res.ok) {
+      var type = res.milestone ? res.milestone.tier : 'bois';
+      var ct = chestTypes.get(type);
+      var lab = ct ? ct.label : 'Coffre';                 // « Coffre de bois » → « Ton coffre de bois »
+      ui.cheer = { id: id, sentence: 'Ton ' + lab.charAt(0).toLowerCase() + lab.slice(1) + ' part vers ton île.' };
+      var tab = document.querySelector('.tabbar .tab');
+      if (from && tab && !prefersReduced()) {
+        var to = tab.getBoundingClientRect();
+        var x = from.left + from.width / 2, y = from.top + from.height / 2;
+        ui.flyer = { key: Date.now(), type: type, x: x, y: y,
+                     dx: to.left + to.width / 2 - x, dy: to.top + to.height / 2 - y };
+      }
+    }
     if (res && res.ok && res.milestone) {
       var t = chestTypes.get(res.milestone.tier);
       ui.milestoneDone = { threshold: res.milestone.threshold, chestLabel: t ? t.label : 'un coffre' };
@@ -6109,6 +6208,7 @@ body {
     var count = derive.habitCount(st, hb.id);
     var done = derive.isHabitValidatedOn(st, hb.id, store.todayKey());
     var next = derive.nextMilestone(count);            // prochain jalon (invitation, non punitif)
+    var cheer = done && ui.cheer && ui.cheer.id === hb.id;   // v0.24 : validée À L'INSTANT
     var d = domains.get(hb.domain);
     var sub = (d ? d.label : hb.domain) + (hb.freq ? ' · ' + hb.freq : '');
     return html`
@@ -6120,7 +6220,8 @@ body {
             <div class="h-sub">${sub}</div>
           </div>
           ${count > 0
-            ? html`<span class="h-count" aria-label=${'validée ' + count + ' fois'}>
+            ? html`<span key=${count} class=${'h-count' + (cheer ? ' pop' : '')}
+                     aria-label=${'validée ' + count + ' fois'}>
                      ${count}<span class="u">fois</span></span>`
             : null}
         </div>
@@ -6128,13 +6229,17 @@ body {
           ? html`<div class="h-goal" aria-label=${'Plus que ' + next.remaining + ' avant le jalon des ' + next.threshold}>
                    ${Glyph('jalon', 'hg-gly', 1)}
                    <span>Plus que <strong>${next.remaining}</strong> avant le jalon des ${next.threshold}</span>
+                   <span class="hg-bar" aria-hidden="true">
+                     <span class="hg-fill" style=${'width:' + Math.round(next.progress * 100) + '%'}></span>
+                   </span>
                  </div>`
           : null}
         <div class="habit-foot">
           ${done
-            ? html`<span class="done" role="status">Fait ✓</span>`
+            ? html`<span class=${'done' + (cheer ? ' cheer' : '')} role="status">
+                     ${Glyph('coche', 'done-gly', 1)}Fait</span>`
             : html`<button class="btn val" type="button"
-                     onClick=${function () { validate(hb.id); }}>Je l’ai fait</button>`}
+                     onClick=${function (e) { validate(hb.id, e); }}>Je l’ai fait</button>`}
           <div class="h-actions">
             <button class="lnk" type="button" onClick=${function () { startEdit(hb); }}
                     aria-label=${'Modifier ' + hb.title}>Modifier</button>
@@ -6142,6 +6247,9 @@ body {
                     aria-label=${'Supprimer ' + hb.title}>Supprimer</button>
           </div>
         </div>
+        ${cheer
+          ? html`<p class="h-sent">${ui.cheer.sentence}</p>`
+          : null}
         ${ui.confirmDeleteId === hb.id
           ? html`
             <div class="del-confirm" role="group" aria-label="Confirmer la suppression">
@@ -6388,12 +6496,24 @@ body {
       </div>`;
   }
 
+  // v0.24 — le coffre gagné S'ENVOLE du bouton vers l'onglet Île, où il accoste : on VOIT où
+  // part la récompense. Décoratif (la phrase de la carte dit la même chose en toutes lettres),
+  // ~0,9 s, jamais bloquant (pointer-events: none), absent en reduce-motion.
+  function Flyer() {
+    var f = ui.flyer;
+    if (!f) return null;
+    return html`
+      <span key=${f.key} class=${'flyer chest-vig chest-vig--' + f.type} aria-hidden="true"
+            style=${'left:' + f.x + 'px;top:' + f.y + 'px;--dx:' + f.dx + 'px;--dy:' + f.dy + 'px'}
+            onAnimationEnd=${function () { ui.flyer = null; ui.land = true; paint(); }}></span>`;
+  }
+
   function HabitScreen() {
     var habits = (store.get().habits || []).filter(function (hb) { return hb && hb.id; });
     return html`
       <main class="wrap">
         <header class="app-hero">
-          <div class="eyebrow">ASCEND · v${VER}</div>
+          <div class="eyebrow">ASCEND</div>
           <h1>Tes habitudes</h1>
           <p class="lede">Valide-les ici chaque fois que tu les fais pour de vrai.</p>
         </header>
@@ -6409,6 +6529,7 @@ body {
         </section>
 
         ${QuestSection()}
+        <p class="app-ver">ASCEND v${VER}</p>
       </main>`;
   }
 
@@ -6423,9 +6544,10 @@ body {
         ${tabs.map(function (t) {
           var on = ui.tab === t.id;
           return html`
-            <button type="button" class="tab ${on ? 'on' : ''}" role="tab"
-                    aria-selected=${on ? 'true' : 'false'}
-                    onClick=${function () { if (ui.tab !== t.id) { ui.tab = t.id; paint(); } }}>
+            <button type="button" class=${'tab' + (on ? ' on' : '') + (t.id === 'ile' && ui.land ? ' land' : '')}
+                    role="tab" aria-selected=${on ? 'true' : 'false'}
+                    onAnimationEnd=${t.id === 'ile' ? function () { ui.land = false; } : null}
+                    onClick=${function () { if (ui.tab !== t.id) { ui.tab = t.id; ui.cheer = null; paint(); } }}>
               ${Glyph(t.gly, 'tab-gly')}
               <span class="tab-label">${t.label}</span>
             </button>`;
@@ -6439,13 +6561,14 @@ body {
       <div class="sky" aria-hidden="true"></div>
       ${onIsland
         ? island.Screen({
-            view: ui.islandView, ver: VER,
+            view: ui.islandView,
             onView: function (v) { if (ui.islandView !== v) { ui.islandView = v; paint(); } },
             repaint: paint,     // Phase 2.3 : re-rendu pour l'UI de placement éphémère (sélection, glisser)
             onOpenChest: openChest  // Phase 3.2 : le hub des coffres (ponton) lance la cérémonie 1.3
           })
         : HabitScreen()}
       ${TabBar()}
+      ${Flyer()}
       ${Ceremony()}`;
   }
 
