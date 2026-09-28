@@ -137,6 +137,7 @@
   --plaza: #48577E; --plaza-2: #5C6B94; --path: #3E4D71;
 }
 
+/* ASCEND v2 — fragment styles/02-base.css : base, ciel d’ambiance. Cascade : l’ordre des fichiers compte (ordre : build/build.ps1). */
 /* ============================ BASE ============================ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; }
@@ -186,6 +187,7 @@ body {
 #splash.hidden { opacity: 0; pointer-events: none; }
 #app { min-height: 100%; }
 
+/* ASCEND v2 — fragment styles/03-habitudes.css : écran Habitudes. Cascade : l’ordre des fichiers compte (ordre : build/build.ps1). */
 /* ==================== PREMIER ÉCRAN — HABITUDES (Phase 1.1) ==================== */
 .wrap {
   max-width: 560px; margin: 0 auto;
@@ -474,6 +476,7 @@ body {
 .empty .e-title { color: var(--ink); font-weight: 700; font-size: 17px; margin: 10px 0 6px; }
 .empty p { font-size: 14px; max-width: 36ch; margin: 0 auto; }
 
+/* ASCEND v2 — fragment styles/04-coffres.css : vignettes de coffres. Cascade : l’ordre des fichiers compte (ordre : build/build.ps1). */
 /* ==================== COFFRES — À DÉCOUVRIR (Phase 1.2) ====================
    Brique lobby (b) : la pile a quitté M1 ; ces règles servent désormais le HUB DU PONTON
    (`.chest-hub`, île Phase 3.2), seul lieu des coffres. `.chest-section` (marge de la
@@ -522,6 +525,7 @@ body {
 .chest-vig--cristal { --chest-body: #7E6FD6; --chest-lid: #9E90EC; --chest-edge: #52439E; } /* violet gemme */
 .chest-vig--aube    { --chest-body: #E58AA6; --chest-lid: #F4B7C8; --chest-edge: #BC5C79; } /* rose d'aube */
 
+/* ASCEND v2 — fragment styles/05-domaine.css : menu du domaine, bandeau, cartes. Cascade : l’ordre des fichiers compte (ordre : build/build.ps1). */
 /* ============ MENU DU DOMAINE / COLLECTION (Phase 3.1, premium en 4.2b) ============ */
 /* Cap « l'île = lobby » : taper un bâtiment ouvre le hub de son domaine — un BANDEAU illustré
    (le bâtiment réel, à son niveau) + « Agir » + sa collection en cartes. Dialog focus-trappé
@@ -559,7 +563,7 @@ body {
     linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 34%, var(--sky-bottom) 56%,
                     var(--land) 58%, var(--land-2) 100%);
 }
-/* Le MÊME dessin que sur la scène, cadré sur la parcelle (voir island.js/heroArt). Le halo a
+/* Le MÊME dessin que sur la scène, cadré sur la parcelle (voir island/05-scene.js, heroArt). Le halo a
    son propre dégradé ici : la scène n'est pas forcément montée (vue Liste). */
 .dm-heroart { display: block; width: 100%; height: 140px; }
 .dm-heroart .isl-glow { fill: url(#dm-glow-g); }
@@ -725,6 +729,7 @@ body {
 @keyframes dm-pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes dm-rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
 
+/* ASCEND v2 — fragment styles/06-ceremonie.css : cérémonie. Cascade : l’ordre des fichiers compte (ordre : build/build.ps1). */
 /* ==================== CÉRÉMONIE D'OUVERTURE (Phase 1.3) ==================== */
 /* < 6 s, skippable (tap/« Passer »), INSTANTANÉE en reduce-motion. Voile sombre fixe pour
    concentrer l'attention (texte en encre claire fixe → lisible quelle que soit l'ambiance). */
@@ -843,6 +848,7 @@ body {
   75%      { transform: scale(2.3) translateX(2px) rotate(2.2deg); }
 }
 
+/* ASCEND v2 — fragment styles/07-quetes.css : quêtes minutées. Cascade : l’ordre des fichiers compte (ordre : build/build.ps1). */
 /* ==================== QUÊTES MINUTÉES (Phase 1.4) ==================== */
 .quest-section { margin-top: 26px; }
 
@@ -926,6 +932,7 @@ body {
 .aq-gatehint { font-size: 12px; color: var(--ink-2); }
 .aq-abandon { margin-left: auto; }
 
+/* ASCEND v2 — fragment styles/08-onglets.css : barre d’onglets. Cascade : l’ordre des fichiers compte (ordre : build/build.ps1). */
 /* ==================== NAVIGATION PAR ONGLETS (Phase 2.1) ==================== */
 :root { --nav-h: 60px; }
 
@@ -954,6 +961,7 @@ body {
 .tab.on { background: var(--accent-soft); }
 .tab.on .tab-label { color: var(--ink); }
 
+/* ASCEND v2 — fragment styles/09-ile.css : scène de l’île. Cascade : l’ordre des fichiers compte (ordre : build/build.ps1). */
 /* ==================== ÉCRAN ÎLE — SCÈNE v1 (Phase 2.1) ==================== */
 .island-screen {
   position: relative;
@@ -1051,7 +1059,7 @@ body {
 .isl-scatter { opacity: .9; }
 
 /* Socle d'une parcelle — 4.2d : ses rayons, son orientation et son liseré viennent de la
-   variante du domaine (island.js/variantOf), dérivée de cards.hash() et jamais stockée. */
+   variante du domaine (island/02-monde.js, variantOf), dérivée de cards.hash() et jamais stockée. */
 .isl-plot-sh { fill: var(--land-2); opacity: .3; }
 .isl-plot { fill: var(--plot); }
 .isl-plot-in { fill: var(--plot-2); }
@@ -1275,6 +1283,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* ASCEND v2 — fragment styles/10-reduced-motion.css : reduced motion. Cascade : l’ordre des fichiers compte (ordre : build/build.ps1). */
 /* ============================ REDUCED MOTION ============================ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -1325,6 +1334,7 @@ body {
 .tl-name { font-weight: 700; font-size: 14px; }
 .tl-sub { color: var(--ink-2); font-size: 12px; margin-top: 2px; word-break: break-word; }
 
+/* ASCEND v2 — fragment styles/11-musee.css : salles du musée. Cascade : l’ordre des fichiers compte (ordre : build/build.ps1). */
 /* ============ LES SALLES DU MUSÉE & LEURS VITRINES (Phase 3.3b) ============
    Le hall porte cinq PORTES ; derrière chacune, une salle où l'on expose ce qu'on choisit de
    montrer. La salle est une surface spatiale : scène SVG + miroir Liste, bascule locale.
@@ -1798,7 +1808,7 @@ body {
 
 /* ASCEND v2 — Moteur d'ambiance (Phase 0.3).
    Choisit le thème visuel selon l'HEURE LOCALE et l'applique via
-   [data-ambiance] sur <html> (les tokens sont dans styles.css) :
+   [data-ambiance] sur <html> (les tokens sont dans styles/01-tokens.css) :
      nuit        21 h → 06 h   (nuit étoilée)
      crepuscule  06 h → 08 h   (aube)  ·  19 h → 21 h  (couchant)
      jour        08 h → 19 h   (jour doux)
@@ -1928,7 +1938,7 @@ body {
    Données PURES : chaque variante est une liste de parties sur une grille de 24×24.
    Clés d'une partie — `d` : le chemin ; `w` : l'épaisseur du trait (absente = celle
    du site) ; `f` : la partie est un APLAT (peint, pas tracé) ; `a` : la partie porte
-   l'ACCENT. Aucune couleur codée en dur : les consommateurs (app.js, island.js)
+   l'ACCENT. Aucune couleur codée en dur : les consommateurs (ui/app/, ui/island/)
    traduisent `f`/`a` en classes, et le CSS décide de l'encre. */
 (function () {
   'use strict';
@@ -2852,7 +2862,7 @@ body {
      Ce qui est STOCKÉ se réduit au strict minimum non calculable : quel objet occupe quelle
      vitrine, soit `{invId, zone:'musee.<domaine>', slot}`. Le TDD §4 écrivait `x, y` : c'était
      pour un placement LIBRE, celui de l'île. Les vitrines sont des emplacements DISCRETS —
-     leurs coordonnées se dérivent de l'index (island.js/SHOWCASES), donc les stocker
+     leurs coordonnées se dérivent de l'index (island/09-musee.js, SHOWCASES), donc les stocker
      violerait l'invariant. Le `slot` est le seul fait que le calcul ne peut pas retrouver.
      Les anciennes positions `zone:'ile'` ne sont jamais lues ici et restent intactes.
 
@@ -3014,7 +3024,7 @@ body {
   // Avancement de la COLLECTION d'un domaine (v0.26) : combien d'objets de son catalogue fixe
   // (`cards.pools`) sont dans l'inventaire. DÉRIVÉ, jamais stocké. Les décos génératives et les
   // cartes-jalons sont HORS catalogue : elles ne comptent pas dans le X/Y (arbitrage 3.1).
-  // Source UNIQUE du X/Y : le menu du domaine (island.js) et la cérémonie (app.js) la lisent.
+  // Source UNIQUE du X/Y : le menu du domaine (island/07-domaine.js) et la cérémonie (app/03-ceremonie.js) la lisent.
   function collectionCount(state, domain) {
     var cat = (cards.pools && cards.pools[domain]) || [], inv = (state && state.inventory) || [];
     var have = {}, got = 0;
@@ -3529,6 +3539,7 @@ body {
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (quête perso) — GDD §13.
 
+/* ASCEND v2 — fragment island/02-monde.js : géométrie du monde, littoral, ciel, place, monument du musée, terrain, variation. Même IIFE que les autres fragments de island/ (ordre : build/build.ps1). */
   /* ------------------------------------------------------------------ géométrie
      Monde fixe (unités SVG) ; ancres STABLES (2.4 y posera les assets réels).
      Ordre des parcelles = domains.list. */
@@ -3947,6 +3958,7 @@ body {
     return v;
   }
 
+/* ASCEND v2 — fragment island/03-etat.js : état d’UI, récap du retour, lectures dérivées, navigation, actions depuis l’île, boîtes de tap, piège à focus. Même IIFE que les autres fragments de island/ (ordre : build/build.ps1). */
   /* ------------------------------------------------------------ état d'UI (module) */
   // JAMAIS persisté. Survit aux re-rendus.
   var openDomainId = null;  // domaine dont le « menu du domaine » est ouvert (éphémère, jamais persisté)
@@ -4271,6 +4283,7 @@ body {
     else if (!e.shiftKey && act === last) { e.preventDefault(); first.focus(); }
   }
 
+/* ASCEND v2 — fragment island/04-controleur.js : contrôleur pan + zoom. Même IIFE que les autres fragments de island/ (ordre : build/build.ps1). */
   /* --------------------------------------------------- contrôleur PAN + ZOOM (natif)
      Manipule le viewBox du <svg> (coordonnées MONDE naturelles, focal-point exact).
      Un seul pointeur = pan ; deux = pinch ; molette = zoom au curseur (desktop).
@@ -4448,6 +4461,7 @@ body {
   }
   function recenter() { if (controller) controller.reset(); }
 
+/* ASCEND v2 — fragment island/05-scene.js : rendu SVG : parcelles, archétypes, port, ciel, place. Même IIFE que les autres fragments de island/ (ordre : build/build.ps1). */
   /* --------------------------------------------------------------- rendu SVG (calques) */
   function parcelles() {
     var list = domains.list, st = store.get(), out = [], grew = grewSet();
@@ -5191,6 +5205,7 @@ body {
       </div>`;
   }
 
+/* ASCEND v2 — fragment island/06-liste.js : vue Liste miroir de l’île. Même IIFE que les autres fragments de island/ (ordre : build/build.ps1). */
   /* ------------------------------------------------------------- vue LISTE (miroir 1:1)
      Équivalent sémantique complet de la scène (a11y NON négociable) : les deux lieux tappables
      — les 5 parcelles et le ponton — y sont atteignables au clavier, et ouvrent les MÊMES
@@ -5274,6 +5289,7 @@ body {
       </div>`;
   }
 
+/* ASCEND v2 — fragment island/07-domaine.js : menu du domaine : cartes, collection, Agir, bandeau. Même IIFE que les autres fragments de island/ (ordre : build/build.ps1). */
   /* ------------------------------------------------------- menu du domaine (Phase 3.1)
      Ouvert en tapant un bâtiment (ou via la vue Liste). Première brique du cap « l'île =
      lobby » : le hub d'un domaine. En 3.1 il contient l'état du bâtiment + SA COLLECTION
@@ -5612,6 +5628,7 @@ body {
       </div>`;
   }
 
+/* ASCEND v2 — fragment island/08-port.js : hub des coffres du port. Même IIFE que les autres fragments de island/ (ordre : build/build.ps1). */
   /* ------------------------------------------------------- hub des coffres (Phase 3.2)
      Ouvert en tapant le PONTON (ou via la vue Liste). Deuxième brique du cap « l'île =
      lobby » : la pile de coffres « À découvrir » vit désormais sur l'île. « Ouvrir » lance
@@ -5667,6 +5684,7 @@ body {
       </div>`;
   }
 
+/* ASCEND v2 — fragment island/09-musee.js : musée : hall timeline, salles, vitrines, portes. Même IIFE que les autres fragments de island/ (ordre : build/build.ps1). */
   /* --------------------------------------------- LE MUSÉE : le Hall Timeline (Phase 3.3)
      La frise rejoue l'histoire RÉELLE, groupée par jour, du plus récent au plus ancien.
      Arbitrage Leo : « objets + moments marquants » — les validations ordinaires n'y figurent
@@ -6142,6 +6160,7 @@ body {
       </div>`;
   }
 
+/* ASCEND v2 — fragment island/10-ecran.js : écran complet et export. Même IIFE que les autres fragments de island/ (ordre : build/build.ps1). */
   /* --------------------------------------------------------------------- écran complet */
   function Screen(ctx) {
     repaint = (ctx && typeof ctx.repaint === 'function') ? ctx.repaint : function () {};
@@ -6190,7 +6209,7 @@ body {
   var cards = window.AscendCards;
   var quests = window.AscendQuests;
   var island = window.AscendIsland;
-  var VER = '0.27';
+  var VER = '0.28';
 
   var DURATION_PRESETS = [5, 10, 15, 20, 30, 45, 60, 90]; // minutes proposées (perso) — GDD §13.
   // v0.26 — suspense GRADUÉ : plus le coffre est rare, plus il se fait attendre (et plus son halo
@@ -6381,6 +6400,7 @@ body {
   function cancelDelete() { ui.confirmDeleteId = null; paint(); }
   function confirmDelete(id) { ui.confirmDeleteId = null; actions.deleteHabit(id); paint(); }
 
+/* ASCEND v2 — fragment app/02-habitudes.js : composants de l’écran Habitudes. Même IIFE que les autres fragments de app/ (ordre : build/build.ps1). */
   /* --------------------------------------------------------------- composants */
   /* Glyphe dessiné (4.2e, redessiné en 4.2f) : remplace les emojis, sans exception
      (arbitrage Leo). Peint en `currentColor`, il prend l'encre du texte qui le porte :
@@ -6555,6 +6575,7 @@ body {
       </div>`;
   }
 
+/* ASCEND v2 — fragment app/03-ceremonie.js : cérémonie d’ouverture de coffre. Même IIFE que les autres fragments de app/ (ordre : build/build.ps1). */
   /* ------------------------------------------------ carte-récompense (placeholder) */
   // Placeholder géométrique propre (les SVG Claude Design la remplaceront, jamais
   // redessinés). En 1.3 seule la rareté « commun » est produite → seule elle est stylée.
@@ -6625,6 +6646,7 @@ body {
       </div>`;
   }
 
+/* ASCEND v2 — fragment app/04-quetes.js : quêtes minutées. Même IIFE que les autres fragments de app/ (ordre : build/build.ps1). */
   /* ------------------------------------------------ quêtes minutées (Phase 1.4) */
   // Carte de la quête EN COURS : anneau de progression + compte à rebours (arbitrage Leo).
   // L'anneau se remplit vers la durée CIBLE et passe au DORÉ à 50 % (gate débloqué). Le
@@ -6761,6 +6783,7 @@ body {
      C'est ce qui permet à l'écran de s'ouvrir sur TA LISTE plutôt que sur un formulaire,
      sans rien retirer de ce qu'on pouvait y faire. `aria-expanded` + `aria-controls` :
      un lecteur d'écran annonce l'état et sait ce que le bouton commande. */
+/* ASCEND v2 — fragment app/05-ecran.js : écran Habitudes, onglets, App, montage. Même IIFE que les autres fragments de app/ (ordre : build/build.ps1). */
   function Disclose(id, open, gly, label, onToggle, body) {
     return html`
       <div class="disclose">
